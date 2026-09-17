@@ -47,7 +47,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 <section id="publicPage">
 <div class="card"><div style="text-align:center;margin-bottom:14px"><div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">👑 CLASSIFICA GENERALE</div><div style="font-size:11px;color:#9aa9b8;letter-spacing:.22em;margin-top:8px">PASSIONE • RISPETTO • AMICIZIA • COMPETIZIONE</div></div>
 <div class="muted" id="status">Connessione a Supabase…</div>
-<div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Giocatore</th><th>Fascia</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Totale</th></tr></thead><tbody id="ranking"></tbody></table></div></div>
+<div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Giocatore</th><th>Totale</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th></tr></thead><tbody id="ranking"></tbody></table></div></div>
 </section>
 
 <section id="adminPage" class="hidden">
@@ -131,7 +131,7 @@ function emptyStats(){
 }
 function render(){
   let a=stats.map(s=>{let base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;return {...s,base,total:base+s.mvp*1.5+s.imb}}).sort((x,y)=>y.total-x.total||y.base-x.base||x.name.localeCompare(y.name));
-  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logoFile(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><span class="badge" style="background:${s.fascia===1?"#6d1620":s.fascia===2?"#6f5310":s.fascia===3?"#0c4d93":"#0a6a3d"};color:#fff">${"F"+s.fascia}</span></td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><b>${s.total.toFixed(2)}</b></td></tr>`).join("");
+  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logoFile(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td></tr>`).join("");
   $("status").textContent="Dati aggiornati dal database RPL.";
 }
 async function loadRanking(){
