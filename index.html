@@ -29,14 +29,13 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 .smallbtn{padding:7px 9px;font-size:11px}.edit{color:#175cd3}.historyrow{display:flex;justify-content:space-between;gap:10px;align-items:center}.actions{display:flex;gap:6px;flex-wrap:wrap}
 @media(max-width:760px){.grid,.players,.setgrid,.two{grid-template-columns:1fr}}
 </style>
-
-<style id="fascia-colors">
-.fascia-badge.f1, .fascia.f1, [data-fascia="F1"] { background: #d4af37 !important; color: #111 !important; border-color: #d4af37 !important; }
-.fascia-badge.f2, .fascia.f2, [data-fascia="F2"] { background: #2563eb !important; color: #fff !important; border-color: #2563eb !important; }
-.fascia-badge.f3, .fascia.f3, [data-fascia="F3"] { background: #16a34a !important; color: #fff !important; border-color: #16a34a !important; }
-.fascia-badge.f4, .fascia.f4, [data-fascia="F4"] { background: #dc2626 !important; color: #fff !important; border-color: #dc2626 !important; }
+<style id="fascia-colors-v55">
+.fascia-badge{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:4px 8px;border-radius:999px;font-weight:800;border:1px solid transparent}
+.fascia-badge.f1{background:#d4af37!important;color:#111!important;border-color:#f2ca63!important}
+.fascia-badge.f2{background:#2563eb!important;color:#fff!important;border-color:#60a5fa!important}
+.fascia-badge.f3{background:#16a34a!important;color:#fff!important;border-color:#4ade80!important}
+.fascia-badge.f4{background:#dc2626!important;color:#fff!important;border-color:#f87171!important}
 </style>
-
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -139,7 +138,7 @@ function emptyStats(){
 }
 function render(){
   let a=stats.map(s=>{let base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;return {...s,base,total:base+s.mvp*1.5+s.imb}}).sort((x,y)=>y.total-x.total||y.base-x.base||x.name.localeCompare(y.name));
-  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logoFile(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><span class="badge">F${s.fascia}</span></td></tr>`).join("");
+  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logoFile(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><span class="badge fascia-badge f${s.fascia}">F${s.fascia}</span></td></tr>`).join("");
   $("status").textContent="Dati aggiornati dal database RPL.";
 }
 async function loadRanking(){
