@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Royal Padel League</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f6f8;color:#17202a}
+main{max-width:1120px;margin:auto;padding:18px}.top{background:#111827;color:#fff;border-radius:18px;padding:18px;margin-bottom:14px}
+h1{margin:0;font-size:25px}.sub{color:#cbd5e1;font-size:13px;margin-top:4px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}nav button{min-height:44px}
+button{border:1px solid #d0d5dd;background:#fff;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+.primary{background:#111827;color:#fff}.danger{color:#b42318}.grid{display:grid;grid-template-columns:1fr 1.5fr;gap:14px}
+.card{background:#fff;border:1px solid #d9dee5;border-radius:16px;padding:16px;margin-bottom:14px}
+h2{font-size:18px;margin:0 0 12px}label{font-size:12px;color:#667085;display:block;margin:8px 0 4px}
+input,select{width:100%;padding:10px;border:1px solid #cbd2da;border-radius:9px;font-size:16px;background:#fff}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}.set{border-top:1px solid #e5e7eb;padding-top:11px;margin-top:11px}
+.setgrid{display:grid;grid-template-columns:1fr 1fr 90px;gap:8px}.scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #e5e7eb;white-space:nowrap}th{font-size:10px;color:#667085}
+.checklist{border:1px solid #d9dee5;border-radius:10px;padding:8px;max-height:160px;overflow:auto}.check{display:flex;gap:7px;align-items:center;padding:5px 0;font-size:13px}.check input{width:18px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.muted{font-size:12px;color:#667085}.msg{font-size:13px;margin-top:9px}
+.hidden{display:none}.login{max-width:420px;margin:20px auto}.ok{color:#067647}.err{color:#b42318}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;font-size:11px;font-weight:700}
+.smallbtn{padding:7px 9px;font-size:11px}
+@media(max-width:760px){.grid,.players,.setgrid,.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<header class="top"><h1>👑 Royal Padel League</h1><div class="sub">Classifica ufficiale • Stagione 2026/27</div></header>
+<nav>
+<button id="publicBtn" class="primary">🏆 Classifica</button>
+<button id="adminBtn">🔐 Area operatori</button>
+</nav>
+
+<section id="publicPage">
+<div class="card"><h2>🏆 Classifica RPL</h2>
+<div class="muted" id="status">Connessione a Supabase…</div>
+<div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Giocatore</th><th>Fascia</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Totale</th></tr></thead><tbody id="ranking"></tbody></table></div></div>
+</section>
+
+<section id="adminPage" class="hidden">
+<div id="loginBox" class="card login"><h2>🔐 Area operatori</h2><div class="muted">Accesso riservato agli operatori RPL autorizzati.</div>
+<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="operatore@email.it">
+<label>Password</label><input id="password" type="password" autocomplete="current-password">
+<button class="primary" id="login">ACCEDI</button><div id="loginMsg" class="msg"></div></div>
+
+<div id="operatorBox" class="hidden">
+<div class="card"><h2>➕ Inserisci partita</h2>
+<label>Data e ora di inizio partita</label><input id="date" type="datetime-local">
+<div class="muted" style="margin-top:6px">Dal 1° novembre il sistema userà la classifica precedente alla partita per congelare le fasce del match.</div>
+<div class="players">
+<div><label>Giocatore 1</label><select id="p1"></select></div><div><label>Giocatore 2</label><select id="p2"></select></div>
+<div><label>Giocatore 3</label><select id="p3"></select></div><div><label>Giocatore 4</label><select id="p4"></select></div>
+</div>
+<div id="sets"></div>
+<div class="two"><div><label>MVP — anche multipli</label><div id="mvp" class="checklist"></div></div><div><label>Imbattuto — anche multipli</label><div id="imb" class="checklist"></div></div></div>
+<button class="primary" id="save">SALVA PARTITA</button><button id="logout">ESCI</button><div id="msg" class="msg"></div></div>
+<div class="card"><h2>📋 Storico partite</h2><div id="history" class="muted">Caricamento…</div></div>
+</div></section>
+</main>
+
+<script>
+const SUPABASE_URL="https://vanbadzkxvextdvnqwtr.supabase.co";
+const SUPABASE_KEY="sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const players=[
+["Filippo Di Dio","El D10s",1,5],["Luigi Cacciato","Il Pistone",1,5],["Gianni Caruso","The Golden President",1,5],["Salvatore Bertuccio","Il Calcolatore",1,5],
+["Giuseppe Farina","Peppe",2,4],["Salvatore Balsamo","The Chef",2,4],["Maurizio Sciuto","The Vet",2,4],["Francesco Valvo","Iron Driver",2,4],
+["Paolo Debole","Padel Nostro",3,3],["Fabrizio Chiaramonte","The Sheriff",3,3],["Andrea Tilaro","The Broker",3,3],["Alessandro Passamonte","Iron Painter",3,3],
+["Raffaele Passalacqua","Inpsider",4,2],["Daniele Spitaleri","Solar King",4,2],["Dario Savoca","Graphic Nerd",4,2],["Federica Demaria","Lady Pharma",4,2],["Davide Savoca","Il sergente",4,2]
+];
+let dbPlayers=[];
+let stats=[];
+let currentUser=null;
+
+const $=id=>document.getElementById(id);
+function playerName(id){let p=dbPlayers.find(x=>x.id===id);return p?p.name:"";}
+function playerNick(id){let p=dbPlayers.find(x=>x.id===id);return p?p.nickname:"";}
+function playerFascia(id){let p=dbPlayers.find(x=>x.id===id);return p?p.fascia_value:2;}
+
+async function loadPlayers(){
+  const {data,error}=await sb.from("players").select("*").eq("active",true).order("id");
+  if(error){$("status").textContent="Errore database: "+error.message;throw error}
+  dbPlayers=data;
+  fill();
+}
+function opts(){return dbPlayers.map(p=>`<option value="${p.id}">${p.name} — ${p.nickname||""}</option>`).join("")}
+function fill(){
+  ["p1","p2","p3","p4"].forEach((id,i)=>{$(id).innerHTML=opts(); if(dbPlayers[i]) $(id).value=dbPlayers[i].id});
+  ["mvp","imb"].forEach(id=>{$(id).innerHTML=dbPlayers.map(p=>`<label class="check"><input type="checkbox" value="${p.id}"> ${p.name} — ${p.nickname||""}</label>`).join("")});
+}
+function buildSets(){
+  let h="";
+  for(let n=1;n<=4;n++) h+=`<div class="set"><b>SET ${n}</b><div class="setgrid">
+  <div><label>Coppia A</label><select class="a1"></select><select class="a2"></select></div>
+  <div><label>Coppia B</label><select class="b1"></select><select class="b2"></select></div>
+  <div><label>Game</label><input class="score" placeholder="6-4" inputmode="numeric"></div>
+  </div></div>`;
+  $("sets").innerHTML=h; refreshSets();
+}
+function refreshSets(){
+  const ids=["p1","p2","p3","p4"].map(x=>+$(x).value);
+  document.querySelectorAll(".set select").forEach(s=>{
+    let old=s.value;
+    s.innerHTML='<option value="">Giocatore</option>'+ids.map(i=>`<option value="${i}">${playerName(i)}</option>`).join("");
+    if(ids.includes(+old)) s.value=old;
+  });
+}
+["p1","p2","p3","p4"].forEach(id=>$(id).addEventListener("change",refreshSets));
+
+function emptyStats(){
+  return dbPlayers.map(p=>({id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,sets:0,pt:0,games:0,mvp:0,imb:0}));
+}
+function render(){
+  let a=stats.map(s=>{let base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;return {...s,base,total:base+s.mvp*1.5+s.imb}}).sort((x,y)=>y.total-x.total||y.base-x.base||x.name.localeCompare(y.name));
+  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><b>${s.name}</b><br><span class="muted">${s.nick}</span></td><td>${s.fascia} (${s.value})</td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><b>${s.total.toFixed(2)}</b></td></tr>`).join("");
+  $("status").textContent="Dati aggiornati dal database RPL.";
+}
+async function loadRanking(){
+  stats=emptyStats();
+  const {data:matches,error:me}=await sb.from("matches").select("id,played_at").order("played_at",{ascending:true});
+  if(me){$("status").textContent="Errore caricamento partite: "+me.message;return}
+  if(!matches.length){render();return}
+  const ids=matches.map(m=>m.id);
+  const [{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
+    sb.from("match_players").select("*").in("match_id",ids),
+    sb.from("sets").select("*").in("match_id",ids).order("set_number"),
+    sb.from("match_awards").select("*").in("match_id",ids)
+  ]);
+  if(mpe||se||ae){$("status").textContent="Errore lettura dati RPL.";return}
+  const snap={};(mp||[]).forEach(x=>{snap[x.match_id+"_"+x.player_id]=x});
+  (sets||[]).forEach(x=>{
+    const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
+    const ga=x.games_a,gb=x.games_b;
+    const win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
+    win.forEach(pid=>{let s=stats.find(z=>z.id===pid);if(!s)return;s.sets++;s.games+=wg;s.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0)});
+    lose.forEach(pid=>{let s=stats.find(z=>z.id===pid);if(s){s.sets++;s.games+=lg}});
+  });
+  (aw||[]).forEach(x=>{let s=stats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++});
+  render();
+}
+function resetForm(){["p1","p2","p3","p4"].forEach((id,i)=>{if(dbPlayers[i])$(id).value=dbPlayers[i].id});refreshSets();document.querySelectorAll(".score").forEach(x=>x.value="");document.querySelectorAll("#mvp input,#imb input").forEach(x=>x.checked=false);$("date").value=new Date().toISOString().slice(0,16)}
+async function isOperator(){
+  const {data,error}=await sb.from("operators").select("user_id").eq("user_id",currentUser.id).maybeSingle();
+  return !error && !!data;
+}
+async function login(){
+  $("loginMsg").textContent="";
+  const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error){$("loginMsg").className="msg err";$("loginMsg").textContent="Accesso non riuscito: "+error.message;return}
+  currentUser=data.user;
+  if(!(await isOperator())){await sb.auth.signOut();$("loginMsg").className="msg err";$("loginMsg").textContent="Account non autorizzato come operatore.";return}
+  $("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");$("loginMsg").className="msg";$("loginMsg").textContent="";
+  await loadHistory();
+}
+async function logout(){await sb.auth.signOut();currentUser=null;$("operatorBox").classList.add("hidden");$("loginBox").classList.remove("hidden")}
+async function saveMatch(){
+  $("msg").className="msg";$("msg").textContent="Salvataggio…";
+  const ids=["p1","p2","p3","p4"].map(id=>+$(id).value);
+  if(new Set(ids).size<4){$("msg").className="msg err";$("msg").textContent="Scegli quattro giocatori diversi.";return}
+  const playedAt=new Date($("date").value).toISOString();
+  let rows=[...document.querySelectorAll(".set")], parsed=[];
+  for(let n=0;n<rows.length;n++){
+    let r=rows[n],t=r.querySelector(".score").value.trim();
+    if(!t)continue;
+    let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);
+    if(!m){$("msg").className="msg err";$("msg").textContent=`Set ${n+1}: inserisci ad esempio 6-4.`;return}
+    let v=["a1","a2","b1","b2"].map(c=>+r.querySelector("."+c).value);
+    if(v.some(Number.isNaN)||new Set(v).size!==4){$("msg").className="msg err";$("msg").textContent=`Completa le coppie del set ${n+1}.`;return}
+    let ga=+m[1],gb=+m[2];if(ga===gb){$("msg").className="msg err";$("msg").textContent="Un set non può finire in parità.";return}
+    parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga,gb});
+  }
+  if(!parsed.length){$("msg").className="msg err";$("msg").textContent="Inserisci almeno un set.";return}
+
+  // Fasce snapshot: fixed through 30/10/2026; from 01/11/2026 derive from standings immediately before this match.
+  const cutoff=new Date("2026-11-01T00:00:00+01:00");
+  let snapshot={};
+  if(new Date(playedAt)<cutoff){
+    ids.forEach(pid=>{let p=dbPlayers.find(x=>x.id===pid);snapshot[pid]={fascia:p.fascia,fascia_value:+p.fascia_value}});
+  }else{
+    const pre=await calculateStandingsBefore(playedAt);
+    ids.forEach((pid,idx)=>{
+      const rank=pre.findIndex(x=>x.id===pid)+1;
+      let fascia=rank<=4?1:rank<=8?2:rank<=12?3:4;
+      let val=fascia===1?5:fascia===2?4:fascia===3?3:2;
+      snapshot[pid]={fascia,fascia_value:val};
+    });
+  }
+
+  const {data:match,error:me}=await sb.from("matches").insert({played_at:playedAt}).select().single();
+  if(me){$("msg").className="msg err";$("msg").textContent="Errore partita: "+me.message;return}
+  const matchId=match.id;
+  const mpRows=ids.map(pid=>({match_id:matchId,player_id:pid,fascia:snapshot[pid].fascia,fascia_value:snapshot[pid].fascia_value}));
+  let {error:mpe}=await sb.from("match_players").insert(mpRows);
+  if(mpe){await sb.from("matches").delete().eq("id",matchId);$("msg").className="msg err";$("msg").textContent="Errore fasce: "+mpe.message;return}
+
+  const setRows=parsed.map(x=>({match_id:matchId,set_number:x.n,pair_a_player_1:x.a1,pair_a_player_2:x.a2,pair_b_player_1:x.b1,pair_b_player_2:x.b2,games_a:x.ga,games_b:x.gb}));
+  let {error:se}=await sb.from("sets").insert(setRows);
+  if(se){await sb.from("matches").delete().eq("id",matchId);$("msg").className="msg err";$("msg").textContent="Errore set: "+se.message;return}
+
+  const mv=[...$("mvp").querySelectorAll("input:checked")].map(x=>+x.value);
+  const im=[...$("imb").querySelectorAll("input:checked")].map(x=>+x.value);
+  const awards=[...mv.map(pid=>({match_id:matchId,player_id:pid,award_type:"MVP"})),...im.map(pid=>({match_id:matchId,player_id:pid,award_type:"IMBATTUTO"}))];
+  if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){await sb.from("matches").delete().eq("id",matchId);$("msg").className="msg err";$("msg").textContent="Errore premi: "+ae.message;return}}
+  $("msg").className="msg ok";$("msg").textContent="✅ Partita salvata nel database.";
+  resetForm();await loadRanking();await loadHistory();
+}
+async function calculateStandingsBefore(timestamp){
+  const {data:matches}=await sb.from("matches").select("id,played_at").lt("played_at",timestamp).order("played_at",{ascending:true});
+  if(!matches||!matches.length)return dbPlayers.map(p=>({id:p.id,base:0,total:0}));
+  const ids=matches.map(m=>m.id);
+  const [{data:mp},{data:sets},{data:aw}]=await Promise.all([
+    sb.from("match_players").select("*").in("match_id",ids),
+    sb.from("sets").select("*").in("match_id",ids),
+    sb.from("match_awards").select("*").in("match_id",ids)
+  ]);
+  let s=dbPlayers.map(p=>({id:p.id,sets:0,pt:0,games:0,mvp:0,imb:0}));
+  const snap={};(mp||[]).forEach(x=>snap[x.match_id+"_"+x.player_id]=x);
+  (sets||[]).forEach(x=>{let A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],win=x.games_a>x.games_b?A:B,lose=x.games_a>x.games_b?B:A,wg=Math.max(x.games_a,x.games_b),lg=Math.min(x.games_a,x.games_b);
+    win.forEach(pid=>{let z=s.find(a=>a.id===pid);if(z){z.sets++;z.games+=wg;z.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0)}});
+    lose.forEach(pid=>{let z=s.find(a=>a.id===pid);if(z){z.sets++;z.games+=lg}});
+  });
+  (aw||[]).forEach(x=>{let z=s.find(a=>a.id===x.player_id);if(z)x.award_type==="MVP"?z.mvp++:z.imb++});
+  return s.map(z=>{let base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;return {...z,base,total:base+z.mvp*1.5+z.imb}}).sort((a,b)=>b.total-a.total||b.base-a.base||a.id-b.id);
+}
+async function loadHistory(){
+  const {data,error}=await sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
+  if(error){$("history").textContent="Errore: "+error.message;return}
+  if(!data.length){$("history").textContent="Nessuna partita registrata.";return}
+  const parts=[];
+  for(const m of data){
+    const {data:mp}=await sb.from("match_players").select("player_id").eq("match_id",m.id);
+    const {data:sets}=await sb.from("sets").select("*").eq("match_id",m.id).order("set_number");
+    parts.push(`<div style="border-top:1px solid #e5e7eb;padding:10px 0"><b>${new Date(m.played_at).toLocaleString("it-IT")}</b><br>
+    <span class="muted">${(mp||[]).map(x=>playerName(x.player_id)).join(" • ")}</span><br>
+    <span class="badge">${(sets||[]).map(x=>x.games_a+"-"+x.games_b).join(" · ")}</span>
+    <button class="smallbtn danger" onclick="deleteMatch(${m.id})">Elimina</button></div>`);
+  }
+  $("history").innerHTML=parts.join("");
+}
+async function deleteMatch(id){
+  if(!confirm("Eliminare definitivamente questa partita?"))return;
+  const {error}=await sb.from("matches").delete().eq("id",id);
+  if(error){alert("Errore: "+error.message);return}
+  await loadRanking();await loadHistory();
+}
+
+$("publicBtn").onclick=()=>{$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");loadRanking()};
+$("adminBtn").onclick=async()=>{$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){$("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");await loadHistory()}}};
+$("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
+$("date").value=new Date().toISOString().slice(0,16);
+(async()=>{await loadPlayers();buildSets();await loadRanking()})();
+</script></body></html>
