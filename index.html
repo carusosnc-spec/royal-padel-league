@@ -138,7 +138,7 @@ function emptyStats(){
 }
 function render(){
   let a=stats.map(s=>{let base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;return {...s,base,total:base+s.mvp*1.5+s.imb}}).sort((x,y)=>y.total-x.total||y.base-x.base||x.name.localeCompare(y.name));
-  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logoFile(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><span class="badge fascia-badge f${s.fascia}">F${s.fascia}</span></td></tr>`).join("");
+  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logoFile(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><span class="badge fascia-badge f${String(s.fascia).replace(/^F/i,'')}">F${s.fascia}</span></td></tr>`).join("");
   $("status").textContent="Dati aggiornati dal database RPL.";
 }
 async function loadRanking(){
