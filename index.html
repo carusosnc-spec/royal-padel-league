@@ -6,35 +6,46 @@
 <title>Royal Padel League</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f6f8;color:#17202a}
+*{box-sizing:border-box}
+:root{--gold:#e7b94e;--gold2:#ffd86a;--navy:#06121f;--navy2:#0a1d2e;--line:rgba(231,185,78,.34)}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:
+radial-gradient(circle at 50% -10%,rgba(31,91,133,.34),transparent 42%),linear-gradient(180deg,#02070d,#06121f 45%,#02070d);color:#f8fafc}
+main{max-width:1180px;margin:auto;padding:0 14px 28px}
 main{max-width:1120px;margin:auto;padding:18px}.top{background:#111827;color:#fff;border-radius:18px;padding:18px;margin-bottom:14px}
 h1{margin:0;font-size:25px}.sub{color:#cbd5e1;font-size:13px;margin-top:4px}
 nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}nav button{min-height:44px}
-button{border:1px solid #d0d5dd;background:#fff;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-.primary{background:#111827;color:#fff}.danger{color:#b42318}.grid{display:grid;grid-template-columns:1fr 1.5fr;gap:14px}
-.card{background:#fff;border:1px solid #d9dee5;border-radius:16px;padding:16px;margin-bottom:14px}
-h2{font-size:18px;margin:0 0 12px}label{font-size:12px;color:#667085;display:block;margin:8px 0 4px}
-input,select{width:100%;padding:10px;border:1px solid #cbd2da;border-radius:9px;font-size:16px;background:#fff}
+button{border:1px solid #7f6a32;background:#0b1825;color:#fff;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+.primary{background:linear-gradient(135deg,#8e681d,#f2ca63);color:#080d12;border-color:#f2ca63}.danger{color:#b42318}.grid{display:grid;grid-template-columns:1fr 1.5fr;gap:14px}
+.card{background:linear-gradient(180deg,rgba(8,25,40,.96),rgba(3,12,21,.96));border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 12px 35px rgba(0,0,0,.28)}
+h2{font-size:19px;margin:0 0 12px;color:#fff}label{font-size:12px;color:#667085;display:block;margin:8px 0 4px}
+input,select{width:100%;padding:10px;border:1px solid #34495c;border-radius:9px;font-size:16px;background:#0b1b2a;color:#fff}
 .players{display:grid;grid-template-columns:1fr 1fr;gap:8px}.set{border-top:1px solid #e5e7eb;padding-top:11px;margin-top:11px}
 .setgrid{display:grid;grid-template-columns:1fr 1fr 90px;gap:8px}.scroll{overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #e5e7eb;white-space:nowrap}th{font-size:10px;color:#667085}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:9px 6px;border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}th{font-size:10px;color:var(--gold2)}
 .checklist{border:1px solid #d9dee5;border-radius:10px;padding:8px;max-height:160px;overflow:auto}.check{display:flex;gap:7px;align-items:center;padding:5px 0;font-size:13px}.check input{width:18px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.muted{font-size:12px;color:#667085}.msg{font-size:13px;margin-top:9px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.muted{font-size:12px;color:#9aa9b8}.msg{font-size:13px;margin-top:9px}
 .hidden{display:none}.login{max-width:420px;margin:20px auto}.ok{color:#067647}.err{color:#b42318}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;font-size:11px;font-weight:700}
-.smallbtn{padding:7px 9px;font-size:11px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(231,185,78,.14);border:1px solid rgba(231,185,78,.32);color:#ffd86a;font-size:11px;font-weight:700}
+.smallbtn{padding:7px 9px;font-size:11px}.edit{color:#175cd3}.historyrow{display:flex;justify-content:space-between;gap:10px;align-items:center}.actions{display:flex;gap:6px;flex-wrap:wrap}
 @media(max-width:760px){.grid,.players,.setgrid,.two{grid-template-columns:1fr}}
 </style>
 </head>
 <body><main>
-<header class="top"><h1>👑 Royal Padel League</h1><div class="sub">Classifica ufficiale • Stagione 2026/27</div></header>
-<nav>
+<header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
+<div style="display:flex;justify-content:center">
+<img src="assets/rpl_logo_ufficiale.jpg" alt="Royal Padel League" style="width:118px;height:118px;object-fit:cover;border-radius:50%;border:2px solid var(--gold);box-shadow:0 0 28px rgba(231,185,78,.24)">
+</div>
+<div style="font-size:28px;font-weight:900;letter-spacing:.04em;margin-top:10px">ROYAL PADEL LEAGUE</div>
+<div style="color:var(--gold2);font-size:12px;font-weight:800;letter-spacing:.24em;margin-top:5px">WHERE LEGENDS PLAY</div>
+<div style="color:#d7dee8;font-size:12px;margin-top:8px">STAGIONE 2026/27</div>
+</header>
+<nav style="padding:14px 0;justify-content:center">
 <button id="publicBtn" class="primary">🏆 Classifica</button>
 <button id="adminBtn">🔐 Area operatori</button>
 </nav>
 
 <section id="publicPage">
-<div class="card"><h2>🏆 Classifica RPL</h2>
+<div class="card"><div style="text-align:center;margin-bottom:14px"><div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">👑 CLASSIFICA GENERALE</div><div style="font-size:11px;color:#9aa9b8;letter-spacing:.22em;margin-top:8px">PASSIONE • RISPETTO • AMICIZIA • COMPETIZIONE</div></div>
 <div class="muted" id="status">Connessione a Supabase…</div>
 <div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Giocatore</th><th>Fascia</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Totale</th></tr></thead><tbody id="ranking"></tbody></table></div></div>
 </section>
@@ -58,6 +69,10 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 <button class="primary" id="save">SALVA PARTITA</button><button id="logout">ESCI</button><div id="msg" class="msg"></div></div>
 <div class="card"><h2>📋 Storico partite</h2><div id="history" class="muted">Caricamento…</div></div>
 </div></section>
+<div class="card" style="text-align:center;margin-top:18px;padding:18px">
+<div style="color:#ffd86a;font-size:22px;font-weight:900;letter-spacing:.05em">WHERE LEGENDS PLAY</div>
+<div class="muted" style="margin-top:5px">Royal Padel League • Stagione 2026/27</div>
+</div>
 </main>
 
 <script>
@@ -77,6 +92,10 @@ let currentUser=null;
 
 const $=id=>document.getElementById(id);
 function playerName(id){let p=dbPlayers.find(x=>x.id===id);return p?p.name:"";}
+function logoFile(name){
+  const map={"Filippo Di Dio":"filippo_di_dio.jpg","Luigi Cacciato":"luigi_cacciato.jpg","Gianni Caruso":"gianni_caruso.jpg","Salvatore Bertuccio":"salvatore_bertuccio.jpg","Giuseppe Farina":"giuseppe_farina.jpg","Salvatore Balsamo":"salvatore_balsamo.jpg","Maurizio Sciuto":"maurizio_sciuto.jpg","Francesco Valvo":"francesco_valvo.jpg","Paolo Debole":"paolo_debole.jpg","Fabrizio Chiaramonte":"fabrizio_chiaramonte.jpg","Andrea Tilaro":"andrea_tilaro.jpg","Alessandro Passamonte":"alessandro_passamonte.jpg","Raffaele Passalacqua":"raffaele_passalacqua.jpg","Daniele Spitaleri":"daniele_spitaleri.jpg","Dario Savoca":"dario_savoca.jpg","Federica Demaria":"federica_demaria.jpg","Davide Savoca":"davide_savoca.jpg"};
+  return "assets/"+(map[name]||"");
+}
 function playerNick(id){let p=dbPlayers.find(x=>x.id===id);return p?p.nickname:"";}
 function playerFascia(id){let p=dbPlayers.find(x=>x.id===id);return p?p.fascia_value:2;}
 
@@ -115,7 +134,7 @@ function emptyStats(){
 }
 function render(){
   let a=stats.map(s=>{let base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;return {...s,base,total:base+s.mvp*1.5+s.imb}}).sort((x,y)=>y.total-x.total||y.base-x.base||x.name.localeCompare(y.name));
-  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><b>${s.name}</b><br><span class="muted">${s.nick}</span></td><td>${s.fascia} (${s.value})</td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><b>${s.total.toFixed(2)}</b></td></tr>`).join("");
+  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logoFile(s.name)}" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><span class="badge" style="background:${s.fascia===1?"#6d1620":s.fascia===2?"#6f5310":s.fascia===3?"#0c4d93":"#0a6a3d"};color:#fff">${"F"+s.fascia}</span></td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><b>${s.total.toFixed(2)}</b></td></tr>`).join("");
   $("status").textContent="Dati aggiornati dal database RPL.";
 }
 async function loadRanking(){
@@ -233,23 +252,100 @@ async function loadHistory(){
   for(const m of data){
     const {data:mp}=await sb.from("match_players").select("player_id").eq("match_id",m.id);
     const {data:sets}=await sb.from("sets").select("*").eq("match_id",m.id).order("set_number");
-    parts.push(`<div style="border-top:1px solid #e5e7eb;padding:10px 0"><b>${new Date(m.played_at).toLocaleString("it-IT")}</b><br>
+    parts.push(`<div class="historyrow" style="border-top:1px solid #e5e7eb;padding:10px 0"><div><b>${new Date(m.played_at).toLocaleString("it-IT")}</b><br>
     <span class="muted">${(mp||[]).map(x=>playerName(x.player_id)).join(" • ")}</span><br>
-    <span class="badge">${(sets||[]).map(x=>x.games_a+"-"+x.games_b).join(" · ")}</span>
-    <button class="smallbtn danger" onclick="deleteMatch(${m.id})">Elimina</button></div>`);
+    <span class="badge">${(sets||[]).map(x=>"S"+x.set_number+" "+x.games_a+"-"+x.games_b).join(" · ")}</span></div>
+    <div class="actions"><button class="smallbtn edit" onclick="openEdit(${m.id})">✏️ Modifica</button><button class="smallbtn danger" onclick="deleteMatch(${m.id})">🗑️ Elimina</button></div></div>`);
   }
   $("history").innerHTML=parts.join("");
 }
-async function deleteMatch(id){
+async function deleteMatchasync function deleteMatch(id){
   if(!confirm("Eliminare definitivamente questa partita?"))return;
   const {error}=await sb.from("matches").delete().eq("id",id);
   if(error){alert("Errore: "+error.message);return}
   await loadRanking();await loadHistory();
 }
 
+
+function editSetMarkup(){
+  let h="";
+  for(let n=1;n<=4;n++) h+=`<div class="set"><b>SET ${n}</b><div class="setgrid">
+  <div><label>Coppia A</label><select class="ea1"></select><select class="ea2"></select></div>
+  <div><label>Coppia B</label><select class="eb1"></select><select class="eb2"></select></div>
+  <div><label>Game</label><input class="escore" placeholder="6-4" inputmode="numeric"></div>
+  </div></div>`;
+  $("editSets").innerHTML=h; refreshEditSets();
+}
+function refreshEditSets(){
+  const ids=["ep1","ep2","ep3","ep4"].map(x=>+$(x).value);
+  document.querySelectorAll("#editSets select").forEach(s=>{let old=s.value;s.innerHTML='<option value="">Giocatore</option>'+ids.map(i=>`<option value="${i}">${playerName(i)}</option>`).join("");if(ids.includes(+old))s.value=old});
+}
+function fillEditPlayers(){
+  ["ep1","ep2","ep3","ep4"].forEach((id,i)=>{$(id).innerHTML=opts();if(dbPlayers[i])$(id).value=dbPlayers[i].id});
+  ["editMvp","editImb"].forEach(id=>$(id).innerHTML=dbPlayers.map(p=>`<label class="check"><input type="checkbox" value="${p.id}"> ${p.name} — ${p.nickname||""}</label>`).join(""));
+  ["ep1","ep2","ep3","ep4"].forEach(id=>$(id).addEventListener("change",refreshEditSets));
+}
+async function openEdit(id){
+  $("editMsg").textContent="Caricamento…";$("editModal").classList.remove("hidden");
+  fillEditPlayers();editSetMarkup();$("editId").value=id;
+  const [{data:m},{data:mp},{data:sets},{data:aw}]=await Promise.all([
+    sb.from("matches").select("*").eq("id",id).single(),
+    sb.from("match_players").select("*").eq("match_id",id).order("id"),
+    sb.from("sets").select("*").eq("match_id",id).order("set_number"),
+    sb.from("match_awards").select("*").eq("match_id",id)
+  ]);
+  if(!m){$("editMsg").className="msg err";$("editMsg").textContent="Partita non trovata.";return}
+  $("editDate").value=new Date(m.played_at).toISOString().slice(0,16);
+  (mp||[]).forEach((x,i)=>{if(i<4)$("ep"+(i+1)).value=x.player_id});
+  refreshEditSets();
+  (sets||[]).forEach((x,i)=>{if(i>=4)return;let r=document.querySelectorAll("#editSets .set")[i];r.querySelector(".ea1").value=x.pair_a_player_1;r.querySelector(".ea2").value=x.pair_a_player_2;r.querySelector(".eb1").value=x.pair_b_player_1;r.querySelector(".eb2").value=x.pair_b_player_2;r.querySelector(".escore").value=x.games_a+"-"+x.games_b});
+  (aw||[]).forEach(x=>{let box=x.award_type==="MVP"?"#editMvp":"#editImb";let el=document.querySelector(`${box} input[value="${x.player_id}"]`);if(el)el.checked=true});
+  $("editMsg").textContent="";
+}
+function closeEdit(){$("editModal").classList.add("hidden")}
+async function updateMatch(){
+  const id=+$("editId").value;
+  $("editMsg").className="msg";$("editMsg").textContent="Salvataggio modifiche…";
+  const ids=["ep1","ep2","ep3","ep4"].map(x=>+$(x).value);
+  if(new Set(ids).size<4){$("editMsg").className="msg err";$("editMsg").textContent="Scegli quattro giocatori diversi.";return}
+  const rows=[...document.querySelectorAll("#editSets .set")],parsed=[];
+  for(let n=0;n<rows.length;n++){let r=rows[n],t=r.querySelector(".escore").value.trim();if(!t)continue;let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);if(!m){$("editMsg").className="msg err";$("editMsg").textContent=`Set ${n+1}: formato non valido.`;return}let v=["ea1","ea2","eb1","eb2"].map(c=>+r.querySelector("."+c).value);if(v.some(Number.isNaN)||new Set(v).size!==4){$("editMsg").className="msg err";$("editMsg").textContent=`Completa le coppie del set ${n+1}.`;return}if(+m[1]===+m[2]){ $("editMsg").className="msg err";$("editMsg").textContent="Un set non può finire in parità.";return}parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga:+m[1],gb:+m[2]})}
+  if(!parsed.length){$("editMsg").className="msg err";$("editMsg").textContent="Inserisci almeno un set.";return}
+  const {error:me}=await sb.from("matches").update({played_at:new Date($("editDate").value).toISOString()}).eq("id",id);if(me){$("editMsg").className="msg err";$("editMsg").textContent=me.message;return}
+  const {data:oldMp}=await sb.from("match_players").select("*").eq("match_id",id);
+  const oldBy=new Map((oldMp||[]).map(x=>[x.player_id,x]));
+  if(ids.some(pid=>!oldBy.has(pid)) || (oldMp||[]).some(x=>!ids.includes(x.player_id))){
+    await sb.from("match_players").delete().eq("match_id",id);
+    const mpRows=ids.map(pid=>{let p=oldBy.get(pid)||dbPlayers.find(x=>x.id===pid);return {match_id:id,player_id:pid,fascia:p.fascia,fascia_value:+p.fascia_value}});
+    let {error:e}=await sb.from("match_players").insert(mpRows);if(e){$("editMsg").className="msg err";$("editMsg").textContent=e.message;return}
+  }
+  await sb.from("sets").delete().eq("match_id",id);
+  let {error:se}=await sb.from("sets").insert(parsed.map(x=>({match_id:id,set_number:x.n,pair_a_player_1:x.a1,pair_a_player_2:x.a2,pair_b_player_1:x.b1,pair_b_player_2:x.b2,games_a:x.ga,games_b:x.gb})));if(se){$("editMsg").className="msg err";$("editMsg").textContent=se.message;return}
+  await sb.from("match_awards").delete().eq("match_id",id);
+  const mv=[...document.querySelectorAll("#editMvp input:checked")].map(x=>+x.value),im=[...document.querySelectorAll("#editImb input:checked")].map(x=>+x.value);
+  const awards=[...mv.map(pid=>({match_id:id,player_id:pid,award_type:"MVP"})),...im.map(pid=>({match_id:id,player_id:pid,award_type:"IMBATTUTO"}))];
+  if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){$("editMsg").className="msg err";$("editMsg").textContent=ae.message;return}}
+  closeEdit();await loadRanking();await loadHistory();
+}
 $("publicBtn").onclick=()=>{$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");loadRanking()};
 $("adminBtn").onclick=async()=>{$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){$("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");await loadHistory()}}};
 $("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
 (async()=>{await loadPlayers();buildSets();await loadRanking()})();
-</script></body></html>
+</script>
+<div id="editModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);padding:18px;z-index:20;overflow:auto">
+<div class="card" style="max-width:850px;margin:30px auto">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2>✏️ Modifica partita</h2><button onclick="closeEdit()">✕</button></div>
+<div class="muted">Le modifiche ricalcolano automaticamente la classifica. Le fasce congelate della partita vengono mantenute.</div>
+<input type="hidden" id="editId">
+<label>Data e ora di inizio partita</label><input id="editDate" type="datetime-local">
+<div class="players">
+<div><label>Giocatore 1</label><select id="ep1"></select></div><div><label>Giocatore 2</label><select id="ep2"></select></div>
+<div><label>Giocatore 3</label><select id="ep3"></select></div><div><label>Giocatore 4</label><select id="ep4"></select></div>
+</div>
+<div id="editSets"></div>
+<div class="two"><div><label>MVP</label><div id="editMvp" class="checklist"></div></div><div><label>Imbattuto</label><div id="editImb" class="checklist"></div></div></div>
+<button class="primary" onclick="updateMatch()">SALVA MODIFICHE</button><button onclick="closeEdit()">ANNULLA</button>
+<div id="editMsg" class="msg"></div>
+</div></div>
+</body></html>
