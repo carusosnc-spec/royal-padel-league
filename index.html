@@ -75,7 +75,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 <div><label>Giocatore 1</label><select id="p1"></select></div><div><label>Giocatore 2</label><select id="p2"></select></div>
 <div><label>Giocatore 3</label><select id="p3"></select></div><div><label>Giocatore 4</label><select id="p4"></select></div>
 </div>
-<div id="sets"></div><button type="button" onclick="addSet(false)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set giocati possono essere inseriti e saranno conteggiati in classifica.</div>
+<div id="sets"></div><button type="button" id="add-set-btn" onclick="addSet(false)" style="margin:10px 0;padding:10px 14px;border-radius:8px;cursor:pointer">➕ AGGIUNGI SET</button><button type="button" onclick="addSet(false)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set giocati possono essere inseriti e saranno conteggiati in classifica.</div>
 <div class="two"><div><label>MVP — anche multipli</label><div id="mvp" class="checklist"></div></div><div><label>Imbattuto — anche multipli</label><div id="imb" class="checklist"></div></div></div>
 <button class="primary" id="save">SALVA PARTITA</button><button id="logout">ESCI</button><div id="msg" class="msg"></div></div>
 <div class="card"><h2>📋 Storico partite</h2><div id="history" class="muted">Caricamento…</div></div>
