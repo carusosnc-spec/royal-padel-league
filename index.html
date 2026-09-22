@@ -36,6 +36,10 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 .fascia-badge.f3{background:#16a34a!important;color:#fff!important;border-color:#4ade80!important}
 .fascia-badge.f4{background:#dc2626!important;color:#fff!important;border-color:#f87171!important}
 </style>
+<style id="all-sets-update">
+.removeSet{font-size:11px;padding:4px 8px;border:1px solid #7b8794;background:transparent;color:#b9c4d0;border-radius:7px}
+.removeSet:hover{border-color:var(--gold);color:var(--gold)}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -71,7 +75,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 <div><label>Giocatore 1</label><select id="p1"></select></div><div><label>Giocatore 2</label><select id="p2"></select></div>
 <div><label>Giocatore 3</label><select id="p3"></select></div><div><label>Giocatore 4</label><select id="p4"></select></div>
 </div>
-<div id="sets"></div>
+<div id="sets"></div><button type="button" onclick="addSet(false)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set giocati possono essere inseriti e saranno conteggiati in classifica.</div>
 <div class="two"><div><label>MVP — anche multipli</label><div id="mvp" class="checklist"></div></div><div><label>Imbattuto — anche multipli</label><div id="imb" class="checklist"></div></div></div>
 <button class="primary" id="save">SALVA PARTITA</button><button id="logout">ESCI</button><div id="msg" class="msg"></div></div>
 <div class="card"><h2>📋 Storico partite</h2><div id="history" class="muted">Caricamento…</div></div>
@@ -114,13 +118,34 @@ function fill(){
   ["p1","p2","p3","p4"].forEach((id,i)=>{$(id).innerHTML=opts(); if(dbPlayers[i]) $(id).value=dbPlayers[i].id});
   ["mvp","imb"].forEach(id=>{$(id).innerHTML=dbPlayers.map(p=>`<label class="check"><input type="checkbox" value="${p.id}"> ${p.name} — ${p.nickname||""}</label>`).join("")});
 }
+function setCard(n, edit=false){
+  const p=edit?["ea1","ea2","eb1","eb2"]:["a1","a2","b1","b2"];
+  const score=edit?"escore":"score";
+  return `<div class="set"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>SET ${n}</b><button type="button" class="removeSet" onclick="removeSet(this)">✕ Rimuovi</button></div><div class="setgrid">
+  <div><label>Coppia A</label><select class="${p[0]}"></select><select class="${p[1]}"></select></div>
+  <div><label>Coppia B</label><select class="${p[2]}"></select><select class="${p[3]}"></select></div>
+  <div><label>Game</label><input class="${score}" placeholder="6-4" inputmode="numeric"></div>
+  </div></div>`;
+}
+function renumberSets(container){
+  container.querySelectorAll(".set").forEach((el,i)=>{
+    const b=el.querySelector("b"); if(b)b.textContent=`SET ${i+1}`;
+  });
+}
+function removeSet(btn){
+  const set=btn.closest(".set"), container=set.parentElement;
+  if(container.querySelectorAll(".set").length<=1){alert("Deve rimanere almeno un set.");return}
+  set.remove(); renumberSets(container);
+}
+function addSet(edit=false){
+  const container=$(edit?"editSets":"sets");
+  const n=container.querySelectorAll(".set").length+1;
+  container.insertAdjacentHTML("beforeend",setCard(n,edit));
+  if(edit) refreshEditSets(); else refreshSets();
+}
 function buildSets(){
   let h="";
-  for(let n=1;n<=4;n++) h+=`<div class="set"><b>SET ${n}</b><div class="setgrid">
-  <div><label>Coppia A</label><select class="a1"></select><select class="a2"></select></div>
-  <div><label>Coppia B</label><select class="b1"></select><select class="b2"></select></div>
-  <div><label>Game</label><input class="score" placeholder="6-4" inputmode="numeric"></div>
-  </div></div>`;
+  for(let n=1;n<=4;n++) h+=setCard(n,false);
   $("sets").innerHTML=h; refreshSets();
 }
 function refreshSets(){
@@ -273,11 +298,7 @@ async function deleteMatch(id){
 
 function editSetMarkup(){
   let h="";
-  for(let n=1;n<=4;n++) h+=`<div class="set"><b>SET ${n}</b><div class="setgrid">
-  <div><label>Coppia A</label><select class="ea1"></select><select class="ea2"></select></div>
-  <div><label>Coppia B</label><select class="eb1"></select><select class="eb2"></select></div>
-  <div><label>Game</label><input class="escore" placeholder="6-4" inputmode="numeric"></div>
-  </div></div>`;
+  for(let n=1;n<=4;n++) h+=setCard(n,true);
   $("editSets").innerHTML=h; refreshEditSets();
 }
 function refreshEditSets(){
@@ -302,7 +323,9 @@ async function openEdit(id){
   $("editDate").value=new Date(m.played_at).toISOString().slice(0,16);
   (mp||[]).forEach((x,i)=>{if(i<4)$("ep"+(i+1)).value=x.player_id});
   refreshEditSets();
-  (sets||[]).forEach((x,i)=>{if(i>=4)return;let r=document.querySelectorAll("#editSets .set")[i];r.querySelector(".ea1").value=x.pair_a_player_1;r.querySelector(".ea2").value=x.pair_a_player_2;r.querySelector(".eb1").value=x.pair_b_player_1;r.querySelector(".eb2").value=x.pair_b_player_2;r.querySelector(".escore").value=x.games_a+"-"+x.games_b});
+  while(document.querySelectorAll("#editSets .set").length < (sets||[]).length) addSet(true);
+  (sets||[]).forEach((x,i)=>{let r=document.querySelectorAll("#editSets .set")[i];if(!r)return;r.querySelector(".ea1").value=x.pair_a_player_1;r.querySelector(".ea2").value=x.pair_a_player_2;r.querySelector(".eb1").value=x.pair_b_player_1;r.querySelector(".eb2").value=x.pair_b_player_2;r.querySelector(".escore").value=x.games_a+"-"+x.games_b});
+  refreshEditSets();
   (aw||[]).forEach(x=>{let box=x.award_type==="MVP"?"#editMvp":"#editImb";let el=document.querySelector(`${box} input[value="${x.player_id}"]`);if(el)el.checked=true});
   $("editMsg").textContent="";
 }
@@ -347,7 +370,7 @@ $("date").value=new Date().toISOString().slice(0,16);
 <div><label>Giocatore 1</label><select id="ep1"></select></div><div><label>Giocatore 2</label><select id="ep2"></select></div>
 <div><label>Giocatore 3</label><select id="ep3"></select></div><div><label>Giocatore 4</label><select id="ep4"></select></div>
 </div>
-<div id="editSets"></div>
+<div id="editSets"></div><button type="button" onclick="addSet(true)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set della partita vengono mantenuti e conteggiati.</div>
 <div class="two"><div><label>MVP</label><div id="editMvp" class="checklist"></div></div><div><label>Imbattuto</label><div id="editImb" class="checklist"></div></div></div>
 <button class="primary" onclick="updateMatch()">SALVA MODIFICHE</button><button onclick="closeEdit()">ANNULLA</button>
 <div id="editMsg" class="msg"></div>
