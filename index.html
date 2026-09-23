@@ -40,6 +40,14 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 .removeSet{font-size:11px;padding:4px 8px;border:1px solid #7b8794;background:transparent;color:#b9c4d0;border-radius:7px}
 .removeSet:hover{border-color:var(--gold);color:var(--gold)}
 </style>
+
+<style id="minimum-sets-status">
+tr.rpl-ineligible{opacity:.42;filter:grayscale(1)}
+tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
+.rpl-set-status{display:block;margin-top:4px;font-size:10px;line-height:1.2;color:#c4cbd3}
+.rpl-set-status.warning{color:#bfc5cc}
+</style>
+
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -161,11 +169,57 @@ function refreshSets(){
 function emptyStats(){
   return dbPlayers.map(p=>({id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,sets:0,pt:0,games:0,mvp:0,imb:0}));
 }
-function render(){
-  let a=stats.map(s=>{let base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;return {...s,base,total:base+s.mvp*1.5+s.imb}}).sort((x,y)=>y.total-x.total||y.base-x.base||x.name.localeCompare(y.name));
-  $("ranking").innerHTML=a.map((s,i)=>`<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logoFile(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td><td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td><span class="badge fascia-badge f${String(s.fascia).replace(/^F/i,'')}">F${s.fascia}</span></td></tr>`).join("");
-  $("status").textContent="Dati aggiornati dal database RPL.";
+function minSetsRequired(){
+  const now=new Date();
+  const y=now.getFullYear();
+  const m=now.getMonth(); // 0=gennaio
+  const d=now.getDate();
+
+  // La soglia di ogni mese diventa vincolante SOLO dal giorno successivo alla scadenza.
+  if(m===9) return 5;   // 1-31 ottobre: verifica del 30 settembre
+  if(m===10) return 15; // 1-30 novembre: verifica del 31 ottobre
+  if(m===11) return 25; // 1-31 dicembre: verifica del 30 novembre
+  if(m===0) return 35;  // 1-31 gennaio: verifica del 31 dicembre
+  if(m===1) return 45;  // 1-28/29 febbraio: verifica del 31 gennaio
+  if(m===2) return 55;  // 1-31 marzo: verifica del 28/29 febbraio
+  if(m>=3 && m<=7) return 65; // dal 1 aprile: verifica finale del 31 marzo
+  return null; // settembre: nessuna soglia ancora scaduta
 }
+
+function render(){
+  const required=minSetsRequired();
+  let a=stats.map(s=>{
+    const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;
+    const eligible=required===null || s.sets>=required;
+    return {...s,base,total:base+s.mvp*1.5+s.imb,eligible,required};
+  }).sort((x,y)=>{
+    if(x.eligible!==y.eligible)return x.eligible?-1:1;
+    return y.total-x.total||y.base-x.base||x.name.localeCompare(y.name);
+  });
+
+  $("ranking").innerHTML=a.map((s,i)=>{
+    const status=(!s.eligible && s.required!==null)
+      ? `<span class="rpl-set-status warning">⚠️ ${s.sets}/${s.required} set — minimo non raggiunto</span>`
+      : "";
+    const f=String(s.fascia||"").replace(/^F/i,"");
+    return `<tr class="${s.eligible?"":"rpl-ineligible"}">
+      <td><b>${i+1}</b></td>
+      <td><div style="display:flex;align-items:center;gap:9px">
+        <img src="${logoFile(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e">
+        <div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span>${status}</div>
+      </div></td>
+      <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
+      <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
+      <td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td>
+      <td><span class="badge fascia-badge f${f}">F${f}</span></td>
+    </tr>`;
+  }).join("");
+
+  $("status").textContent = required===null
+    ? "Dati aggiornati dal database RPL. Prima scadenza: 30 settembre — minimo 5 set."
+    : `Dati aggiornati dal database RPL. Soglia verificata: ${required} set.`;
+}
+
 async function loadRanking(){
   stats=emptyStats();
   const {data:matches,error:me}=await sb.from("matches").select("id,played_at").order("played_at",{ascending:true});
