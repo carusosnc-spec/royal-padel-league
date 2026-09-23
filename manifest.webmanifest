@@ -1,12 +1,13 @@
 {
-  "name": "Royal Padel League",
-  "short_name": "RPL",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#061522",
-  "theme_color": "#061522",
-  "icons": [
-    {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png"},
-    {"src":"assets/rpl-icon-512.png","sizes":"512x512","type":"image/png"}
+  "name":"Royal Padel League",
+  "short_name":"RPL",
+  "start_url":"/royal-padel-league/",
+  "scope":"/royal-padel-league/",
+  "display":"standalone",
+  "background_color":"#061522",
+  "theme_color":"#061522",
+  "icons":[
+    {"src":"/royal-padel-league/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"/royal-padel-league/icon-512.png","sizes":"512x512","type":"image/png"}
   ]
 }
