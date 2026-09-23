@@ -124,6 +124,25 @@ function logoFile(name){const map={"Francesco Valvo": "data:image/jpeg;base64,/9
 function playerNick(id){let p=dbPlayers.find(x=>x.id===id);return p?p.nickname:"";}
 function playerFascia(id){let p=dbPlayers.find(x=>x.id===id);return p?p.fascia_value:2;}
 
+
+function validateAllPlayedSets(){
+  const rows=[...document.querySelectorAll("#sets .set")];
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const vals=[".a1",".a2",".b1",".b2"].map(sel=>r.querySelector(sel)?.value||"");
+    if(vals.some(v=>!v)){
+      alert(`Completa le coppie del set ${i+1}.`);
+      return false;
+    }
+    const score=r.querySelector(".score")?.value?.trim()||"";
+    if(!score){
+      alert(`Inserisci il risultato del set ${i+1}.`);
+      return false;
+    }
+  }
+  return true;
+}
+
 async function loadPlayers(){
   const {data,error}=await sb.from("players").select("*").eq("active",true).order("id");
   if(error){$("status").textContent="Errore database: "+error.message;throw error}
@@ -162,7 +181,7 @@ function addSet(edit=false){
 }
 function buildSets(){
   let h="";
-  for(let n=1;n<=4;n++) h+=setCard(n,false);
+  for(let n=1;n<=3;n++) h+=setCard(n,false);
   $("sets").innerHTML=h; refreshSets();
 }
 function refreshSets(){
@@ -361,7 +380,7 @@ async function deleteMatch(id){
 
 function editSetMarkup(){
   let h="";
-  for(let n=1;n<=4;n++) h+=setCard(n,true);
+  for(let n=1;n<=3;n++) h+=setCard(n,true);
   $("editSets").innerHTML=h; refreshEditSets();
 }
 function refreshEditSets(){
