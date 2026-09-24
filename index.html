@@ -93,6 +93,23 @@ tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
     </div>
   </div>
 </div>
+<section id="historyView" style="display:none!important">
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+<div><div class="muted">ROYAL PADEL LEAGUE</div><h2>📚 STORICO PARTITE</h2></div>
+<button type="button" onclick="showHome()">← Classifica</button>
+</div>
+<div class="history-filters">
+<div><label>Da data</label><input id="historyFrom" type="date"></div>
+<div><label>A data</label><input id="historyTo" type="date"></div>
+<div><label>Giocatore</label><select id="historyPlayer"><option value="">Tutti i giocatori</option></select></div>
+<div class="history-actions"><button type="button" onclick="loadHistory()">🔎 CERCA</button><button type="button" onclick="resetHistory()">↻ RESET</button></div>
+</div>
+<div id="historySummary" class="muted"></div>
+<div id="historyList" class="history-list"></div>
+</div>
+</section>
+
 <main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -104,7 +121,7 @@ tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
 </header>
 <nav style="padding:14px 0;justify-content:center">
 <button id="publicBtn" class="primary">🏆 Classifica</button>
-<button id="adminBtn">🔐 Area operatori</button> <button type="button" id="historyNav" onclick="showHistory()">📚 STORICO PARTITE</button>
+<button id="adminBtn">🔐 Area operatori</button> <button type="button" id="historyNav" onclick="showHistory()">📚 Storico partite</button>
 </nav>
 
 <section id="publicPage">
@@ -390,21 +407,7 @@ async function calculateStandingsBefore(timestamp){
   (aw||[]).forEach(x=>{let z=s.find(a=>a.id===x.player_id);if(z)x.award_type==="MVP"?z.mvp++:z.imb++});
   return s.map(z=>{let base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;return {...z,base,total:base+z.mvp*1.5+z.imb}}).sort((a,b)=>b.total-a.total||b.base-a.base||a.id-b.id);
 }
-async function loadHistory(){
-  const {data,error}=await sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
-  if(error){$("history").textContent="Errore: "+error.message;return}
-  if(!data.length){$("history").textContent="Nessuna partita registrata.";return}
-  const parts=[];
-  for(const m of data){
-    const {data:mp}=await sb.from("match_players").select("player_id").eq("match_id",m.id);
-    const {data:sets}=await sb.from("sets").select("*").eq("match_id",m.id).order("set_number");
-    parts.push(`<div class="historyrow" style="border-top:1px solid #e5e7eb;padding:10px 0"><div><b>${new Date(m.played_at).toLocaleString("it-IT")}</b><br>
-    <span class="muted">${(mp||[]).map(x=>playerName(x.player_id)).join(" • ")}</span><br>
-    <span class="badge">${(sets||[]).map(x=>"S"+x.set_number+" "+x.games_a+"-"+x.games_b).join(" · ")}</span></div>
-    <div class="actions"><button class="smallbtn edit" onclick="openEdit(${m.id})">✏️ Modifica</button><button class="smallbtn danger" onclick="deleteMatch(${m.id})">🗑️ Elimina</button></div></div>`);
-  }
-  $("history").innerHTML=parts.join("");
-}
+async 
 async function deleteMatch(id){
   if(!confirm("Eliminare definitivamente questa partita?"))return;
   const {error}=await sb.from("matches").delete().eq("id",id);
@@ -492,5 +495,56 @@ $("date").value=new Date().toISOString().slice(0,16);
 <button class="primary" onclick="updateMatch()">SALVA MODIFICHE</button><button onclick="closeEdit()">ANNULLA</button>
 <div id="editMsg" class="msg"></div>
 </div></div>
-<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "95157cef4197481ca08c16aadd0f1329"}'></script><!-- End Cloudflare Web Analytics -->
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "95157cef4197481ca08c16aadd0f1329"}'>
+function showHistory(){
+  const pub=document.getElementById("publicPage"), admin=document.getElementById("adminPage"), hv=document.getElementById("historyView");
+  if(pub)pub.classList.add("hidden"); if(admin)admin.classList.add("hidden");
+  if(hv)hv.style.setProperty("display","block","important");
+  document.getElementById("publicBtn")?.classList.remove("primary");
+  document.getElementById("adminBtn")?.classList.remove("primary");
+  document.getElementById("historyNav")?.classList.add("primary");
+  populateHistoryPlayers(); loadHistory(); window.scrollTo({top:0,behavior:"smooth"});
+}
+function showHome(){
+  const pub=document.getElementById("publicPage"), admin=document.getElementById("adminPage"), hv=document.getElementById("historyView");
+  if(hv)hv.style.setProperty("display","none","important"); if(admin)admin.classList.add("hidden"); if(pub)pub.classList.remove("hidden");
+  document.getElementById("historyNav")?.classList.remove("primary"); document.getElementById("publicBtn")?.classList.add("primary");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function populateHistoryPlayers(){
+  const sel=document.getElementById("historyPlayer"); if(!sel||sel.dataset.loaded==="1")return;
+  if(typeof dbPlayers!=="undefined"&&Array.isArray(dbPlayers)){dbPlayers.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||"")).forEach(p=>{
+    const o=document.createElement("option");o.value=String(p.id);o.textContent=p.name+(p.nickname?` — ${p.nickname}`:"");sel.appendChild(o);
+  });sel.dataset.loaded="1";}
+}
+function escHistory(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function loadHistory(){
+  const list=document.getElementById("historyList"),summary=document.getElementById("historySummary"); if(!list)return;
+  list.innerHTML='<div class="history-empty">Caricamento storico…</div>';
+  try{
+    if(typeof sb==="undefined")throw new Error("Connessione al database non disponibile.");
+    const from=document.getElementById("historyFrom")?.value||"",to=document.getElementById("historyTo")?.value||"",player=document.getElementById("historyPlayer")?.value||"";
+    let q=sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
+    if(from)q=q.gte("played_at",from+"T00:00:00"); if(to)q=q.lt("played_at",to+"T23:59:59.999");
+    let r=await q;if(r.error)throw r.error;let matches=r.data||[];
+    if(player){let pr=await sb.from("match_players").select("match_id").eq("player_id",player);if(pr.error)throw pr.error;let ids=new Set((pr.data||[]).map(x=>String(x.match_id)));matches=matches.filter(m=>ids.has(String(m.id)));}
+    summary.textContent=`${matches.length} partite trovate`;
+    if(!matches.length){list.innerHTML='<div class="history-empty">Nessuna partita trovata con questi filtri.</div>';return;}
+    const ids=matches.map(m=>m.id);
+    const [mr,sr,pr]=await Promise.all([sb.from("match_players").select("*").in("match_id",ids),sb.from("sets").select("*").in("match_id",ids).order("set_number"),sb.from("players").select("id,name,nickname")]);
+    if(mr.error)throw mr.error;if(sr.error)throw sr.error;if(pr.error)throw pr.error;
+    const names={};(pr.data||[]).forEach(p=>names[String(p.id)]=p.name+(p.nickname?` — ${p.nickname}`:""));
+    const setsBy={},mpBy={};(sr.data||[]).forEach(x=>(setsBy[x.match_id]??=[]).push(x));(mr.data||[]).forEach(x=>(mpBy[x.match_id]??=[]).push(x));
+    list.innerHTML=matches.map(m=>{
+      const ss=setsBy[m.id]||[],first=ss[0],ps=mpBy[m.id]||[];
+      const A=first?[first.pair_a_player_1,first.pair_a_player_2]:ps.slice(0,2).map(x=>x.player_id),B=first?[first.pair_b_player_1,first.pair_b_player_2]:ps.slice(2,4).map(x=>x.player_id);
+      const a=A.map(id=>names[String(id)]||"Giocatore").join(" · "),b=B.map(id=>names[String(id)]||"Giocatore").join(" · ");
+      const dt=new Date(m.played_at),date=isNaN(dt)?m.played_at:dt.toLocaleString("it-IT",{dateStyle:"medium",timeStyle:"short"});
+      return `<div class="history-card" onclick="this.classList.toggle('open')"><div class="history-head"><span class="history-date">${escHistory(date)}</span><span class="history-meta">${ss.length} set</span></div><div class="history-teams"><div class="history-team">${escHistory(a)}</div><div class="history-score">${ss.map(s=>`${s.games_a}-${s.games_b}`).join(" · ")}</div><div class="history-team">${escHistory(b)}</div></div><div class="history-detail">${ss.map((s,i)=>`<div class="history-set"><span>Set ${i+1}</span><b>${escHistory(s.games_a)} - ${escHistory(s.games_b)}</b></div>`).join("")}</div></div>`;
+    }).join("");
+  }catch(e){console.error(e);summary.textContent="";list.innerHTML=`<div class="history-empty">Errore nel caricamento dello storico.<br><small>${escHistory(e.message||e)}</small></div>`;}
+}
+function resetHistory(){document.getElementById("historyFrom").value="";document.getElementById("historyTo").value="";document.getElementById("historyPlayer").value="";loadHistory();}
+
+</script><!-- End Cloudflare Web Analytics -->
 </body></html>
