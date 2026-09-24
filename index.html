@@ -491,7 +491,7 @@ $("date").value=new Date().toISOString().slice(0,16);
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-  function openHistory(){
+  async function openHistory(){
     const pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
     if(!hist)return;
     pub?.classList.add("hidden");
@@ -501,7 +501,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     $("publicBtn")?.classList.remove("primary");
     $("adminBtn")?.classList.remove("primary");
     $("historyBtn")?.classList.add("primary");
-    populateHistoryPlayers();
+    await populateHistoryPlayers();
     loadHistory();
     window.scrollTo(0,0);
   }
@@ -514,18 +514,32 @@ $("date").value=new Date().toISOString().slice(0,16);
     $("historyBtn")?.classList.remove("primary");
   }
 
-  function populateHistoryPlayers(){
+  async function populateHistoryPlayers(){
     const s=$("historyPlayer");
     if(!s)return;
     const current=s.value;
     s.innerHTML='<option value="">Tutti i giocatori</option>';
-    (window.dbPlayers||[]).slice().sort((a,b)=>(a.name||"").localeCompare(b.name||"","it")).forEach(p=>{
-      const o=document.createElement("option");
-      o.value=String(p.id);
-      o.textContent=p.name+(p.nickname?" — "+p.nickname:"");
-      s.appendChild(o);
-    });
-    if(current && [...s.options].some(o=>o.value===current))s.value=current;
+    try{
+      let list=[];
+      // Always read the canonical players table. This avoids depending on
+      // when/if the main ranking has finished loading its local player array.
+      if(window.sb){
+        const r=await window.sb.from("players").select("id,name,nickname").order("name",{ascending:true});
+        if(r.error)throw r.error;
+        list=r.data||[];
+      }
+      // Fallback to the already loaded player array if the query returned none.
+      if(!list.length) list=window.dbPlayers||[];
+      list.forEach(p=>{
+        const o=document.createElement("option");
+        o.value=String(p.id);
+        o.textContent=(p.name||"Giocatore")+(p.nickname?" — "+p.nickname:"");
+        s.appendChild(o);
+      });
+      if(current && [...s.options].some(o=>o.value===current))s.value=current;
+    }catch(e){
+      console.error("Errore caricamento giocatori storico:",e);
+    }
   }
 
   async function loadHistory(){
@@ -630,8 +644,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     $("historyReset")?.addEventListener("click",()=>{
       $("historyFrom").value="";
       $("historyTo").value="";
-      populateHistoryPlayers();
-      loadHistory();
+      populateHistoryPlayers().then(loadHistory);
     });
     function route(){location.hash==="#history"?openHistory():openHome();}
     window.addEventListener("hashchange",route);
