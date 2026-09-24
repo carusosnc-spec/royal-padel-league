@@ -84,29 +84,10 @@ tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
 }
 </style>
 
-</head>
-<body><div id="historyNav" style="display:flex;justify-content:center;margin:12px 0 18px">
-<button type="button" onclick="showHistory()" style="font-weight:700">📚 STORICO PARTITE</button>
-</div><div style="margin:10px 0;text-align:center"><button type="button" onclick="showHistory()">📚 STORICO PARTITE</button></div>
-<div id="historyView" style="display:none">
-  <div class="container">
-    <div class="card">
-      <div class="section-title">
-        <div>
-          <div class="eyebrow">ROYAL PADEL LEAGUE</div>
-          <h2>📚 STORICO PARTITE</h2>
-        </div>
-        <button type="button" onclick="showHome()">← Classifica</button>
-      </div>
-      <div class="history-filters">
-        <div><label>Da data</label><input id="historyFrom" type="date"></div>
-        <div><label>A data</label><input id="historyTo" type="date"></div>
-        <div><label>Giocatore</label><select id="historyPlayer"><option value="">Tutti i giocatori</option></select></div>
-        <div class="history-actions">
-          <button type="button" onclick="loadHistory()">🔎 CERCA</button>
-          <button type="button" onclick="resetHistory()">↻ RESET</button>
-        </div>
-      </div>
+<style id="history-nav-style">
+#historyNav{margin-left:8px}
+</style></head>
+<body>
       <div id="historySummary" class="muted"></div>
       <div id="historyList" class="history-list"></div>
     </div>
@@ -123,7 +104,7 @@ tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
 </header>
 <nav style="padding:14px 0;justify-content:center">
 <button id="publicBtn" class="primary">🏆 Classifica</button>
-<button id="adminBtn">🔐 Area operatori</button>
+<button id="adminBtn">🔐 Area operatori</button> <button type="button" id="historyNav" onclick="showHistory()">📚 STORICO PARTITE</button>
 </nav>
 
 <section id="publicPage">
