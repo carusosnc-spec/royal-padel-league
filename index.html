@@ -842,4 +842,107 @@ $("date").value=new Date().toISOString().slice(0,16);
     route();
   });
 })();
-</script></body></html>
+</script>
+<!-- RPL PLAYER CARD PROTOTYPE: GIANNI CARUSO -->
+<div id="rplPlayerCardGianni" class="rpl-player-card-overlay" aria-hidden="true">
+  <div class="rpl-player-card-backdrop" data-close-player-card></div>
+  <div class="rpl-player-card-modal" role="dialog" aria-modal="true" aria-label="Scheda Gianni Caruso">
+    <button class="rpl-player-card-close" type="button" data-close-player-card aria-label="Chiudi">×</button>
+    <div class="rpl-player-card">
+      <div class="rpl-card-corner">
+        <div class="rpl-card-ovr">75</div>
+        <div class="rpl-card-label">OVR</div>
+        <div class="rpl-card-fascia">F1</div>
+      </div>
+      <div class="rpl-card-brand">ROYAL PADEL LEAGUE</div>
+      <div class="rpl-card-hero">
+        <img id="rplGianniLogo" alt="Gianni Caruso — The Golden President">
+      </div>
+      <div class="rpl-card-name">GIANNI CARUSO</div>
+      <div class="rpl-card-nick">THE GOLDEN PRESIDENT</div>
+      <div class="rpl-card-stats">
+        <div class="rpl-stat"><b>60</b><span>VELOCITÀ</span></div>
+        <div class="rpl-stat"><b>70</b><span>POTENZA</span></div>
+        <div class="rpl-stat"><b>95</b><span>PRECISIONE</span></div>
+        <div class="rpl-stat"><b>90</b><span>TATTICA</span></div>
+        <div class="rpl-stat"><b>85</b><span>DIFESA</span></div>
+        <div class="rpl-stat"><b>50</b><span>RESISTENZA</span></div>
+      </div>
+      <div class="rpl-card-footer">
+        <span>ROYAL PADEL LEAGUE</span>
+        <span>WHERE LEGENDS PLAY</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style id="rpl-player-card-style">
+.rpl-player-card-overlay{display:none;position:fixed;inset:0;z-index:99999}
+.rpl-player-card-overlay.open{display:block}
+.rpl-player-card-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px)}
+.rpl-player-card-modal{position:relative;z-index:2;width:min(92vw,390px);margin:3vh auto 0}
+.rpl-player-card-close{position:absolute;right:-7px;top:-10px;width:40px;height:40px;border:2px solid #fff;border-radius:50%;background:#111;color:#fff;font-size:28px;line-height:32px;cursor:pointer;z-index:4}
+.rpl-player-card{position:relative;overflow:hidden;border-radius:26px;padding:17px 18px 18px;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(255,255,255,.72),transparent 27%),
+    linear-gradient(145deg,#fff4bd 0%,#e4c35b 28%,#b88922 52%,#f5df91 76%,#9c701b 100%);
+  border:3px solid #fff2a5;box-shadow:0 28px 80px rgba(0,0,0,.65);color:#111}
+.rpl-player-card:before{content:"";position:absolute;inset:8px;border:1px solid rgba(255,255,255,.7);border-radius:20px;pointer-events:none}
+.rpl-card-brand{text-align:center;font-weight:900;font-size:11px;letter-spacing:2.3px;margin:2px 0 2px;position:relative}
+.rpl-card-corner{position:absolute;left:20px;top:34px;z-index:2;text-align:center}
+.rpl-card-ovr{font-size:48px;font-weight:950;line-height:.86}
+.rpl-card-label{font-size:9px;font-weight:900;letter-spacing:1.6px;margin-top:4px}
+.rpl-card-fascia{font-size:12px;font-weight:950;margin-top:7px;border-top:1px solid rgba(0,0,0,.35);padding-top:5px}
+.rpl-card-hero{height:235px;margin-top:2px;display:flex;align-items:center;justify-content:center;position:relative}
+.rpl-card-hero img{width:210px;height:210px;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.28))}
+.rpl-card-name{text-align:center;font-size:25px;font-weight:950;letter-spacing:.4px;position:relative}
+.rpl-card-nick{text-align:center;font-size:11px;font-weight:900;letter-spacing:2px;margin-top:3px;position:relative}
+.rpl-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:11px 25px;margin:17px 8px 0;padding:13px 0 12px;border-top:1px solid rgba(0,0,0,.3);border-bottom:1px solid rgba(0,0,0,.25);position:relative}
+.rpl-stat{display:flex;align-items:center;gap:9px}
+.rpl-stat b{font-size:25px;line-height:1;min-width:36px}
+.rpl-stat span{font-size:9px;font-weight:950;letter-spacing:.5px}
+.rpl-card-footer{display:flex;justify-content:space-between;gap:10px;margin:11px 7px 0;font-size:7px;font-weight:900;letter-spacing:1.1px;opacity:.85;position:relative}
+.rpl-player-logo-clickable{cursor:pointer!important}
+@media(max-width:430px){.rpl-player-card-modal{margin-top:2vh}.rpl-card-hero{height:215px}.rpl-card-hero img{width:185px;height:185px}.rpl-card-name{font-size:22px}}
+</style>
+
+<script id="rpl-player-card-script">
+(function(){
+  const overlay=document.getElementById("rplPlayerCardGianni");
+  const logo=document.getElementById("rplGianniLogo");
+  function gianniLogo(){
+    try{return typeof window.logoFile==="function" ? window.logoFile("Gianni Caruso") : "";}catch(e){return "";}
+  }
+  function openGianniCard(){
+    const src=gianniLogo();
+    if(src) logo.src=src;
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+  }
+  function closeCard(){
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+  }
+  window.openGianniCard=openGianniCard;
+  window.closeGianniCard=closeCard;
+
+  document.addEventListener("click",function(e){
+    const close=e.target.closest("[data-close-player-card]");
+    if(close){closeCard();return;}
+    const img=e.target.closest("img");
+    if(!img)return;
+    const src=gianniLogo();
+    if(src && img.currentSrc===src){
+      img.classList.add("rpl-player-logo-clickable");
+      openGianniCard();
+    }
+  },true);
+
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape" && overlay.classList.contains("open")) closeCard();
+  });
+})();
+</script>
+</body></html>
