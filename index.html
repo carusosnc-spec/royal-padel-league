@@ -486,41 +486,155 @@ $("date").value=new Date().toISOString().slice(0,16);
 
 
 
-<script id="history-v658-script">
+<script id="history-v659-script">
 (function(){
-  function byId(x){return document.getElementById(x);}
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
   function openHistory(){
-    var pub=byId("publicPage"), admin=byId("adminPage"), hist=byId("historyView");
+    const pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
     if(!hist)return;
-    if(pub)pub.classList.add("hidden");
-    if(admin)admin.classList.add("hidden");
+    pub?.classList.add("hidden");
+    admin?.classList.add("hidden");
     hist.style.display="block";
     hist.classList.remove("hidden");
-    if(byId("publicBtn"))byId("publicBtn").classList.remove("primary");
-    if(byId("adminBtn"))byId("adminBtn").classList.remove("primary");
-    if(byId("historyBtn"))byId("historyBtn").classList.add("primary");
-    if(typeof populateHistoryPlayers==="function")populateHistoryPlayers();
-    if(typeof loadHistory==="function")loadHistory();
+    $("publicBtn")?.classList.remove("primary");
+    $("adminBtn")?.classList.remove("primary");
+    $("historyBtn")?.classList.add("primary");
+    populateHistoryPlayers();
+    loadHistory();
     window.scrollTo(0,0);
   }
   function openHome(){
-    var pub=byId("publicPage"), admin=byId("adminPage"), hist=byId("historyView");
-    if(hist)hist.style.display="none";
-    if(admin)admin.classList.add("hidden");
-    if(pub)pub.classList.remove("hidden");
-    if(byId("publicBtn"))byId("publicBtn").classList.add("primary");
-    if(byId("adminBtn"))byId("adminBtn").classList.remove("primary");
-    if(byId("historyBtn"))byId("historyBtn").classList.remove("primary");
+    $("historyView")?.style.setProperty("display","none");
+    $("adminPage")?.classList.add("hidden");
+    $("publicPage")?.classList.remove("hidden");
+    $("publicBtn")?.classList.add("primary");
+    $("adminBtn")?.classList.remove("primary");
+    $("historyBtn")?.classList.remove("primary");
   }
+
+  function populateHistoryPlayers(){
+    const s=$("historyPlayer");
+    if(!s)return;
+    const current=s.value;
+    s.innerHTML='<option value="">Tutti i giocatori</option>';
+    (window.dbPlayers||[]).slice().sort((a,b)=>(a.name||"").localeCompare(b.name||"","it")).forEach(p=>{
+      const o=document.createElement("option");
+      o.value=String(p.id);
+      o.textContent=p.name+(p.nickname?" — "+p.nickname:"");
+      s.appendChild(o);
+    });
+    if(current && [...s.options].some(o=>o.value===current))s.value=current;
+  }
+
+  async function loadHistory(){
+    const list=$("historyList"), summary=$("historySummary");
+    if(!list)return;
+    list.innerHTML='<div class="history-empty">Caricamento storico…</div>';
+    try{
+      const from=$("historyFrom")?.value||"";
+      const to=$("historyTo")?.value||"";
+      const player=$("historyPlayer")?.value||"";
+
+      let mq=window.sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
+      if(from)mq=mq.gte("played_at",from+"T00:00:00");
+      if(to)mq=mq.lte("played_at",to+"T23:59:59");
+      let mr=await mq;
+      if(mr.error)throw mr.error;
+      let matches=mr.data||[];
+
+      if(player){
+        const pr=await window.sb.from("match_players").select("match_id").eq("player_id",Number(player));
+        if(pr.error)throw pr.error;
+        const ids=new Set((pr.data||[]).map(x=>String(x.match_id)));
+        matches=matches.filter(m=>ids.has(String(m.id)));
+      }
+
+      summary.textContent=`${matches.length} partite trovate`;
+      if(!matches.length){
+        list.innerHTML='<div class="history-empty">Nessuna partita trovata con questi filtri.</div>';
+        return;
+      }
+
+      const ids=matches.map(m=>m.id);
+      const [sr,mpR,plR]=await Promise.all([
+        window.sb.from("sets").select("*").in("match_id",ids).order("set_number"),
+        window.sb.from("match_players").select("*").in("match_id",ids),
+        window.sb.from("players").select("id,name,nickname")
+      ]);
+      if(sr.error)throw sr.error;
+      if(mpR.error)throw mpR.error;
+      if(plR.error)throw plR.error;
+
+      const names={};
+      (plR.data||[]).forEach(p=>names[String(p.id)]=p.name+(p.nickname?" — "+p.nickname:""));
+      const setsBy={};
+      (sr.data||[]).forEach(s=>(setsBy[String(s.match_id)]??=[]).push(s));
+
+      list.innerHTML=matches.map(m=>{
+        const sets=setsBy[String(m.id)]||[];
+        const date=new Date(m.played_at);
+        const dateText=isNaN(date)?String(m.played_at):date.toLocaleString("it-IT",{dateStyle:"medium",timeStyle:"short"});
+
+        const involved=[];
+        (mpR.data||[]).filter(x=>String(x.match_id)===String(m.id)).forEach(x=>{
+          if(names[String(x.player_id)] && !involved.includes(names[String(x.player_id)]))involved.push(names[String(x.player_id)]);
+        });
+
+        const results=sets.map(s=>`${s.games_a}-${s.games_b}`).join(" · ");
+
+        const detail=sets.map((s,i)=>{
+          const a1=names[String(s.pair_a_player_1)]||"Giocatore";
+          const a2=names[String(s.pair_a_player_2)]||"Giocatore";
+          const b1=names[String(s.pair_b_player_1)]||"Giocatore";
+          const b2=names[String(s.pair_b_player_2)]||"Giocatore";
+          return `<div class="history-set" style="display:block;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)">
+            <div style="display:flex;justify-content:space-between;gap:10px">
+              <b>SET ${i+1}</b><b>${esc(s.games_a)} - ${esc(s.games_b)}</b>
+            </div>
+            <div style="margin-top:6px;font-size:13px">
+              🟦 ${esc(a1)} + ${esc(a2)}
+              <span style="margin:0 7px;color:#9da8b4">vs</span>
+              🟥 ${esc(b1)} + ${esc(b2)}
+            </div>
+          </div>`;
+        }).join("");
+
+        return `<div class="history-card" onclick="this.classList.toggle('open')">
+          <div class="history-head">
+            <span class="history-date">${esc(dateText)}</span>
+            <span class="history-meta">${sets.length} set</span>
+          </div>
+          <div class="history-team" style="font-size:13px;margin-bottom:7px">${involved.map(esc).join(" · ")}</div>
+          <div class="history-score">${esc(results||"—")}</div>
+          <div class="history-detail">${detail}</div>
+        </div>`;
+      }).join("");
+    }catch(e){
+      console.error(e);
+      summary.textContent="";
+      list.innerHTML=`<div class="history-empty">Errore nel caricamento dello storico.<br><small>${esc(e.message||e)}</small></div>`;
+    }
+  }
+
   window.showHistory=openHistory;
   window.showHome=openHome;
-  function route(){ if(location.hash==="#history") openHistory(); else openHome(); }
-  window.addEventListener("hashchange",route);
-  document.addEventListener("DOMContentLoaded",function(){
-    var b=byId("historyBtn");
-    if(b)b.addEventListener("click",function(){ /* anchor hash handles routing */ });
-    var back=byId("historyBack");
-    if(back)back.addEventListener("click",function(){location.hash="";});
+  window.populateHistoryPlayers=populateHistoryPlayers;
+  window.loadHistory=loadHistory;
+
+  document.addEventListener("DOMContentLoaded",()=>{
+    $("historyBtn")?.addEventListener("click",()=>{location.hash="history"});
+    $("historyBack")?.addEventListener("click",()=>{location.hash=""});
+    $("historySearch")?.addEventListener("click",loadHistory);
+    $("historyReset")?.addEventListener("click",()=>{
+      $("historyFrom").value="";
+      $("historyTo").value="";
+      populateHistoryPlayers();
+      loadHistory();
+    });
+    function route(){location.hash==="#history"?openHistory():openHome();}
+    window.addEventListener("hashchange",route);
     route();
   });
 })();
