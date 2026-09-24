@@ -553,8 +553,15 @@ $("date").value=new Date().toISOString().slice(0,16);
   const hide=id=>$(id)?.classList.add("hidden");
   const show=id=>$(id)?.classList.remove("hidden");
 
+  function getPartialPlayers(){
+    try{
+      if(typeof dbPlayers!=="undefined" && Array.isArray(dbPlayers)) return dbPlayers;
+    }catch(e){}
+    return Array.isArray(window.dbPlayers)?window.dbPlayers:[];
+  }
+
   function emptyPartial(){
-    return (window.dbPlayers||[]).map(p=>({
+    return getPartialPlayers().map(p=>({
       id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,
       sets:0,pt:0,games:0,mvp:0,imb:0
     }));
