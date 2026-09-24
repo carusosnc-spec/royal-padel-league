@@ -102,6 +102,7 @@ window.esc = window.esc || function(v){
 </header>
 <nav style="padding:14px 0;justify-content:center">
 <button id="publicBtn" class="primary">🏆 Classifica</button>
+<button id="partialBtn">📊 Classifica parziale</button>
 <button id="adminBtn">🔐 Area operatori</button><a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
 
 </nav>
@@ -110,6 +111,36 @@ window.esc = window.esc || function(v){
 <div class="card"><div style="text-align:center;margin-bottom:14px"><div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">👑 CLASSIFICA GENERALE</div><div style="font-size:11px;color:#9aa9b8;letter-spacing:.22em;margin-top:8px">PASSIONE • RISPETTO • AMICIZIA • COMPETIZIONE</div></div>
 <div class="muted" id="status">Connessione a Supabase…</div>
 <div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Giocatore</th><th>Totale</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Fascia</th></tr></thead><tbody id="ranking"></tbody></table></div></div>
+</section>
+
+<section id="partialPage" class="hidden">
+<div class="card">
+  <div style="text-align:center;margin-bottom:14px">
+    <div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">📊 CLASSIFICA PARZIALE</div>
+    <div style="font-size:11px;color:#9aa9b8;letter-spacing:.18em;margin-top:8px">CLASSIFICA DEL PERIODO SELEZIONATO</div>
+  </div>
+  <div class="history-filters" style="margin-bottom:14px">
+    <div><label>Da data</label><input id="partialFrom" type="date"></div>
+    <div><label>A data</label><input id="partialTo" type="date"></div>
+    <div class="history-actions">
+      <button type="button" id="partialCalculate" class="primary">📊 CALCOLA</button>
+      <button type="button" id="partialReset">↻ RESET</button>
+    </div>
+  </div>
+  <div class="partial-presets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <button type="button" class="partial-preset" data-from="2026-09-15" data-to="2026-09-30">15–30 SET</button>
+    <button type="button" class="partial-preset" data-from="2026-10-01" data-to="2026-10-31">OTTOBRE</button>
+    <button type="button" class="partial-preset" data-from="2026-11-01" data-to="2026-11-30">NOVEMBRE</button>
+    <button type="button" class="partial-preset" data-from="2026-12-01" data-to="2026-12-31">DICEMBRE</button>
+  </div>
+  <div id="partialSummary" class="muted">Seleziona un periodo e premi CALCOLA.</div>
+  <div class="scroll" style="margin-top:10px">
+    <table>
+      <thead><tr><th>#</th><th>Giocatore</th><th>Totale</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Fascia</th></tr></thead>
+      <tbody id="partialRanking"></tbody>
+    </table>
+  </div>
+</div>
 </section>
 
 <section id="adminPage" class="hidden">
@@ -480,8 +511,8 @@ async function updateMatch(){
   if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){$("editMsg").className="msg err";$("editMsg").textContent=ae.message;return}}
   closeEdit();await loadRanking();await loadHistory();
 }
-$("publicBtn").onclick=()=>{$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");loadRanking()};
-$("adminBtn").onclick=async()=>{$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){$("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");await loadHistory()}}};
+$("publicBtn").onclick=()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");$("partialBtn")?.classList.remove("primary");loadRanking()};
+$("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){$("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");await loadHistory()}}};
 $("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
 (async()=>{await loadPlayers();buildSets();await loadRanking()})();
@@ -515,6 +546,128 @@ $("date").value=new Date().toISOString().slice(0,16);
 
 
 
+<script id="partial-v6516-script">
+(function(){
+  const $=id=>document.getElementById(id);
+  const escp=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const hide=id=>$(id)?.classList.add("hidden");
+  const show=id=>$(id)?.classList.remove("hidden");
+
+  function emptyPartial(){
+    return (window.dbPlayers||[]).map(p=>({
+      id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,
+      sets:0,pt:0,games:0,mvp:0,imb:0
+    }));
+  }
+
+  function logoFor(name){
+    try{return typeof window.logoFile==="function"?window.logoFile(name):"";}catch(e){return "";}
+  }
+
+  function renderPartial(stats,from,to){
+    const body=$("partialRanking"), summary=$("partialSummary");
+    if(!body)return;
+    const ranked=stats.map(s=>{
+      const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;
+      return {...s,base,total:base+s.mvp*1.5+s.imb};
+    }).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,"it"));
+
+    body.innerHTML=ranked.map((s,i)=>{
+      const f=String(s.fascia||"").replace(/^F/i,"");
+      return `<tr>
+        <td><b>${i+1}</b></td>
+        <td><div style="display:flex;align-items:center;gap:9px">
+          <img src="${logoFor(s.name)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e">
+          <div><b style="color:#fff">${escp(s.name)}</b><br><span style="color:#ffd86a;font-size:11px">${escp(s.nick)}</span></div>
+        </div></td>
+        <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
+        <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
+        <td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td>
+        <td><span class="badge fascia-badge f${f}">F${f}</span></td>
+      </tr>`;
+    }).join("");
+    const played=stats.filter(s=>s.sets>0).length;
+    summary.textContent=`Periodo: ${from||"—"} → ${to||"—"} · ${played} giocatori con almeno un set. Il punteggio usa lo stesso sistema della classifica generale.`;
+  }
+
+  async function calculatePartial(){
+    const from=$("partialFrom")?.value||"";
+    const to=$("partialTo")?.value||"";
+    const summary=$("partialSummary");
+    if(!from||!to){summary.textContent="Inserisci entrambe le date.";return;}
+    if(from>to){summary.textContent="La data iniziale non può essere successiva a quella finale.";return;}
+    summary.textContent="Calcolo classifica parziale…";
+    const stats=emptyPartial();
+    try{
+      const start=from+"T00:00:00";
+      const end=to+"T23:59:59";
+      const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at").gte("played_at",start).lte("played_at",end).order("played_at",{ascending:true});
+      if(me)throw me;
+      if(!matches?.length){renderPartial(stats,from,to);summary.textContent=`Periodo: ${from} → ${to} · Nessuna partita nel periodo.`;return;}
+      const ids=matches.map(m=>m.id);
+      const [{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
+        window.sb.from("match_players").select("*").in("match_id",ids),
+        window.sb.from("sets").select("*").in("match_id",ids).order("set_number"),
+        window.sb.from("match_awards").select("*").in("match_id",ids)
+      ]);
+      if(mpe||se||ae)throw (mpe||se||ae);
+      const snap={};
+      (mp||[]).forEach(x=>snap[x.match_id+"_"+x.player_id]=x);
+      (sets||[]).forEach(x=>{
+        const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
+        const ga=+x.games_a,gb=+x.games_b;
+        const win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
+        win.forEach(pid=>{const s=stats.find(z=>z.id===pid);if(!s)return;s.sets++;s.games+=wg;s.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0);});
+        lose.forEach(pid=>{const s=stats.find(z=>z.id===pid);if(s){s.sets++;s.games+=lg;}});
+      });
+      (aw||[]).forEach(x=>{const s=stats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++;});
+      renderPartial(stats,from,to);
+      summary.textContent=`Periodo: ${from} → ${to} · ${matches.length} partite · classifica calcolata.`;
+    }catch(e){
+      console.error(e);
+      $("partialRanking").innerHTML="";
+      summary.textContent="Errore nel calcolo della classifica parziale: "+(e.message||e);
+    }
+  }
+
+  function showPartial(){
+    hide("publicPage");hide("adminPage");hide("historyView");show("partialPage");
+    $("publicBtn")?.classList.remove("primary");
+    $("adminBtn")?.classList.remove("primary");
+    $("historyBtn")?.classList.remove("primary");
+    $("partialBtn")?.classList.add("primary");
+    if(!$("partialFrom").value)$("partialFrom").value="2026-09-15";
+    if(!$("partialTo").value)$("partialTo").value="2026-09-30";
+    calculatePartial();
+    window.scrollTo(0,0);
+  }
+
+  function showHome(){
+    hide("partialPage");
+    show("publicPage");
+    $("partialBtn")?.classList.remove("primary");
+  }
+
+  window.showPartial=showPartial;
+  window.calculatePartial=calculatePartial;
+
+  document.addEventListener("DOMContentLoaded",()=>{
+    $("partialBtn")?.addEventListener("click",()=>{location.hash="partial";});
+    $("partialCalculate")?.addEventListener("click",calculatePartial);
+    $("partialReset")?.addEventListener("click",()=>{
+      $("partialFrom").value="";
+      $("partialTo").value="";
+      $("partialRanking").innerHTML="";
+      $("partialSummary").textContent="Seleziona un periodo e premi CALCOLA.";
+    });
+    document.querySelectorAll(".partial-preset").forEach(b=>b.addEventListener("click",()=>{
+      $("partialFrom").value=b.dataset.from;
+      $("partialTo").value=b.dataset.to;
+      calculatePartial();
+    }));
+  });
+})();
+</script>
 <script id="history-v6514-script">
 (function(){
   const $=id=>document.getElementById(id);
@@ -677,7 +830,7 @@ $("date").value=new Date().toISOString().slice(0,16);
       $("historyTo").value="";
       populateHistoryPlayers().then(loadHistory);
     });
-    function route(){location.hash==="#history"?openHistory():openHome();}
+    function route(){if(location.hash==="#history")openHistory();else if(location.hash==="#partial"&&window.showPartial)window.showPartial();else openHome();}
     window.addEventListener("hashchange",route);
     route();
   });
