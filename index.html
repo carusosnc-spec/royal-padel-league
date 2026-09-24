@@ -68,6 +68,9 @@ tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
 </style><style id="history-v657-nav-style">
 nav[style*="justify-content:center"]{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #historyView{display:none}
+</style><style id="history-v658-style">
+#historyBtn{display:inline-block;padding:9px 13px;border:1px solid #2f4052;border-radius:9px;background:#0b1723;color:#d7dee8;font:inherit;cursor:pointer}
+#historyBtn.primary{border-color:var(--gold);color:var(--gold2)}
 </style></head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -80,7 +83,7 @@ nav[style*="justify-content:center"]{display:flex;align-items:center;gap:8px;fle
 </header>
 <nav style="padding:14px 0;justify-content:center">
 <button id="publicBtn" class="primary">🏆 Classifica</button>
-<button id="adminBtn">🔐 Area operatori</button><button id="historyBtn" type="button">📚 Storico partite</button>
+<button id="adminBtn">🔐 Area operatori</button><a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
 
 </nav>
 
@@ -481,51 +484,44 @@ $("date").value=new Date().toISOString().slice(0,16);
 
 
 
-<script id="history-v657-script">
-(function(){
-  function $(id){return document.getElementById(id);}
-  function hide(el){if(el)el.classList.add("hidden");}
-  function show(el){if(el)el.classList.remove("hidden");}
 
-  window.showHistory=function(){
-    var pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
+
+<script id="history-v658-script">
+(function(){
+  function byId(x){return document.getElementById(x);}
+  function openHistory(){
+    var pub=byId("publicPage"), admin=byId("adminPage"), hist=byId("historyView");
     if(!hist)return;
-    hide(pub); hide(admin);
+    if(pub)pub.classList.add("hidden");
+    if(admin)admin.classList.add("hidden");
     hist.style.display="block";
     hist.classList.remove("hidden");
-    $("publicBtn")?.classList.remove("primary");
-    $("adminBtn")?.classList.remove("primary");
-    $("historyBtn")?.classList.add("primary");
-    if(typeof populateHistoryPlayers==="function") populateHistoryPlayers();
-    if(typeof loadHistory==="function") loadHistory();
+    if(byId("publicBtn"))byId("publicBtn").classList.remove("primary");
+    if(byId("adminBtn"))byId("adminBtn").classList.remove("primary");
+    if(byId("historyBtn"))byId("historyBtn").classList.add("primary");
+    if(typeof populateHistoryPlayers==="function")populateHistoryPlayers();
+    if(typeof loadHistory==="function")loadHistory();
     window.scrollTo(0,0);
-  };
-
-  window.showHome=function(){
-    var pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
+  }
+  function openHome(){
+    var pub=byId("publicPage"), admin=byId("adminPage"), hist=byId("historyView");
     if(hist)hist.style.display="none";
-    hide(admin); show(pub);
-    $("publicBtn")?.classList.add("primary");
-    $("adminBtn")?.classList.remove("primary");
-    $("historyBtn")?.classList.remove("primary");
-    window.scrollTo(0,0);
-  };
-
+    if(admin)admin.classList.add("hidden");
+    if(pub)pub.classList.remove("hidden");
+    if(byId("publicBtn"))byId("publicBtn").classList.add("primary");
+    if(byId("adminBtn"))byId("adminBtn").classList.remove("primary");
+    if(byId("historyBtn"))byId("historyBtn").classList.remove("primary");
+  }
+  window.showHistory=openHistory;
+  window.showHome=openHome;
+  function route(){ if(location.hash==="#history") openHistory(); else openHome(); }
+  window.addEventListener("hashchange",route);
   document.addEventListener("DOMContentLoaded",function(){
-    var b=$("historyBtn");
-    if(b)b.addEventListener("click",window.showHistory);
-    var back=$("historyBack");
-    if(back)back.addEventListener("click",window.showHome);
-    var search=$("historySearch");
-    if(search && typeof loadHistory==="function")search.addEventListener("click",loadHistory);
-    var reset=$("historyReset");
-    if(reset)reset.addEventListener("click",function(){
-      if($("historyFrom"))$("historyFrom").value="";
-      if($("historyTo"))$("historyTo").value="";
-      if(typeof populateHistoryPlayers==="function")populateHistoryPlayers();
-      if(typeof loadHistory==="function")loadHistory();
-    });
+    var b=byId("historyBtn");
+    if(b)b.addEventListener("click",function(){ /* anchor hash handles routing */ });
+    var back=byId("historyBack");
+    if(back)back.addEventListener("click",function(){location.hash="";});
+    route();
   });
 })();
-</script>
-</body></html>
+</script></body></html>
