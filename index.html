@@ -59,12 +59,15 @@ tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
 
 
 <style id="history-v654-style">
-#historyView{display:none!important}.history-filters{display:grid;grid-template-columns:1fr 1fr 1.4fr auto;gap:10px;align-items:end;margin:14px 0}.history-actions{display:flex;gap:8px}.history-list{display:grid;gap:10px;margin-top:12px}.history-card{border:1px solid rgba(255,216,106,.22);border-radius:12px;padding:13px;background:rgba(255,255,255,.025);cursor:pointer}.history-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}.history-date{color:#ffd86a;font-weight:700}.history-meta{font-size:12px;color:#9da8b4}.history-score{font-size:18px;font-weight:800}.history-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}.history-team{text-align:center}.history-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}.history-card.open .history-detail{display:block}.history-set{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}.history-empty{padding:28px;text-align:center;color:#9da8b4}@media(max-width:700px){.history-filters{grid-template-columns:1fr 1fr}.history-filters>div:nth-child(3){grid-column:1/-1}.history-actions{grid-column:1/-1}.history-actions button{flex:1}.history-teams{grid-template-columns:1fr}.history-score{order:-1;text-align:center}}
+#historyView{display:none}.history-filters{display:grid;grid-template-columns:1fr 1fr 1.4fr auto;gap:10px;align-items:end;margin:14px 0}.history-actions{display:flex;gap:8px}.history-list{display:grid;gap:10px;margin-top:12px}.history-card{border:1px solid rgba(255,216,106,.22);border-radius:12px;padding:13px;background:rgba(255,255,255,.025);cursor:pointer}.history-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}.history-date{color:#ffd86a;font-weight:700}.history-meta{font-size:12px;color:#9da8b4}.history-score{font-size:18px;font-weight:800}.history-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}.history-team{text-align:center}.history-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}.history-card.open .history-detail{display:block}.history-set{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}.history-empty{padding:28px;text-align:center;color:#9da8b4}@media(max-width:700px){.history-filters{grid-template-columns:1fr 1fr}.history-filters>div:nth-child(3){grid-column:1/-1}.history-actions{grid-column:1/-1}.history-actions button{flex:1}.history-teams{grid-template-columns:1fr}.history-score{order:-1;text-align:center}}
 </style>
 <style id="history-v655-style">
 .history-card{cursor:pointer}
 .history-card .history-detail{display:none}
 .history-card.open .history-detail{display:block}
+</style><style id="history-v657-nav-style">
+nav[style*="justify-content:center"]{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#historyView{display:none}
 </style></head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -77,8 +80,8 @@ tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
 </header>
 <nav style="padding:14px 0;justify-content:center">
 <button id="publicBtn" class="primary">🏆 Classifica</button>
-<button id="adminBtn">🔐 Area operatori</button><button type="button" id="historyBtn" onclick="showHistory()">📚 STORICO PARTITE</button>
-<button id="historyBtn" type="button">📚 Storico partite</button>
+<button id="adminBtn">🔐 Area operatori</button><button id="historyBtn" type="button">📚 Storico partite</button>
+
 </nav>
 
 <section id="publicPage">
@@ -467,162 +470,7 @@ $("date").value=new Date().toISOString().slice(0,16);
 <div id="editMsg" class="msg"></div>
 </div></div>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "95157cef4197481ca08c16aadd0f1329"}'></script><!-- End Cloudflare Web Analytics -->
-<script id="history-v655-script">
-(function(){
-  const H={
-    pub:()=>document.getElementById('publicPage'),
-    admin:()=>document.getElementById('adminPage'),
-    view:()=>document.getElementById('historyView')
-  };
-  function hideAll(){
-    H.pub()?.classList.add('hidden');
-    H.admin()?.classList.add('hidden');
-    H.view()?.style.setProperty('display','block','important');
-  }
-  function showHome(){
-    H.view()?.style.setProperty('display','none','important');
-    H.admin()?.classList.add('hidden');
-    H.pub()?.classList.remove('hidden');
-    document.getElementById('publicBtn')?.classList.add('primary');
-    document.getElementById('adminBtn')?.classList.remove('primary');
-    document.getElementById('historyBtn')?.classList.remove('primary');
-  }
-  function esc(v){
-    return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-  function getPlayers(){
-    if(typeof dbPlayers!=="undefined" && Array.isArray(dbPlayers)) return dbPlayers;
-    return window.dbPlayers||[];
-  }
-  function names(){
-    const out={};
-    getPlayers().forEach(p=>out[String(p.id)]=p.name+(p.nickname?' — '+p.nickname:''));
-    return out;
-  }
-  function fillPlayers(){
-    const s=document.getElementById('historyPlayer');
-    if(!s)return;
-    s.innerHTML='<option value="">Tutti i giocatori</option>';
-    getPlayers().slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','it')).forEach(p=>{
-      const o=document.createElement('option');
-      o.value=p.id;
-      o.textContent=p.name+(p.nickname?' — '+p.nickname:'');
-      s.appendChild(o);
-    });
-  }
-  async function loadHistory(){
-    const list=document.getElementById('historyList'),sum=document.getElementById('historySummary');
-    if(!list)return;
-    list.innerHTML='<div class="history-empty">Caricamento storico…</div>';
-    try{
-      const client=window.sb;
-      if(!client)throw new Error('Connessione al database non disponibile.');
-      const from=document.getElementById('historyFrom')?.value||'';
-      const to=document.getElementById('historyTo')?.value||'';
-      const player=document.getElementById('historyPlayer')?.value||'';
 
-      let q=client.from('matches').select('id,played_at').order('played_at',{ascending:false});
-      if(from)q=q.gte('played_at',from+'T00:00:00');
-      if(to)q=q.lt('played_at',to+'T23:59:59.999');
-      let {data:matches,error}=await q;
-      if(error)throw error;
-
-      if(player){
-        const r=await client.from('match_players').select('match_id').eq('player_id',player);
-        if(r.error)throw r.error;
-        const ids=new Set((r.data||[]).map(x=>String(x.match_id)));
-        matches=(matches||[]).filter(x=>ids.has(String(x.id)));
-      }
-
-      sum.textContent=`${(matches||[]).length} partite trovate`;
-      if(!matches?.length){
-        list.innerHTML='<div class="history-empty">Nessuna partita trovata con questi filtri.</div>';
-        return;
-      }
-
-      const ids=matches.map(x=>x.id);
-      const [sres,pres]=await Promise.all([
-        client.from('sets').select('*').in('match_id',ids).order('set_number'),
-        client.from('players').select('id,name,nickname')
-      ]);
-      if(sres.error)throw sres.error;
-      if(pres.error)throw pres.error;
-
-      const nm={};
-      (pres.data||[]).forEach(p=>{
-        nm[String(p.id)]=p.name+(p.nickname?' — '+p.nickname:'');
-      });
-
-      const by={};
-      (sres.data||[]).forEach(s=>(by[s.match_id]??=[]).push(s));
-
-      list.innerHTML=matches.map(m=>{
-        const ss=by[m.id]||[];
-        if(!ss.length)return '';
-
-        const d=new Date(m.played_at);
-        const ds=isNaN(d)?m.played_at:d.toLocaleString('it-IT',{dateStyle:'medium',timeStyle:'short'});
-
-        // Each set has its own four player IDs because partners rotate every set.
-        const setDetails=ss.map((s,i)=>{
-          const a1=nm[String(s.pair_a_player_1)]||'Giocatore';
-          const a2=nm[String(s.pair_a_player_2)]||'Giocatore';
-          const b1=nm[String(s.pair_b_player_1)]||'Giocatore';
-          const b2=nm[String(s.pair_b_player_2)]||'Giocatore';
-          return `<div class="history-set" style="display:block;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)">
-            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
-              <span><b>SET ${i+1}</b></span>
-              <b>${esc(s.games_a)} - ${esc(s.games_b)}</b>
-            </div>
-            <div style="margin-top:5px;font-size:13px">
-              <span>🟦 ${esc(a1)} + ${esc(a2)}</span>
-              <span style="margin:0 8px;color:#9da8b4">vs</span>
-              <span>🟥 ${esc(b1)} + ${esc(b2)}</span>
-            </div>
-          </div>`;
-        }).join('');
-
-        return `<div class="history-card" onclick="this.classList.toggle('open')">
-          <div class="history-head">
-            <span class="history-date">${esc(ds)}</span>
-            <span class="history-meta">${ss.length} set</span>
-          </div>
-          <div class="history-score" style="text-align:center;margin:6px 0 10px">
-            ${ss.map(s=>`${esc(s.games_a)}-${esc(s.games_b)}`).join(' · ')}
-          </div>
-          <div class="history-detail">${setDetails}</div>
-        </div>`;
-      }).join('');
-    }catch(e){
-      console.error(e);
-      sum.textContent='';
-      list.innerHTML=`<div class="history-empty">Errore nel caricamento dello storico.<br><small>${esc(e.message||e)}</small></div>`;
-    }
-  }
-
-  window.showHistory=function(){
-    hideAll();
-    document.getElementById('publicBtn')?.classList.remove('primary');
-    document.getElementById('adminBtn')?.classList.remove('primary');
-    document.getElementById('historyBtn')?.classList.add('primary');
-    fillPlayers();
-    loadHistory();
-    window.scrollTo(0,0);
-  };
-
-  document.addEventListener('DOMContentLoaded',()=>{
-    document.getElementById('historyBtn')?.addEventListener('click',window.showHistory);
-    document.getElementById('historyBack')?.addEventListener('click',showHome);
-    document.getElementById('historySearch')?.addEventListener('click',loadHistory);
-    document.getElementById('historyReset')?.addEventListener('click',()=>{
-      document.getElementById('historyFrom').value='';
-      document.getElementById('historyTo').value='';
-      fillPlayers();
-      loadHistory();
-    });
-  });
-})();
-</script>
 
 <section id="historyView">
 <div class="card">
@@ -631,30 +479,53 @@ $("date").value=new Date().toISOString().slice(0,16);
 <div id="historySummary" class="muted"></div><div id="historyList" class="history-list"></div>
 </div></section>
 
-<script id="history-nav-fix">
+
+
+<script id="history-v657-script">
 (function(){
+  function $(id){return document.getElementById(id);}
+  function hide(el){if(el)el.classList.add("hidden");}
+  function show(el){if(el)el.classList.remove("hidden");}
+
   window.showHistory=function(){
-    const pub=document.getElementById("publicPage");
-    const admin=document.getElementById("adminPage");
-    const hist=document.getElementById("historyView");
-    if(!hist){console.error("historyView non trovato");return;}
-    if(pub) pub.classList.add("hidden");
-    if(admin) admin.classList.add("hidden");
+    var pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
+    if(!hist)return;
+    hide(pub); hide(admin);
     hist.style.display="block";
-    hist.style.visibility="visible";
+    hist.classList.remove("hidden");
+    $("publicBtn")?.classList.remove("primary");
+    $("adminBtn")?.classList.remove("primary");
+    $("historyBtn")?.classList.add("primary");
     if(typeof populateHistoryPlayers==="function") populateHistoryPlayers();
     if(typeof loadHistory==="function") loadHistory();
     window.scrollTo(0,0);
   };
+
   window.showHome=function(){
-    const pub=document.getElementById("publicPage");
-    const admin=document.getElementById("adminPage");
-    const hist=document.getElementById("historyView");
-    if(hist) hist.style.display="none";
-    if(admin) admin.classList.add("hidden");
-    if(pub) pub.classList.remove("hidden");
+    var pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
+    if(hist)hist.style.display="none";
+    hide(admin); show(pub);
+    $("publicBtn")?.classList.add("primary");
+    $("adminBtn")?.classList.remove("primary");
+    $("historyBtn")?.classList.remove("primary");
     window.scrollTo(0,0);
   };
+
+  document.addEventListener("DOMContentLoaded",function(){
+    var b=$("historyBtn");
+    if(b)b.addEventListener("click",window.showHistory);
+    var back=$("historyBack");
+    if(back)back.addEventListener("click",window.showHome);
+    var search=$("historySearch");
+    if(search && typeof loadHistory==="function")search.addEventListener("click",loadHistory);
+    var reset=$("historyReset");
+    if(reset)reset.addEventListener("click",function(){
+      if($("historyFrom"))$("historyFrom").value="";
+      if($("historyTo"))$("historyTo").value="";
+      if(typeof populateHistoryPlayers==="function")populateHistoryPlayers();
+      if(typeof loadHistory==="function")loadHistory();
+    });
+  });
 })();
 </script>
 </body></html>
