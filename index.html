@@ -88,7 +88,9 @@ nav[style*="justify-content:center"]{display:flex;align-items:center;gap:8px;fle
  .history-vs{font-size:9px}
 }
 </style>
-</head>
+<style id="history-player-logo-style">
+.history-set-teams{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}.history-team-side{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0}.history-player{display:flex;flex-direction:column;align-items:center;justify-content:center;width:82px;text-align:center;font-size:11px;line-height:1.15}.history-player-logo,.history-player-placeholder{width:54px;height:54px;border-radius:50%;object-fit:cover;margin-bottom:5px;border:2px solid rgba(255,255,255,.25)}.history-player-placeholder{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);font-size:25px}.history-plus{font-weight:800}.history-vs{font-weight:900;font-size:12px;opacity:.8}@media(max-width:600px){.history-set-teams{gap:4px}.history-team-side{gap:3px}.history-player{width:65px;font-size:9px}.history-player-logo,.history-player-placeholder{width:44px;height:44px}.history-vs{font-size:10px}}
+</style></head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -503,6 +505,16 @@ $("date").value=new Date().toISOString().slice(0,16);
 
 
 
+<script id="history-player-logos">const LOGO_MAP={"Francesco Valvo":"0DC08EE5-2E33-4C36-888F-C2BF7DFADC73.JPG","Raffaele Passalacqua":"0F1E97AE-746F-42BB-8B29-6751099B17B6.JPG","Paolo Debole":"143B1250-AA82-4D35-AE3B-F737C17DA88F.JPG","Alessandro Passamonte":"1A9789EB-466F-47FA-A0AB-470416E3310C.JPG","Maurizio Sciuto":"262BBBFB-7F04-45C6-A1F7-1C1CF2E1BB3F.JPG","Andrea Tilaro":"334D53FD-F5C1-4F9F-ADCF-EFC3D85177E8.JPG","Giuseppe Farina":"3B43046B-27CD-4BEB-B5D2-06782A0B2DD2.JPG","Fabrizio Chiaramonte":"4A4D5F36-5A12-473D-A613-0A287423CDD5.JPG","Daniele Spitaleri":"51E32B40-1075-4A10-8953-43BF5C222640.JPG","Dario Savoca":"55A85B26-5818-4F42-97FD-2A56CF6AEAA8.JPG","Salvatore Bertuccio":"79D0796D-59B0-4581-8340-203382A67DA7.JPG","Salvatore Balsamo":"8FF1E86C-1B1C-46A5-87EA-623BDEE3C6B3.JPG","Luigi Cacciato":"984259EC-740D-461F-8B27-28A6E09A7BAE.JPG","Filippo Di Dio":"A148101C-6AC9-474E-9095-8DD42592C771.JPG","Federica De Maria":"CBC1D9C2-8121-44B5-8670-7659F2B4F0AD.JPG","Gianni Caruso":"CD002E48-9711-4713-BE63-D16DBDC2C7AC.JPG","Davide Savoca":"D9C1F593-541A-4128-967E-4F9214087DC3.JPG"};
+function playerVisual(label){
+  const full=String(label||'Giocatore');
+  const base=full.split(' — ')[0].trim();
+  const file=LOGO_MAP[base];
+  const src=file ? 'logos/'+encodeURIComponent(file) : '';
+  const safe=typeof esc==='function'?esc(full):full.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  if(!file) return `<div class="history-player"><div class="history-player-placeholder">👤</div><span>${safe}</span></div>`;
+  return `<div class="history-player"><img class="history-player-logo" src="${src}" alt="${safe}" loading="lazy"><span>${safe}</span></div>`;
+}</script>
 <script id="history-v659-script">
 (function(){
   const $=id=>document.getElementById(id);
@@ -668,5 +680,4 @@ $("date").value=new Date().toISOString().slice(0,16);
     route();
   });
 })();
-</script  const LOGO_MAP={"Francesco Valvo": "0DC08EE5-2E33-4C36-888F-C2BF7DFADC73.JPG", "Raffaele Passalacqua": "0F1E97AE-746F-42BB-8B29-6751099B17B6.JPG", "Paolo Debole": "143B1250-AA82-4D35-AE3B-F737C17DA88F.JPG", "Alessandro Passamonte": "1A9789EB-466F-47FA-A0AB-470416E3310C.JPG", "Maurizio Sciuto": "262BBBFB-7F04-45C6-A1F7-1C1CF2E1BB3F.JPG", "Andrea Tilaro": "334D53FD-F5C1-4F9F-ADCF-EFC3D85177E8.JPG", "Giuseppe Farina": "3B43046B-27CD-4BEB-B5D2-06782A0B2DD2.JPG", "Fabrizio Chiaramonte": "4A4D5F36-5A12-473D-A613-0A287423CDD5.JPG", "Daniele Spitaleri": "51E32B40-1075-4A10-8953-43BF5C222640.JPG", "Dario Savoca": "55A85B26-5818-4F42-97FD-2A56CF6AEAA8.JPG", "Salvatore Bertuccio": "79D0796D-59B0-4581-8340-203382A67DA7.JPG", "Salvatore Balsamo": "8FF1E86C-1B1C-46A5-87EA-623BDEE3C6B3.JPG", "Luigi Cacciato": "984259EC-740D-461F-8B27-28A6E09A7BAE.JPG", "Filippo Di Dio": "A148101C-6AC9-474E-9095-8DD42592C771.JPG", "Federica De Maria": "CBC1D9C2-8121-44B5-8670-7659F2B4F0AD.JPG", "Gianni Caruso": "CD002E48-9711-4713-BE63-D16DBDC2C7AC.JPG", "Davide Savoca": "D9C1F593-541A-4128-967E-4F9214087DC3.JPG"};
-  ></body></html>
+</script></body></html>
