@@ -71,7 +71,24 @@ nav[style*="justify-content:center"]{display:flex;align-items:center;gap:8px;fle
 </style><style id="history-v658-style">
 #historyBtn{display:inline-block;padding:9px 13px;border:1px solid #2f4052;border-radius:9px;background:#0b1723;color:#d7dee8;font:inherit;cursor:pointer}
 #historyBtn.primary{border-color:var(--gold);color:var(--gold2)}
-</style></head>
+</style>
+<style id="history-v6511-logos">
+.history-set-teams{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px}
+.history-team-side{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0}
+.history-player{width:82px;text-align:center;font-size:10px;font-weight:700;line-height:1.15}
+.history-player img{width:62px;height:62px;object-fit:cover;border-radius:14px;display:block;margin:0 auto 4px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.history-plus{font-weight:900;font-size:16px}
+.history-vs{font-size:11px;font-weight:900;opacity:.65;padding:0 2px}
+@media(max-width:600px){
+ .history-set-teams{gap:3px}
+ .history-team-side{gap:2px}
+ .history-player{width:66px;font-size:9px}
+ .history-player img{width:52px;height:52px;border-radius:11px}
+ .history-plus{font-size:13px}
+ .history-vs{font-size:9px}
+}
+</style>
+</head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -607,10 +624,10 @@ $("date").value=new Date().toISOString().slice(0,16);
             <div style="display:flex;justify-content:space-between;gap:10px">
               <b>SET ${i+1}</b><b>${esc(s.games_a)} - ${esc(s.games_b)}</b>
             </div>
-            <div style="margin-top:6px;font-size:13px">
-              🟦 ${esc(a1)} + ${esc(a2)}
-              <span style="margin:0 7px;color:#9da8b4">vs</span>
-              🟥 ${esc(b1)} + ${esc(b2)}
+            <div class="history-set-teams">
+              <div class="history-team-side team-a">${playerVisual(a1)}<span class="history-plus">+</span>${playerVisual(a2)}</div>
+              <div class="history-vs">VS</div>
+              <div class="history-team-side team-b">${playerVisual(b1)}<span class="history-plus">+</span>${playerVisual(b2)}</div>
             </div>
           </div>`;
         }).join("");
@@ -651,4 +668,5 @@ $("date").value=new Date().toISOString().slice(0,16);
     route();
   });
 })();
-</script></body></html>
+</script  const LOGO_MAP={"Francesco Valvo": "0DC08EE5-2E33-4C36-888F-C2BF7DFADC73.JPG", "Raffaele Passalacqua": "0F1E97AE-746F-42BB-8B29-6751099B17B6.JPG", "Paolo Debole": "143B1250-AA82-4D35-AE3B-F737C17DA88F.JPG", "Alessandro Passamonte": "1A9789EB-466F-47FA-A0AB-470416E3310C.JPG", "Maurizio Sciuto": "262BBBFB-7F04-45C6-A1F7-1C1CF2E1BB3F.JPG", "Andrea Tilaro": "334D53FD-F5C1-4F9F-ADCF-EFC3D85177E8.JPG", "Giuseppe Farina": "3B43046B-27CD-4BEB-B5D2-06782A0B2DD2.JPG", "Fabrizio Chiaramonte": "4A4D5F36-5A12-473D-A613-0A287423CDD5.JPG", "Daniele Spitaleri": "51E32B40-1075-4A10-8953-43BF5C222640.JPG", "Dario Savoca": "55A85B26-5818-4F42-97FD-2A56CF6AEAA8.JPG", "Salvatore Bertuccio": "79D0796D-59B0-4581-8340-203382A67DA7.JPG", "Salvatore Balsamo": "8FF1E86C-1B1C-46A5-87EA-623BDEE3C6B3.JPG", "Luigi Cacciato": "984259EC-740D-461F-8B27-28A6E09A7BAE.JPG", "Filippo Di Dio": "A148101C-6AC9-474E-9095-8DD42592C771.JPG", "Federica De Maria": "CBC1D9C2-8121-44B5-8670-7659F2B4F0AD.JPG", "Gianni Caruso": "CD002E48-9711-4713-BE63-D16DBDC2C7AC.JPG", "Davide Savoca": "D9C1F593-541A-4128-967E-4F9214087DC3.JPG"};
+  ></body></html>
