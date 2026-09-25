@@ -95,6 +95,10 @@ window.esc = window.esc || function(v){
 .score-selects select{width:64px;min-width:64px;padding:9px 8px;border:1px solid #ccc;border-radius:10px;font-size:17px;font-weight:800;text-align:center;background:#fff;color:#111}
 .score-dash{font-weight:900;font-size:18px}
 </style>
+<style id="rpl-score-label-style">
+.score-selects{position:relative}
+.score-label{font-size:10px;font-weight:800;letter-spacing:.5px;display:none}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -238,21 +242,21 @@ function scoreOptions(){
   return `<option value="">–</option>${Array.from({length:8},(_,i)=>`<option value="${i}">${i}</option>`).join("")}`;
 }
 function scoreSelects(prefix){
-  return `<div class="score-selects" aria-label="Risultato set">
-    <select class="${prefix}A" aria-label="Game squadra A">${scoreOptions()}</select>
+  return `<div class="score-selects" aria-label="Risultato set"><span class="score-label">PUNTEGGIO</span>
+    <select class="${prefix}GameA" aria-label="Game squadra A">${scoreOptions()}</select>
     <span class="score-dash">–</span>
-    <select class="${prefix}B" aria-label="Game squadra B">${scoreOptions()}</select>
+    <select class="${prefix}GameB" aria-label="Game squadra B">${scoreOptions()}</select>
   </div>`;
 }
 function scoreValue(row, prefix){
-  const a=row.querySelector("."+prefix+"A")?.value||"";
-  const b=row.querySelector("."+prefix+"B")?.value||"";
+  const a=row.querySelector("."+prefix+"GameA")?.value||"";
+  const b=row.querySelector("."+prefix+"GameB")?.value||"";
   return (a!==""&&b!=="")?`${a}-${b}`:"";
 }
 function setScoreValue(row, prefix, value){
   const m=String(value||"").match(/^\s*([0-7])\s*[-:]\s*([0-7])\s*$/);
   if(m){
-    const a=row.querySelector("."+prefix+"A"), b=row.querySelector("."+prefix+"B");
+    const a=row.querySelector("."+prefix+"GameA"), b=row.querySelector("."+prefix+"GameB");
     if(a)a.value=m[1]; if(b)b.value=m[2];
   }
 }
