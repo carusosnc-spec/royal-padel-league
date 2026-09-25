@@ -244,7 +244,7 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 <button class="primary" id="login">ACCEDI</button><div id="loginMsg" class="msg"></div></div>
 
 <div id="operatorBox" class="hidden">
-<div class="card"><h2>➕ Inserisci partita</h2>
+<div id="operatorMatchSection"><div class="card"><h2>➕ Inserisci partita</h2>
 <label>Data e ora di inizio partita</label><input id="date" type="datetime-local">
 <div class="muted" style="margin-top:6px">Dal 1° novembre il sistema userà la classifica precedente alla partita per congelare le fasce del match.</div>
 <div id="guestLegend" class="muted" style="margin:6px 0 10px">⭐ = Ospite · gioca la partita ma non entra in classifica e non riceve punti.</div><div class="players">
@@ -254,6 +254,39 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 <div id="sets"></div><button type="button" id="add-set-btn" onclick="addSet(false)" style="margin:10px 0;padding:10px 14px;border-radius:8px;cursor:pointer">➕ AGGIUNGI SET</button><button type="button" onclick="addSet(false)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set giocati possono essere inseriti e saranno conteggiati in classifica.</div>
 <div class="two"><div><label>MVP — anche multipli</label><div id="mvp" class="checklist"></div></div><div><label>Imbattuto — anche multipli</label><div id="imb" class="checklist"></div></div></div>
 <button class="primary" id="save">SALVA PARTITA</button><button id="logout">ESCI</button><div id="msg" class="msg"></div></div>
+</div>
+<div class="card" id="operatorSubmenu">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button type="button" id="opMatchTab" class="primary" onclick="showOperatorSection('match')">🎾 Inserisci partita</button>
+<button type="button" id="opCalendarTab" onclick="showOperatorSection('calendar')">📅 Calendario</button>
+</div>
+</div>
+
+<div id="operatorCalendarSection" class="hidden">
+<div class="card">
+<h2>📅 Calendario partite</h2>
+<div class="muted">Inserisci le partite della settimana. Data, ora, campo e 4 giocatori vengono memorizzati. Le modifiche al calendario, compresi i cambi di campo, restano nello storico.</div>
+<div class="players" style="margin-top:12px">
+<div><label>Data e ora</label><input id="calDate" type="datetime-local"></div>
+<div><label>Campo di gioco</label><input id="calCourt" type="text" placeholder="es. Sporting Club Perillo"></div>
+<div><label>Giocatore 1</label><select id="calP1"></select></div>
+<div><label>Giocatore 2</label><select id="calP2"></select></div>
+<div><label>Giocatore 3</label><select id="calP3"></select></div>
+<div><label>Giocatore 4</label><select id="calP4"></select></div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<button type="button" class="primary" id="calSaveBtn" onclick="saveCalendarMatch()">💾 SALVA PARTITA A CALENDARIO</button>
+<button type="button" id="calCancelBtn" class="hidden" onclick="cancelCalendarEdit()">ANNULLA MODIFICA</button>
+</div>
+<div id="calMsg" class="msg"></div>
+<input type="hidden" id="calEditId">
+</div>
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">📅 Partite in calendario</h2><button type="button" class="smallbtn" onclick="loadCalendar()">🔄 Aggiorna</button></div>
+<div id="calendarList" class="muted">Caricamento…</div>
+</div>
+</div>
+
 <div class="card"><h2>📋 Storico partite</h2><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Storico partite</b><button type="button" class="smallbtn" onclick="loadOperatorHistory()">🔄 Aggiorna</button></div><div id="history" class="muted">Caricamento…</div></div>
 </div></section>
 <div class="card" style="text-align:center;margin-top:18px;padding:18px">
@@ -558,6 +591,103 @@ async function calculateStandingsBefore(timestamp){
   });
   (aw||[]).forEach(x=>{let z=s.find(a=>a.id===x.player_id);if(z)x.award_type==="MVP"?z.mvp++:z.imb++});
   return s.map(z=>{let base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;return {...z,base,total:base+z.mvp*1.5+z.imb}}).sort((a,b)=>b.total-a.total||b.base-a.base||a.id-b.id);
+}
+
+function showOperatorSection(which){
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection");
+  const mt=$("opMatchTab"), ct=$("opCalendarTab");
+  if(which==="calendar"){
+    m?.classList.add("hidden"); c?.classList.remove("hidden");
+    mt?.classList.remove("primary"); ct?.classList.add("primary");
+    fillCalendarPlayers(); loadCalendar();
+  }else{
+    c?.classList.add("hidden"); m?.classList.remove("hidden");
+    ct?.classList.remove("primary"); mt?.classList.add("primary");
+  }
+}
+function fillCalendarPlayers(){
+  ["calP1","calP2","calP3","calP4"].forEach(id=>{
+    const s=$(id); if(!s)return;
+    const old=s.value;
+    s.innerHTML='<option value="">Giocatore</option>'+opts();
+    if(old)s.value=old;
+  });
+}
+function calendarPlayerName(id){
+  const p=dbPlayers.find(x=>String(x.id)===String(id));
+  return p ? `${p.name}${p.nickname?" — "+p.nickname:""}` : "Giocatore";
+}
+function resetCalendarForm(){
+  $("calEditId").value="";
+  $("calCourt").value="";
+  $("calDate").value="";
+  ["calP1","calP2","calP3","calP4"].forEach(id=>{if($(id))$(id).value=""});
+  $("calSaveBtn").textContent="💾 SALVA PARTITA A CALENDARIO";
+  $("calCancelBtn").classList.add("hidden");
+}
+function cancelCalendarEdit(){resetCalendarForm();$("calMsg").textContent=""}
+async function saveCalendarMatch(){
+  const msg=$("calMsg"); msg.className="msg"; msg.textContent="Salvataggio…";
+  const id=$("calEditId").value;
+  const at=$("calDate").value, court=$("calCourt").value.trim();
+  const pids=["calP1","calP2","calP3","calP4"].map(x=>+$(x).value);
+  if(!at||!court||pids.some(x=>!x)){msg.className="msg err";msg.textContent="Completa data, ora, campo e tutti e 4 i giocatori.";return}
+  if(new Set(pids).size<4){msg.className="msg err";msg.textContent="Scegli quattro giocatori diversi.";return}
+  const payload={scheduled_at:new Date(at).toISOString(),court,player_1:pids[0],player_2:pids[1],player_3:pids[2],player_4:pids[3]};
+  let r;
+  if(id) r=await sb.from("calendar_matches").update(payload).eq("id",id).select().single();
+  else r=await sb.from("calendar_matches").insert(payload).select().single();
+  if(r.error){msg.className="msg err";msg.textContent="Errore calendario: "+r.error.message;return}
+  msg.className="msg ok";msg.textContent=id?"✅ Partita modificata. Il cambio è stato memorizzato.":"✅ Partita aggiunta al calendario.";
+  resetCalendarForm(); await loadCalendar();
+}
+function editCalendarMatch(m){
+  $("calEditId").value=m.id;
+  $("calDate").value=new Date(m.scheduled_at).toISOString().slice(0,16);
+  $("calCourt").value=m.court||"";
+  ["calP1","calP2","calP3","calP4"].forEach((id,i)=>$(id).value=m["player_"+(i+1)]);
+  $("calSaveBtn").textContent="💾 SALVA MODIFICHE";
+  $("calCancelBtn").classList.remove("hidden");
+  window.scrollTo({top:document.getElementById("operatorCalendarSection").offsetTop-10,behavior:"smooth"});
+}
+async function deleteCalendarMatch(id){
+  if(!confirm("Eliminare questa partita dal calendario?"))return;
+  const r=await sb.from("calendar_matches").delete().eq("id",id);
+  if(r.error){alert("Errore: "+r.error.message);return}
+  await loadCalendar();
+}
+async function showCalendarChanges(id){
+  const r=await sb.from("calendar_match_changes").select("*").eq("calendar_match_id",id).order("changed_at",{ascending:false});
+  if(r.error){alert("Errore storico cambi: "+r.error.message);return}
+  if(!r.data?.length){alert("Nessun cambio registrato per questa partita.");return}
+  alert(r.data.map(x=>{
+    const d=new Date(x.changed_at).toLocaleString("it-IT");
+    const when=x.old_scheduled_at&&x.new_scheduled_at?`${new Date(x.old_scheduled_at).toLocaleString("it-IT")} → ${new Date(x.new_scheduled_at).toLocaleString("it-IT")}`:"";
+    const court=x.old_court!==x.new_court?`${x.old_court||"—"} → ${x.new_court||"—"}`:"";
+    return `${d}\n${when}\nCampo: ${court}`;
+  }).join("\n\n"));
+}
+async function loadCalendar(){
+  const box=$("calendarList"); if(!box)return;
+  box.innerHTML='<div class="muted">Caricamento…</div>';
+  const r=await sb.from("calendar_matches").select("*").order("scheduled_at",{ascending:true});
+  if(r.error){box.innerHTML=`<div class="msg err">Errore calendario: ${escOperator(r.error.message)}</div>`;return}
+  if(!r.data?.length){box.innerHTML='<div class="muted">Nessuna partita programmata.</div>';return}
+  box.innerHTML=r.data.map(m=>{
+    const players=[m.player_1,m.player_2,m.player_3,m.player_4].map(calendarPlayerName);
+    const dt=new Date(m.scheduled_at).toLocaleString("it-IT",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+    return `<div style="border-top:1px solid #e5e7eb;padding:12px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+        <div><b>📅 ${escOperator(dt)}</b><br><span class="badge">📍 ${escOperator(m.court)}</span>
+        <div class="muted" style="margin-top:7px">👤 ${players.map(escOperator).join(" · ")}</div></div>
+        <div class="actions">
+          <button type="button" class="smallbtn edit" onclick='editCalendarMatch(${JSON.stringify(m)})'>✏️ Modifica</button>
+          <button type="button" class="smallbtn" onclick="showCalendarChanges(${m.id})">🔄 Cambi</button>
+          <button type="button" class="smallbtn danger" onclick="deleteCalendarMatch(${m.id})">🗑️ Elimina</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
 }
 async function loadOperatorHistory(){
   const box=$("history");
