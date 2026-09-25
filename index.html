@@ -568,7 +568,7 @@ async function updateMatch(){
   closeEdit();await loadRanking();await loadOperatorHistory();
 }
 $("publicBtn").onclick=()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");$("partialBtn")?.classList.remove("primary");loadRanking()};
-$("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){$("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");await loadHistory()}}};
+$("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){$("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");await loadOperatorHistory()}}};
 $("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
 (async()=>{await loadPlayers();buildSets();await loadRanking()})();
