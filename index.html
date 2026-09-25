@@ -180,7 +180,10 @@ nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
   box-shadow:0 2px 7px rgba(0,0,0,.14)!important;
 }
 </style>
-</head>
+<style id="rpl-nav-order-v6534">
+nav[style*="justify-content:center"]{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;flex-wrap:wrap!important}
+#publicBtn,#partialBtn,#historyBtn,#adminBtn{order:initial!important}
+</style></head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -193,7 +196,8 @@ nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
 <nav style="padding:14px 0;justify-content:center">
 <button id="publicBtn" class="primary">🏆 Classifica</button>
 <button id="partialBtn">📊 Classifica parziale</button>
-<button id="adminBtn">🔐 Area riservata</button><a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
+<a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
+<button id="adminBtn">🔐 Area riservata</button>
 
 </nav>
 
