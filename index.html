@@ -102,6 +102,17 @@ window.esc = window.esc || function(v){
 <style id="rpl-score-final-style">.score-selects{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%}.score-selects select{width:58px!important;min-width:58px!important;height:42px!important;padding:6px!important;font-size:18px!important;font-weight:800!important;text-align:center!important;border:1px solid #bbb!important;border-radius:10px!important;background:#fff!important;color:#111!important}.score-dash{display:inline-block!important;font-size:20px!important;font-weight:900!important}</style><style id="guest-player-style">
 #guestLegend{color:#f5d76e!important}
 </style>
+
+<style id="rpl-professional-buttons-v6530">
+nav button,nav a,.tabs button,.tabs a,.menu button,.menu a{
+  border-radius:10px;
+  font-weight:700;
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+nav button:hover,nav a:hover,.tabs button:hover,.tabs a:hover,.menu button:hover,.menu a:hover{
+  transform:translateY(-1px);
+}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -115,7 +126,7 @@ window.esc = window.esc || function(v){
 <nav style="padding:14px 0;justify-content:center">
 <button id="publicBtn" class="primary">🏆 Classifica</button>
 <button id="partialBtn">📊 Classifica parziale</button>
-<button id="adminBtn">🔐 Area operatori</button><a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
+<button id="adminBtn">🔐 Area riservata</button><a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
 
 </nav>
 
@@ -156,7 +167,7 @@ window.esc = window.esc || function(v){
 </section>
 
 <section id="adminPage" class="hidden">
-<div id="loginBox" class="card login"><h2>🔐 Area operatori</h2><div class="muted">Accesso riservato agli operatori RPL autorizzati.</div>
+<div id="loginBox" class="card login"><h2>🔐 Area riservata</h2><div class="muted">Accesso riservato agli operatori RPL autorizzati.</div>
 <label>Email</label><input id="email" type="email" autocomplete="username" placeholder="operatore@email.it">
 <label>Password</label><input id="password" type="password" autocomplete="current-password">
 <button class="primary" id="login">ACCEDI</button><div id="loginMsg" class="msg"></div></div>
@@ -538,7 +549,7 @@ async function loadOperatorHistory(){
       </div>`;
     }).join("");
   }catch(e){
-    console.error("Errore storico area operatori:",e);
+    console.error("Errore storico area riservata:",e);
     box.innerHTML=`<div class="msg err">Errore caricamento storico: ${escOperator(e.message||e)}<br><button type="button" onclick="loadOperatorHistory()">🔄 Riprova</button></div>`;
   }
 }
@@ -1061,4 +1072,11 @@ $("date").value=new Date().toISOString().slice(0,16);
 .rpl-score-dash{font-weight:900;font-size:18px}
 </style>
 <script id="rpl-score-select-fix">/* Score controls are native selects in V6.5.24; no DOM observer needed. */</script>
+
+<script id="rpl-nav-professional-v6530">
+document.addEventListener("DOMContentLoaded",function(){
+  const area=[...document.querySelectorAll("button,a")].find(x=>x.textContent.trim().toLowerCase().includes("area riservata"));
+  if(area && area.parentElement) area.parentElement.appendChild(area);
+});
+</script>
 </body></html>
