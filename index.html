@@ -954,4 +954,47 @@ $("date").value=new Date().toISOString().slice(0,16);
   });
 })();
 </script>
+
+<style id="rpl-score-select-style">
+.rpl-score-selects{display:flex;align-items:center;justify-content:center;gap:7px}
+.rpl-score-selects select{width:62px;min-width:62px;padding:9px 8px;border:1px solid #ccc;border-radius:10px;font-size:17px;font-weight:800;text-align:center;background:#fff}
+.rpl-score-dash{font-weight:900;font-size:18px}
+</style>
+<script id="rpl-score-select-fix">
+(function(){
+  function makeSelect(){
+    const s=document.createElement("select");
+    s.className="rpl-score-part";
+    let o=document.createElement("option"); o.value=""; o.textContent="–"; s.appendChild(o);
+    for(let n=0;n<=7;n++){o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);}
+    return s;
+  }
+  function install(root){
+    const inputs=[...root.querySelectorAll("input")].filter(i=>{
+      const m=((i.id||"")+" "+(i.name||"")+" "+(i.placeholder||"")).toLowerCase();
+      return /score|risultato|punteggio/.test(m) || /^\s*[0-7]\s*[-–]\s*[0-7]\s*$/.test(i.value||"");
+    });
+    inputs.forEach(input=>{
+      if(input.dataset.rplScoreSelect==="1") return;
+      const wrap=document.createElement("div"); wrap.className="rpl-score-selects";
+      const a=makeSelect(), b=makeSelect(), dash=document.createElement("span");
+      dash.className="rpl-score-dash"; dash.textContent="–";
+      const m=String(input.value||"").match(/^\s*([0-7])\s*[-–]\s*([0-7])\s*$/);
+      if(m){a.value=m[1];b.value=m[2];}
+      wrap.append(a,dash,b);
+      input.style.display="none"; input.dataset.rplScoreSelect="1";
+      input.parentNode.insertBefore(wrap,input);
+      const sync=()=>{
+        input.value=(a.value!==""&&b.value!=="")?a.value+"-"+b.value:"";
+        input.dispatchEvent(new Event("input",{bubbles:true}));
+        input.dispatchEvent(new Event("change",{bubbles:true}));
+      };
+      a.addEventListener("change",sync); b.addEventListener("change",sync); sync();
+    });
+  }
+  const go=()=>install(document);
+  new MutationObserver(go).observe(document.documentElement,{childList:true,subtree:true});
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",go); else go();
+})();
+</script>
 </body></html>
