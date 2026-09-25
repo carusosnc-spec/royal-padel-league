@@ -183,7 +183,24 @@ nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
 <style id="rpl-nav-order-v6534">
 nav[style*="justify-content:center"]{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;flex-wrap:wrap!important}
 #publicBtn,#partialBtn,#historyBtn,#adminBtn{order:initial!important}
-</style></head>
+</style>
+<style id="rpl-v6536-submenu">
+.rpl-admin-submenu{
+  display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;
+  padding:10px;border-radius:12px;background:rgba(0,0,0,.035);
+}
+.rpl-admin-submenu button{
+  border:1px solid rgba(31,41,55,.18);border-radius:10px;
+  padding:10px 16px;font-weight:700;background:#fff;cursor:pointer;
+}
+.rpl-admin-submenu button.active{
+  background:linear-gradient(180deg,#f6d86b,#d9ad32);
+  border-color:#c59a27;color:#171717;
+}
+.rpl-admin-panel{display:none}
+.rpl-admin-panel.active{display:block}
+</style>
+</head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -1352,6 +1369,90 @@ $("date").value=new Date().toISOString().slice(0,16);
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);
   else install();
+})();
+</script>
+
+<script id="rpl-v6536-submenu-script">
+(function(){
+  const COURTS=[
+    "Sporting Club Perillo",
+    "Sporting Village Tirrito Coperto",
+    "Sporting Village Tirrito Scoperto",
+    "Padel Club Calascibetta"
+  ];
+
+  function makeCourtSelect(){
+    document.querySelectorAll('input').forEach(input=>{
+      const ph=(input.placeholder||"").toLowerCase();
+      const aria=(input.getAttribute("aria-label")||"").toLowerCase();
+      if(!(ph.includes("campo")||aria.includes("campo"))) return;
+      if(input.dataset.courtFixed==="1") return;
+      const select=document.createElement("select");
+      select.className=input.className;
+      select.name=input.name;
+      select.id=input.id;
+      select.dataset.courtFixed="1";
+      COURTS.forEach(c=>{
+        const o=document.createElement("option");
+        o.value=c;o.textContent=c;select.appendChild(o);
+      });
+      if(input.value && COURTS.includes(input.value)) select.value=input.value;
+      input.replaceWith(select);
+    });
+  }
+
+  function buildSubmenu(){
+    const admin=[...document.querySelectorAll("h1,h2,h3,h4,button,div")].find(x=>
+      x.textContent.trim().toLowerCase()==="area riservata"
+    );
+    if(!admin || document.getElementById("rplAdminSubmenu")) return;
+
+    // Find the largest visible container around the operator content.
+    let root=admin.parentElement;
+    for(let i=0;i<4 && root;i++,root=root.parentElement){
+      if(root.querySelector("input,select,table,form")) break;
+    }
+    if(!root) return;
+
+    const submenu=document.createElement("div");
+    submenu.id="rplAdminSubmenu";
+    submenu.className="rpl-admin-submenu";
+    const b1=document.createElement("button");
+    const b2=document.createElement("button");
+    b1.textContent="🎾 Inserisci partita";
+    b2.textContent="📅 Calendario";
+    submenu.append(b1,b2);
+    root.insertBefore(submenu,root.firstChild);
+
+    // Identify content blocks by text.
+    const descendants=[...root.children];
+    let matchPanel=null, calendarPanel=null;
+    descendants.forEach(el=>{
+      const t=el.textContent.toLowerCase();
+      if(!matchPanel && (t.includes("inserisci partita") || t.includes("inserisci i risultati"))) matchPanel=el;
+      if(!calendarPanel && t.includes("calendario")) calendarPanel=el;
+    });
+
+    function show(which){
+      b1.classList.toggle("active",which==="match");
+      b2.classList.toggle("active",which==="calendar");
+      if(matchPanel) matchPanel.style.display=which==="match"?"block":"none";
+      if(calendarPanel) calendarPanel.style.display=which==="calendar"?"block":"none";
+      if(which==="calendar") makeCourtSelect();
+    }
+    b1.onclick=()=>show("match");
+    b2.onclick=()=>show("calendar");
+    show("match");
+  }
+
+  function init(){
+    buildSubmenu();
+    makeCourtSelect();
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);
+  else init();
+  const obs=new MutationObserver(()=>{buildSubmenu();makeCourtSelect()});
+  obs.observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 </body></html>
