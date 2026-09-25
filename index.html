@@ -154,6 +154,37 @@ nav a[data-nav="parziale"] > span:first-child{color:#16a34a !important}
 nav button[data-nav="riservata"] > span:first-child,
 nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
 </style>
+
+<style id="rpl-nav-active-v6532">
+/* Stato attivo uniforme per tutti i quattro pulsanti */
+.rpl-nav-item{
+  box-sizing:border-box!important;
+  min-height:42px!important;
+  height:42px!important;
+  padding:0 15px!important;
+  border:1px solid rgba(31,41,55,.18)!important;
+  border-radius:10px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  font-weight:700!important;
+  cursor:pointer!important;
+  transition:background-color .15s ease,color .15s ease,box-shadow .15s ease,transform .15s ease!important;
+}
+.rpl-nav-item.rpl-active{
+  background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;
+  color:#171717!important;
+  border-color:#c59a27!important;
+  box-shadow:0 2px 7px rgba(0,0,0,.14)!important;
+}
+.rpl-nav-item.rpl-active .rpl-nav-icon-classifica,
+.rpl-nav-item.rpl-active .rpl-nav-icon-storico,
+.rpl-nav-item.rpl-active .rpl-nav-icon-parziale,
+.rpl-nav-item.rpl-active .rpl-nav-icon-riservata{
+  color:#171717!important;
+}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1138,5 +1169,60 @@ document.addEventListener("DOMContentLoaded",function(){
     }
   });
 });
+</script>
+
+<script id="rpl-nav-active-script-v6532">
+(function(){
+  function setupNav(){
+    const els=[...document.querySelectorAll("button,a")];
+    const nav=[];
+    els.forEach(el=>{
+      const t=el.textContent.trim().toLowerCase();
+      let key=null;
+      if(t.includes("storico partite")) key="storico";
+      else if(t.includes("classifica parziale")) key="parziale";
+      else if(t.includes("area riservata")) key="riservata";
+      else if(t.includes("classifica")) key="classifica";
+      if(!key)return;
+      el.classList.add("rpl-nav-item");
+      el.dataset.rplNav=key;
+      nav.push(el);
+    });
+    if(!nav.length)return;
+
+    function setActive(key){
+      nav.forEach(el=>el.classList.toggle("rpl-active",el.dataset.rplNav===key));
+    }
+
+    // Classifica è la schermata iniziale.
+    setActive("classifica");
+
+    nav.forEach(el=>{
+      el.addEventListener("click",function(){
+        // Applica subito lo stato visivo, prima della navigazione/render.
+        setActive(el.dataset.rplNav);
+      },true);
+    });
+
+    // Osserva i cambi di schermata dell'app e sincronizza il pulsante attivo.
+    const observer=new MutationObserver(function(){
+      const visible=[];
+      document.querySelectorAll("[id],section,main").forEach(x=>{
+        if(!x.offsetParent)return;
+        const id=(x.id||"").toLowerCase();
+        if(id.includes("partial")||id.includes("parziale"))visible.push("parziale");
+        else if(id.includes("history")||id.includes("storico"))visible.push("storico");
+        else if(id.includes("operator")||id.includes("riserv"))visible.push("riservata");
+        else if(id.includes("ranking")||id==="classifica")visible.push("classifica");
+      });
+      const priority=["riservata","storico","parziale","classifica"];
+      const key=priority.find(k=>visible.includes(k));
+      if(key)setActive(key);
+    });
+    observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class","style","hidden"]});
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setupNav);
+  else setupNav();
+})();
 </script>
 </body></html>
