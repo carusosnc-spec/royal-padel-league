@@ -169,7 +169,7 @@ window.esc = window.esc || function(v){
 <div id="sets"></div><button type="button" id="add-set-btn" onclick="addSet(false)" style="margin:10px 0;padding:10px 14px;border-radius:8px;cursor:pointer">➕ AGGIUNGI SET</button><button type="button" onclick="addSet(false)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set giocati possono essere inseriti e saranno conteggiati in classifica.</div>
 <div class="two"><div><label>MVP — anche multipli</label><div id="mvp" class="checklist"></div></div><div><label>Imbattuto — anche multipli</label><div id="imb" class="checklist"></div></div></div>
 <button class="primary" id="save">SALVA PARTITA</button><button id="logout">ESCI</button><div id="msg" class="msg"></div></div>
-<div class="card"><h2>📋 Storico partite</h2><div id="history" class="muted">Caricamento…</div></div>
+<div class="card"><h2>📋 Storico partite</h2><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Storico partite</b><button type="button" class="smallbtn" onclick="loadOperatorHistory()">🔄 Aggiorna</button></div><div id="history" class="muted">Caricamento…</div></div>
 </div></section>
 <div class="card" style="text-align:center;margin-top:18px;padding:18px">
 <div style="color:#ffd86a;font-size:22px;font-weight:900;letter-spacing:.05em">WHERE LEGENDS PLAY</div>
@@ -464,38 +464,66 @@ async function calculateStandingsBefore(timestamp){
 async function loadOperatorHistory(){
   const box=$("history");
   if(!box)return;
-  box.textContent="Caricamento…";
+  box.innerHTML='<div class="muted">Caricamento…</div>';
   try{
-    const mr=await sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
+    // Keep the operator history completely independent from the public history.
+    // Fetch only the match list first, then enrich it with the existing tables.
+    const query=sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
+    const mr=await Promise.race([
+      query,
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("Timeout caricamento storico")),10000))
+    ]);
     if(mr.error)throw mr.error;
     const matches=mr.data||[];
-    if(!matches.length){box.textContent="Nessuna partita registrata.";return;}
+    if(!matches.length){
+      box.innerHTML='<div class="muted">Nessuna partita registrata.</div>';
+      return;
+    }
+
     const ids=matches.map(m=>m.id);
-    const [mpR,setsR]=await Promise.all([
+    const [mpR,setsR,plR]=await Promise.all([
       sb.from("match_players").select("match_id,player_id").in("match_id",ids),
-      sb.from("sets").select("match_id,set_number,games_a,games_b").in("match_id",ids).order("set_number")
+      sb.from("sets").select("match_id,set_number,games_a,games_b").in("match_id",ids).order("set_number"),
+      sb.from("players").select("id,name,nickname")
     ]);
     if(mpR.error)throw mpR.error;
     if(setsR.error)throw setsR.error;
+    if(plR.error)throw plR.error;
+
     const names={};
-    (dbPlayers||[]).forEach(p=>names[String(p.id)]=p.name);
+    (plR.data||[]).forEach(p=>names[String(p.id)]=p.name+(p.nickname?" — "+p.nickname:""));
     const playersBy={};
-    (mpR.data||[]).forEach(x=>(playersBy[String(x.match_id)]??=[]).push(names[String(x.player_id)]||"Giocatore"));
+    (mpR.data||[]).forEach(x=>{
+      const k=String(x.match_id);
+      if(!playersBy[k])playersBy[k]=[];
+      const n=names[String(x.player_id)]||"Giocatore";
+      if(!playersBy[k].includes(n))playersBy[k].push(n);
+    });
     const setsBy={};
-    (setsR.data||[]).forEach(x=>(setsBy[String(x.match_id)]??=[]).push(x));
+    (setsR.data||[]).forEach(x=>{
+      const k=String(x.match_id);
+      if(!setsBy[k])setsBy[k]=[];
+      setsBy[k].push(x);
+    });
+
     box.innerHTML=matches.map(m=>{
-      const sets=setsBy[String(m.id)]||[];
-      const namesList=[...new Set(playersBy[String(m.id)]||[])];
+      const k=String(m.id), sets=setsBy[k]||[], ps=playersBy[k]||[];
+      const scores=sets.map(s=>`${s.games_a}-${s.games_b}`).join(" · ")||"—";
       return `<div class="historyrow" style="border-top:1px solid #e5e7eb;padding:10px 0">
-        <div><b>${new Date(m.played_at).toLocaleString("it-IT")}</b><br>
-        <span class="muted">${namesList.map(n=>escOperator(n)).join(" • ")}</span><br>
-        <span class="badge">${sets.map(x=>"S"+x.set_number+" "+x.games_a+"-"+x.games_b).join(" · ")}</span></div>
-        <div class="actions"><button class="smallbtn edit" onclick="openEdit(${m.id})">✏️ Modifica</button><button class="smallbtn danger" onclick="deleteMatch(${m.id})">🗑️ Elimina</button></div>
+        <div style="min-width:0">
+          <b>${escOperator(new Date(m.played_at).toLocaleString("it-IT"))}</b><br>
+          <span class="muted">${ps.map(escOperator).join(" • ")}</span><br>
+          <span class="badge">${escOperator(scores)}</span>
+        </div>
+        <div class="actions">
+          <button class="smallbtn edit" type="button" onclick="openEdit(${JSON.stringify(m.id)})">✏️ Modifica</button>
+          <button class="smallbtn danger" type="button" onclick="deleteMatch(${JSON.stringify(m.id)})">🗑️ Elimina</button>
+        </div>
       </div>`;
     }).join("");
   }catch(e){
     console.error("Errore storico area operatori:",e);
-    box.innerHTML=`<div style="color:#b42318">Errore caricamento storico: ${escOperator(e.message||e)}</div>`;
+    box.innerHTML=`<div class="msg err">Errore caricamento storico: ${escOperator(e.message||e)}<br><button type="button" onclick="loadOperatorHistory()">🔄 Riprova</button></div>`;
   }
 }
 function escOperator(v){
