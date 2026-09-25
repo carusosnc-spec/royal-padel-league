@@ -113,6 +113,47 @@ nav button:hover,nav a:hover,.tabs button:hover,.tabs a:hover,.menu button:hover
   transform:translateY(-1px);
 }
 </style>
+
+<style id="rpl-nav-uniform-v6531">
+/* Uniforma tutti i pulsanti della navigazione pubblica */
+nav button, nav a, .tabs button, .tabs a, .menu button, .menu a {
+  box-sizing:border-box !important;
+  min-height:42px !important;
+  height:42px !important;
+  padding:0 15px !important;
+  border:1px solid rgba(31,41,55,.18) !important;
+  border-radius:10px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:7px !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+  box-shadow:none !important;
+}
+nav button:hover, nav a:hover, .tabs button:hover, .tabs a:hover, .menu button:hover, .menu a:hover {
+  transform:translateY(-1px);
+}
+/* Colori delle piccole icone, mantenendo il testo neutro */
+nav button .icon, nav a .icon, .tabs button .icon, .tabs a .icon, .menu button .icon, .menu a .icon {
+  font-size:18px !important;
+  line-height:1 !important;
+}
+.rpl-nav-icon-classifica{color:#2563eb !important}
+.rpl-nav-icon-storico{color:#f59e0b !important}
+.rpl-nav-icon-parziale{color:#16a34a !important}
+.rpl-nav-icon-riservata{color:#7c3aed !important}
+
+/* Se le icone sono emoji/testo dentro uno span, assegna comunque il colore */
+nav button[data-nav="classifica"] > span:first-child,
+nav a[data-nav="classifica"] > span:first-child{color:#2563eb !important}
+nav button[data-nav="storico"] > span:first-child,
+nav a[data-nav="storico"] > span:first-child{color:#f59e0b !important}
+nav button[data-nav="parziale"] > span:first-child,
+nav a[data-nav="parziale"] > span:first-child{color:#16a34a !important}
+nav button[data-nav="riservata"] > span:first-child,
+nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1077,6 +1118,25 @@ $("date").value=new Date().toISOString().slice(0,16);
 document.addEventListener("DOMContentLoaded",function(){
   const area=[...document.querySelectorAll("button,a")].find(x=>x.textContent.trim().toLowerCase().includes("area riservata"));
   if(area && area.parentElement) area.parentElement.appendChild(area);
+});
+</script>
+
+<script id="rpl-nav-icons-v6531">
+document.addEventListener("DOMContentLoaded",function(){
+  const items=[...document.querySelectorAll("button,a")];
+  items.forEach(el=>{
+    const t=el.textContent.trim().toLowerCase();
+    let key="";
+    if(t.includes("storico partite")) key="storico";
+    else if(t.includes("classifica parziale")) key="parziale";
+    else if(t.includes("area riservata")) key="riservata";
+    else if(t.includes("classifica")) key="classifica";
+    if(key){
+      el.dataset.nav=key;
+      const first=el.querySelector(":scope > span:first-child");
+      if(first) first.classList.add("rpl-nav-icon-"+key);
+    }
+  });
 });
 </script>
 </body></html>
