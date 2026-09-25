@@ -155,9 +155,9 @@ nav button[data-nav="riservata"] > span:first-child,
 nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
 </style>
 
-<style id="rpl-nav-active-v6532">
-/* Stato attivo uniforme per tutti i quattro pulsanti */
-.rpl-nav-item{
+<style id="rpl-nav-controller-v6533">
+/* One consistent visual state: only .primary is active. */
+#publicBtn,#partialBtn,#historyBtn,#adminBtn{
   box-sizing:border-box!important;
   min-height:42px!important;
   height:42px!important;
@@ -169,20 +169,15 @@ nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
   justify-content:center!important;
   gap:7px!important;
   font-weight:700!important;
+  line-height:1!important;
+  text-decoration:none!important;
   cursor:pointer!important;
-  transition:background-color .15s ease,color .15s ease,box-shadow .15s ease,transform .15s ease!important;
 }
-.rpl-nav-item.rpl-active{
+#publicBtn.primary,#partialBtn.primary,#historyBtn.primary,#adminBtn.primary{
   background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;
   color:#171717!important;
   border-color:#c59a27!important;
   box-shadow:0 2px 7px rgba(0,0,0,.14)!important;
-}
-.rpl-nav-item.rpl-active .rpl-nav-icon-classifica,
-.rpl-nav-item.rpl-active .rpl-nav-icon-storico,
-.rpl-nav-item.rpl-active .rpl-nav-icon-parziale,
-.rpl-nav-item.rpl-active .rpl-nav-icon-riservata{
-  color:#171717!important;
 }
 </style>
 </head>
@@ -1145,84 +1140,84 @@ $("date").value=new Date().toISOString().slice(0,16);
 </style>
 <script id="rpl-score-select-fix">/* Score controls are native selects in V6.5.24; no DOM observer needed. */</script>
 
-<script id="rpl-nav-professional-v6530">
-document.addEventListener("DOMContentLoaded",function(){
-  const area=[...document.querySelectorAll("button,a")].find(x=>x.textContent.trim().toLowerCase().includes("area riservata"));
-  if(area && area.parentElement) area.parentElement.appendChild(area);
-});
-</script>
 
-<script id="rpl-nav-icons-v6531">
-document.addEventListener("DOMContentLoaded",function(){
-  const items=[...document.querySelectorAll("button,a")];
-  items.forEach(el=>{
-    const t=el.textContent.trim().toLowerCase();
-    let key="";
-    if(t.includes("storico partite")) key="storico";
-    else if(t.includes("classifica parziale")) key="parziale";
-    else if(t.includes("area riservata")) key="riservata";
-    else if(t.includes("classifica")) key="classifica";
-    if(key){
-      el.dataset.nav=key;
-      const first=el.querySelector(":scope > span:first-child");
-      if(first) first.classList.add("rpl-nav-icon-"+key);
-    }
-  });
-});
-</script>
-
-<script id="rpl-nav-active-script-v6532">
+<script id="rpl-nav-controller-v6533">
 (function(){
-  function setupNav(){
-    const els=[...document.querySelectorAll("button,a")];
-    const nav=[];
-    els.forEach(el=>{
-      const t=el.textContent.trim().toLowerCase();
-      let key=null;
-      if(t.includes("storico partite")) key="storico";
-      else if(t.includes("classifica parziale")) key="parziale";
-      else if(t.includes("area riservata")) key="riservata";
-      else if(t.includes("classifica")) key="classifica";
-      if(!key)return;
-      el.classList.add("rpl-nav-item");
-      el.dataset.rplNav=key;
-      nav.push(el);
-    });
-    if(!nav.length)return;
-
-    function setActive(key){
-      nav.forEach(el=>el.classList.toggle("rpl-active",el.dataset.rplNav===key));
-    }
-
-    // Classifica è la schermata iniziale.
-    setActive("classifica");
-
-    nav.forEach(el=>{
-      el.addEventListener("click",function(){
-        // Applica subito lo stato visivo, prima della navigazione/render.
-        setActive(el.dataset.rplNav);
-      },true);
-    });
-
-    // Osserva i cambi di schermata dell'app e sincronizza il pulsante attivo.
-    const observer=new MutationObserver(function(){
-      const visible=[];
-      document.querySelectorAll("[id],section,main").forEach(x=>{
-        if(!x.offsetParent)return;
-        const id=(x.id||"").toLowerCase();
-        if(id.includes("partial")||id.includes("parziale"))visible.push("parziale");
-        else if(id.includes("history")||id.includes("storico"))visible.push("storico");
-        else if(id.includes("operator")||id.includes("riserv"))visible.push("riservata");
-        else if(id.includes("ranking")||id==="classifica")visible.push("classifica");
-      });
-      const priority=["riservata","storico","parziale","classifica"];
-      const key=priority.find(k=>visible.includes(k));
-      if(key)setActive(key);
-    });
-    observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class","style","hidden"]});
+  function navButtons(){
+    return {
+      home:document.getElementById("publicBtn"),
+      partial:document.getElementById("partialBtn"),
+      history:document.getElementById("historyBtn"),
+      admin:document.getElementById("adminBtn")
+    };
   }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setupNav);
-  else setupNav();
+  function active(key){
+    const b=navButtons();
+    Object.keys(b).forEach(k=>b[k]?.classList.toggle("primary",k===key));
+  }
+  function showHomeNow(){
+    const b=navButtons();
+    location.hash="";
+    document.getElementById("partialPage")?.classList.add("hidden");
+    document.getElementById("historyView")?.style.setProperty("display","none");
+    document.getElementById("publicPage")?.classList.remove("hidden");
+    document.getElementById("adminPage")?.classList.add("hidden");
+    active("home");
+    if(typeof loadRanking==="function") loadRanking();
+    window.scrollTo(0,0);
+  }
+  function showPartialNow(){
+    const b=navButtons();
+    location.hash="partial";
+    document.getElementById("publicPage")?.classList.add("hidden");
+    document.getElementById("adminPage")?.classList.add("hidden");
+    document.getElementById("historyView")?.style.setProperty("display","none");
+    document.getElementById("partialPage")?.classList.remove("hidden");
+    active("partial");
+    if(typeof window.showPartial==="function") window.showPartial();
+    window.scrollTo(0,0);
+  }
+  function showHistoryNow(){
+    const b=navButtons();
+    location.hash="history";
+    document.getElementById("publicPage")?.classList.add("hidden");
+    document.getElementById("adminPage")?.classList.add("hidden");
+    document.getElementById("partialPage")?.classList.add("hidden");
+    active("history");
+    if(typeof window.showHistory==="function") window.showHistory();
+    window.scrollTo(0,0);
+  }
+  async function showAdminNow(){
+    const b=navButtons();
+    location.hash="";
+    document.getElementById("partialPage")?.classList.add("hidden");
+    document.getElementById("historyView")?.style.setProperty("display","none");
+    document.getElementById("publicPage")?.classList.add("hidden");
+    document.getElementById("adminPage")?.classList.remove("hidden");
+    active("admin");
+    // Reuse the existing auth/operator handler, but only after the view is visible.
+    if(b.admin && typeof b.admin.onclick==="function"){
+      // Existing handler also changes the view; call it only for auth/data loading.
+      try{ await b.admin.onclick(); }catch(e){ console.error(e); }
+      active("admin");
+    }
+    window.scrollTo(0,0);
+  }
+
+  function install(){
+    const b=navButtons();
+    if(!b.home||!b.partial||!b.history||!b.admin)return;
+
+    // Replace navigation listeners with a single deterministic capture handler.
+    b.home.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showHomeNow();},true);
+    b.partial.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showPartialNow();},true);
+    b.history.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showHistoryNow();},true);
+    b.admin.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showAdminNow();},true);
+
+    active(location.hash==="#history"?"history":location.hash==="#partial"?"partial":"home");
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);
+  else install();
 })();
 </script>
 </body></html>
