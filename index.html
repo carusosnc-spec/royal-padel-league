@@ -218,6 +218,15 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 .rpl-cal-week-list{margin-top:16px}
 @media(max-width:700px){.rpl-cal-grid{grid-template-columns:1fr 1fr}.rpl-cal-toolbar{display:grid}.rpl-cal-card{padding:11px}}
 </style>
+
+<style id="rpl-v6538-admin">
+#operatorSubmenu{margin-top:0}
+#operatorSubmenu > div{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important}
+#operatorSubmenu button{min-height:48px;font-weight:800;border-radius:12px}
+#operatorSubmenu button.primary{background:linear-gradient(180deg,#f6d86b,#d9ad32);color:#171717}
+#operatorCalendarSection select#calCourt{width:100%;min-height:42px}
+@media(max-width:600px){#operatorSubmenu > div{grid-template-columns:1fr}}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -279,7 +288,7 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 <button class="primary" id="login">ACCEDI</button><div id="loginMsg" class="msg"></div></div>
 
 <div id="operatorBox" class="hidden">
-<div id="operatorMatchSection"><div class="card"><h2>➕ Inserisci partita</h2>
+<div id="operatorMatchSection" class="hidden"><div class="card"><h2>➕ Inserisci partita</h2>
 <label>Data e ora di inizio partita</label><input id="date" type="datetime-local">
 <div class="muted" style="margin-top:6px">Dal 1° novembre il sistema userà la classifica precedente alla partita per congelare le fasce del match.</div>
 <div id="guestLegend" class="muted" style="margin:6px 0 10px">⭐ = Ospite · gioca la partita ma non entra in classifica e non riceve punti.</div><div class="players">
@@ -303,7 +312,15 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 <div class="muted">Inserisci le partite della settimana. Data, ora, campo e 4 giocatori vengono memorizzati. Le modifiche al calendario, compresi i cambi di campo, restano nello storico.</div>
 <div class="players" style="margin-top:12px">
 <div><label>Data e ora</label><input id="calDate" type="datetime-local"></div>
-<div><label>Campo di gioco</label><input id="calCourt" type="text" placeholder="es. Sporting Club Perillo"></div>
+<div><label>Campo di gioco</label>
+<select id="calCourt">
+<option value="">Seleziona campo</option>
+<option value="Sporting Club Perillo">Sporting Club Perillo</option>
+<option value="Sporting Village Tirrito Coperto">Sporting Village Tirrito Coperto</option>
+<option value="Sporting Village Tirrito Scoperto">Sporting Village Tirrito Scoperto</option>
+<option value="Padel Club Calascibetta">Padel Club Calascibetta</option>
+</select>
+</div>
 <div><label>Giocatore 1</label><select id="calP1"></select></div>
 <div><label>Giocatore 2</label><select id="calP2"></select></div>
 <div><label>Giocatore 3</label><select id="calP3"></select></div>
@@ -549,10 +566,19 @@ async function login(){
   if(error){$("loginMsg").className="msg err";$("loginMsg").textContent="Accesso non riuscito: "+error.message;return}
   currentUser=data.user;
   if(!(await isOperator())){await sb.auth.signOut();$("loginMsg").className="msg err";$("loginMsg").textContent="Account non autorizzato come operatore.";return}
-  $("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");$("loginMsg").className="msg";$("loginMsg").textContent="";
+  $("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");
+  $("operatorMatchSection")?.classList.add("hidden");
+  $("operatorCalendarSection")?.classList.add("hidden");
+  $("operatorSubmenu")?.classList.remove("hidden");
+  $("loginMsg").className="msg";$("loginMsg").textContent="";
+  $("opMatchTab")?.classList.remove("primary");
+  $("opCalendarTab")?.classList.remove("primary");
   await loadOperatorHistory();
 }
-async function logout(){await sb.auth.signOut();currentUser=null;$("operatorBox").classList.add("hidden");$("loginBox").classList.remove("hidden")}
+async function logout(){await sb.auth.signOut();currentUser=null;
+$("operatorBox").classList.add("hidden");$("loginBox").classList.remove("hidden");
+$("operatorMatchSection")?.classList.add("hidden");$("operatorCalendarSection")?.classList.add("hidden");
+}
 async function saveMatch(){
   $("msg").className="msg";$("msg").textContent="Salvataggio…";
   const ids=["p1","p2","p3","p4"].map(id=>+$(id).value);
@@ -668,7 +694,13 @@ async function saveCalendarMatch(){
   const pids=["calP1","calP2","calP3","calP4"].map(x=>+$(x).value);
   if(!at||!court||pids.some(x=>!x)){msg.className="msg err";msg.textContent="Completa data, ora, campo e tutti e 4 i giocatori.";return}
   if(new Set(pids).size<4){msg.className="msg err";msg.textContent="Scegli quattro giocatori diversi.";return}
-  const payload={scheduled_at:new Date(at).toISOString(),court,player_1:pids[0],player_2:pids[1],player_3:pids[2],player_4:pids[3]};
+  const courtMap={
+  "Sporting Club Perillo":1,
+  "Sporting Village Tirrito Coperto":2,
+  "Sporting Village Tirrito Scoperto":3,
+  "Padel Club Calascibetta":4
+};
+const payload={scheduled_at:new Date(at).toISOString(),court,court_id:courtMap[court]||null,player_1:pids[0],player_2:pids[1],player_3:pids[2],player_4:pids[3]};
   let r;
   if(id) r=await sb.from("calendar_matches").update(payload).eq("id",id).select().single();
   else r=await sb.from("calendar_matches").insert(payload).select().single();
@@ -859,7 +891,16 @@ async function updateMatch(){
   closeEdit();await loadRanking();await loadOperatorHistory();
 }
 $("publicBtn").onclick=()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");$("partialBtn")?.classList.remove("primary");loadRanking()};
-$("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){$("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");await loadOperatorHistory()}}};
+$("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){
+  $("loginBox").classList.add("hidden");
+  $("operatorBox").classList.remove("hidden");
+  $("operatorMatchSection")?.classList.add("hidden");
+  $("operatorCalendarSection")?.classList.add("hidden");
+  $("operatorSubmenu")?.classList.remove("hidden");
+  $("opMatchTab")?.classList.remove("primary");
+  $("opCalendarTab")?.classList.remove("primary");
+  await loadOperatorHistory();
+}}};
 $("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
 (async()=>{await loadPlayers();buildSets();await loadRanking()})();
@@ -1390,266 +1431,5 @@ $("date").value=new Date().toISOString().slice(0,16);
 })();
 </script>
 
-<script id="rpl-v6536-submenu-script">
-(function(){
-  const COURTS=[
-    "Sporting Club Perillo",
-    "Sporting Village Tirrito Coperto",
-    "Sporting Village Tirrito Scoperto",
-    "Padel Club Calascibetta"
-  ];
 
-  function makeCourtSelect(){
-    document.querySelectorAll('input').forEach(input=>{
-      const ph=(input.placeholder||"").toLowerCase();
-      const aria=(input.getAttribute("aria-label")||"").toLowerCase();
-      if(!(ph.includes("campo")||aria.includes("campo"))) return;
-      if(input.dataset.courtFixed==="1") return;
-      const select=document.createElement("select");
-      select.className=input.className;
-      select.name=input.name;
-      select.id=input.id;
-      select.dataset.courtFixed="1";
-      COURTS.forEach(c=>{
-        const o=document.createElement("option");
-        o.value=c;o.textContent=c;select.appendChild(o);
-      });
-      if(input.value && COURTS.includes(input.value)) select.value=input.value;
-      input.replaceWith(select);
-    });
-  }
-
-  function buildSubmenu(){
-    const admin=[...document.querySelectorAll("h1,h2,h3,h4,button,div")].find(x=>
-      x.textContent.trim().toLowerCase()==="area riservata"
-    );
-    if(!admin || document.getElementById("rplAdminSubmenu")) return;
-
-    // Find the largest visible container around the operator content.
-    let root=admin.parentElement;
-    for(let i=0;i<4 && root;i++,root=root.parentElement){
-      if(root.querySelector("input,select,table,form")) break;
-    }
-    if(!root) return;
-
-    const submenu=document.createElement("div");
-    submenu.id="rplAdminSubmenu";
-    submenu.className="rpl-admin-submenu";
-    const b1=document.createElement("button");
-    const b2=document.createElement("button");
-    b1.textContent="🎾 Inserisci partita";
-    b2.textContent="📅 Calendario";
-    submenu.append(b1,b2);
-    root.insertBefore(submenu,root.firstChild);
-
-    // Identify content blocks by text.
-    const descendants=[...root.children];
-    let matchPanel=null, calendarPanel=null;
-    descendants.forEach(el=>{
-      const t=el.textContent.toLowerCase();
-      if(!matchPanel && (t.includes("inserisci partita") || t.includes("inserisci i risultati"))) matchPanel=el;
-      if(!calendarPanel && t.includes("calendario")) calendarPanel=el;
-    });
-
-    function show(which){
-      b1.classList.toggle("active",which==="match");
-      b2.classList.toggle("active",which==="calendar");
-      if(matchPanel) matchPanel.style.display=which==="match"?"block":"none";
-      if(calendarPanel) calendarPanel.style.display=which==="calendar"?"block":"none";
-      if(which==="calendar") makeCourtSelect();
-    }
-    b1.onclick=()=>show("match");
-    b2.onclick=()=>show("calendar");
-    show("match");
-  }
-
-  function init(){
-    buildSubmenu();
-    makeCourtSelect();
-  }
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);
-  else init();
-  const obs=new MutationObserver(()=>{buildSubmenu();makeCourtSelect()});
-  obs.observe(document.body,{childList:true,subtree:true});
-})();
-</script>
-
-<script id="rpl-v6537-calendar-script">
-(function(){
-  const COURTS=[
-    "Sporting Club Perillo",
-    "Sporting Village Tirrito Coperto",
-    "Sporting Village Tirrito Scoperto",
-    "Padel Club Calascibetta"
-  ];
-  let players=[], courts=[], rows=[];
-
-  function qs(s){return document.querySelector(s)}
-  function supa(){return window.supabase || window.sb || window.client || null}
-
-  async function loadCalendarData(){
-    const db=supa();
-    if(!db || !db.from) return;
-    try{
-      const p=await db.from("players").select("id,name,nickname,fascia,fascia_value,is_guest,active").order("name");
-      if(!p.error) players=(p.data||[]).filter(x=>x.active!==false);
-      const c=await db.from("calendar_courts").select("id,name,active").order("id");
-      if(!c.error && c.data?.length) courts=c.data.filter(x=>x.active!==false);
-      else courts=COURTS.map((name,i)=>({id:i+1,name,active:true}));
-    }catch(e){console.error("Calendario:",e)}
-    render();
-  }
-
-  function playerLabel(p){
-    const nick=p.nickname?` "${p.nickname}"`:"";
-    const guest=p.is_guest?" ⭐":"";
-    return `${p.name||""}${nick}${guest}`;
-  }
-
-  function playerSelect(selected){
-    const s=document.createElement("select");
-    s.innerHTML='<option value="">Seleziona giocatore</option>';
-    players.forEach(p=>{
-      const o=document.createElement("option");
-      o.value=p.id;o.textContent=playerLabel(p);
-      if(String(p.id)===String(selected))o.selected=true;
-      s.appendChild(o);
-    });
-    return s;
-  }
-
-  function courtSelect(selected){
-    const s=document.createElement("select");
-    s.innerHTML='<option value="">Seleziona campo</option>';
-    (courts.length?courts:COURTS.map((name,i)=>({id:i+1,name}))).forEach(c=>{
-      const o=document.createElement("option");
-      o.value=c.id;o.textContent=c.name;
-      if(String(c.id)===String(selected)||c.name===selected)o.selected=true;
-      s.appendChild(o);
-    });
-    return s;
-  }
-
-  function makeRow(data={}){
-    const card=document.createElement("div");card.className="rpl-cal-card";
-    const grid=document.createElement("div");grid.className="rpl-cal-grid";
-    const fields=[
-      ["Data","date",data.date||""],
-      ["Ora","time",data.time||""]
-    ];
-    fields.forEach(([lab,type,val])=>{
-      const wrap=document.createElement("div");wrap.className="rpl-cal-field";
-      const l=document.createElement("label");l.textContent=lab;
-      const i=document.createElement("input");i.type=type;i.value=val;
-      wrap.append(l,i);grid.appendChild(wrap);
-    });
-    const cw=document.createElement("div");cw.className="rpl-cal-field";
-    const cl=document.createElement("label");cl.textContent="Campo di gioco";
-    const cs=courtSelect(data.court_id||data.court);cw.append(cl,cs);grid.appendChild(cw);
-
-    for(let i=1;i<=4;i++){
-      const wrap=document.createElement("div");wrap.className="rpl-cal-field";
-      const l=document.createElement("label");l.textContent=`Giocatore ${i}`;
-      const ps=playerSelect(data[`player_${i}`]||data[`player_${i}_id`]);
-      wrap.append(l,ps);grid.appendChild(wrap);
-    }
-    card.appendChild(grid);
-    const actions=document.createElement("div");actions.className="rpl-cal-actions";
-    const del=document.createElement("button");del.textContent="🗑️ Elimina";
-    del.onclick=()=>card.remove();
-    actions.appendChild(del);card.appendChild(actions);
-    return card;
-  }
-
-  function render(){
-    const host=document.getElementById("rplCalendarDefinitive");
-    if(!host)return;
-    host.innerHTML="";
-    const bar=document.createElement("div");bar.className="rpl-cal-toolbar";
-    const a=document.createElement("label");a.textContent="Settimana dal";
-    const start=document.createElement("input");start.type="date";start.id="rplWeekStart";
-    const b=document.createElement("label");b.textContent="al";
-    const end=document.createElement("input");end.type="date";end.id="rplWeekEnd";
-    a.appendChild(start);b.appendChild(end);bar.append(a,b);
-    const add=document.createElement("button");add.textContent="➕ Aggiungi partita";
-    add.className="rpl-cal-save";add.onclick=()=>list.appendChild(makeRow());
-    bar.appendChild(add);host.appendChild(bar);
-    const list=document.createElement("div");list.className="rpl-cal-list";list.id="rplCalList";
-    host.appendChild(list);
-    const save=document.createElement("button");save.textContent="🟨 SALVA SETTIMANA";save.className="rpl-cal-save";
-    save.style.marginTop="14px";save.onclick=saveWeek;host.appendChild(save);
-    const history=document.createElement("div");history.className="rpl-cal-week-list";history.id="rplCalWeeks";host.appendChild(history);
-    list.appendChild(makeRow());
-    loadWeeks();
-  }
-
-  async function saveWeek(){
-    const db=supa();if(!db||!db.from){alert("Connessione database non disponibile.");return}
-    const ws=qs("#rplWeekStart")?.value,we=qs("#rplWeekEnd")?.value;
-    if(!ws||!we){alert("Inserisci data iniziale e finale della settimana.");return}
-    const cards=[...document.querySelectorAll("#rplCalList .rpl-cal-card")];
-    if(!cards.length){alert("Aggiungi almeno una partita.");return}
-    const {data:week,error:weErr}=await db.from("calendar_weeks").upsert({week_start:ws,week_end:we},{onConflict:"week_start,week_end"}).select().single();
-    if(weErr){alert("Errore nel salvataggio della settimana: "+weErr.message);return}
-    for(const card of cards){
-      const inputs=card.querySelectorAll("input"), selects=card.querySelectorAll("select");
-      const date=inputs[0]?.value,time=inputs[1]?.value;
-      const court=selects[0]?.value;
-      const p=[...selects].slice(1).map(x=>x.value);
-      if(!date||!time||!court||p.length!==4||p.some(x=>!x)){alert("Completa data, ora, campo e 4 giocatori in ogni partita.");return}
-      const snap=p.map(id=>players.find(x=>String(x.id)===String(id)));
-      const courtObj=(courts.length?courts:COURTS.map((name,i)=>({id:i+1,name}))).find(x=>String(x.id)===String(court));
-      const row={
-        week_id:week.id,
-        scheduled_at:`${date}T${time}:00`,
-        court_id:Number(court),
-        court:courtObj?.name||"",
-        player_1:p[0],player_2:p[1],player_3:p[2],player_4:p[3],
-        player_1_name:snap[0]?.name||"",player_1_nickname:snap[0]?.nickname||"",player_1_fascia:snap[0]?.fascia??null,player_1_fascia_points:snap[0]?.fascia_value??null,
-        player_2_name:snap[1]?.name||"",player_2_nickname:snap[1]?.nickname||"",player_2_fascia:snap[1]?.fascia??null,player_2_fascia_points:snap[1]?.fascia_value??null,
-        player_3_name:snap[2]?.name||"",player_3_nickname:snap[2]?.nickname||"",player_3_fascia:snap[2]?.fascia??null,player_3_fascia_points:snap[2]?.fascia_value??null,
-        player_4_name:snap[3]?.name||"",player_4_nickname:snap[3]?.nickname||"",player_4_fascia:snap[3]?.fascia??null,player_4_fascia_points:snap[3]?.fascia_value??null
-      };
-      const {error}=await db.from("calendar_matches").insert(row);
-      if(error){alert("Errore partita: "+error.message);return}
-    }
-    alert("Settimana salvata correttamente.");
-    loadWeeks();
-  }
-
-  async function loadWeeks(){
-    const db=supa();if(!db||!db.from)return;
-    const host=document.getElementById("rplCalWeeks");if(!host)return;
-    const r=await db.from("calendar_weeks").select("*").order("week_start",{ascending:false});
-    if(r.error){host.innerHTML="";return}
-    host.innerHTML="<h3>📚 Storico settimane</h3>";
-    (r.data||[]).forEach(w=>{
-      const d=document.createElement("div");d.className="rpl-cal-card";
-      d.textContent=`📅 ${w.week_start} – ${w.week_end}`;
-      host.appendChild(d);
-    });
-  }
-
-  function inject(){
-    if(document.getElementById("rplCalendarDefinitive"))return;
-    const all=[...document.querySelectorAll("h1,h2,h3,h4,button,div")];
-    const calTitle=all.find(x=>x.textContent.trim().toLowerCase()==="calendario");
-    if(!calTitle)return;
-    let root=calTitle.parentElement;
-    for(let i=0;i<4&&root;i++,root=root.parentElement){
-      if(root.querySelector("input,select,form"))break;
-    }
-    if(!root)return;
-    // Hide old calendar controls within this panel; the new editor is the sole calendar UI.
-    [...root.children].forEach(el=>{
-      if(el!==calTitle && !el.classList.contains("rpl-admin-submenu")) el.style.display="none";
-    });
-    const host=document.createElement("div");host.id="rplCalendarDefinitive";host.className="rpl-cal-wrap";
-    root.appendChild(host);
-    loadCalendarData();
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",inject);else inject();
-  new MutationObserver(inject).observe(document.body,{childList:true,subtree:true});
-})();
-</script>
 </body></html>
