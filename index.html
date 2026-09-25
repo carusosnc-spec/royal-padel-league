@@ -389,7 +389,7 @@ async function login(){
   currentUser=data.user;
   if(!(await isOperator())){await sb.auth.signOut();$("loginMsg").className="msg err";$("loginMsg").textContent="Account non autorizzato come operatore.";return}
   $("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");$("loginMsg").className="msg";$("loginMsg").textContent="";
-  await loadHistory();
+  await loadOperatorHistory();
 }
 async function logout(){await sb.auth.signOut();currentUser=null;$("operatorBox").classList.add("hidden");$("loginBox").classList.remove("hidden")}
 async function saveMatch(){
@@ -441,7 +441,7 @@ async function saveMatch(){
   const awards=[...mv.map(pid=>({match_id:matchId,player_id:pid,award_type:"MVP"})),...im.map(pid=>({match_id:matchId,player_id:pid,award_type:"IMBATTUTO"}))];
   if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){await sb.from("matches").delete().eq("id",matchId);$("msg").className="msg err";$("msg").textContent="Errore premi: "+ae.message;return}}
   $("msg").className="msg ok";$("msg").textContent="✅ Partita salvata nel database.";
-  resetForm();await loadRanking();await loadHistory();
+  resetForm();await loadRanking();await loadOperatorHistory();
 }
 async function calculateStandingsBefore(timestamp){
   const {data:matches}=await sb.from("matches").select("id,played_at").lt("played_at",timestamp).order("played_at",{ascending:true});
@@ -461,26 +461,51 @@ async function calculateStandingsBefore(timestamp){
   (aw||[]).forEach(x=>{let z=s.find(a=>a.id===x.player_id);if(z)x.award_type==="MVP"?z.mvp++:z.imb++});
   return s.map(z=>{let base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;return {...z,base,total:base+z.mvp*1.5+z.imb}}).sort((a,b)=>b.total-a.total||b.base-a.base||a.id-b.id);
 }
-async function loadHistory(){
-  const {data,error}=await sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
-  if(error){$("history").textContent="Errore: "+error.message;return}
-  if(!data.length){$("history").textContent="Nessuna partita registrata.";return}
-  const parts=[];
-  for(const m of data){
-    const {data:mp}=await sb.from("match_players").select("player_id").eq("match_id",m.id);
-    const {data:sets}=await sb.from("sets").select("*").eq("match_id",m.id).order("set_number");
-    parts.push(`<div class="historyrow" style="border-top:1px solid #e5e7eb;padding:10px 0"><div><b>${new Date(m.played_at).toLocaleString("it-IT")}</b><br>
-    <span class="muted">${(mp||[]).map(x=>playerName(x.player_id)).join(" • ")}</span><br>
-    <span class="badge">${(sets||[]).map(x=>"S"+x.set_number+" "+x.games_a+"-"+x.games_b).join(" · ")}</span></div>
-    <div class="actions"><button class="smallbtn edit" onclick="openEdit(${m.id})">✏️ Modifica</button><button class="smallbtn danger" onclick="deleteMatch(${m.id})">🗑️ Elimina</button></div></div>`);
+async function loadOperatorHistory(){
+  const box=$("history");
+  if(!box)return;
+  box.textContent="Caricamento…";
+  try{
+    const mr=await sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
+    if(mr.error)throw mr.error;
+    const matches=mr.data||[];
+    if(!matches.length){box.textContent="Nessuna partita registrata.";return;}
+    const ids=matches.map(m=>m.id);
+    const [mpR,setsR]=await Promise.all([
+      sb.from("match_players").select("match_id,player_id").in("match_id",ids),
+      sb.from("sets").select("match_id,set_number,games_a,games_b").in("match_id",ids).order("set_number")
+    ]);
+    if(mpR.error)throw mpR.error;
+    if(setsR.error)throw setsR.error;
+    const names={};
+    (dbPlayers||[]).forEach(p=>names[String(p.id)]=p.name);
+    const playersBy={};
+    (mpR.data||[]).forEach(x=>(playersBy[String(x.match_id)]??=[]).push(names[String(x.player_id)]||"Giocatore"));
+    const setsBy={};
+    (setsR.data||[]).forEach(x=>(setsBy[String(x.match_id)]??=[]).push(x));
+    box.innerHTML=matches.map(m=>{
+      const sets=setsBy[String(m.id)]||[];
+      const namesList=[...new Set(playersBy[String(m.id)]||[])];
+      return `<div class="historyrow" style="border-top:1px solid #e5e7eb;padding:10px 0">
+        <div><b>${new Date(m.played_at).toLocaleString("it-IT")}</b><br>
+        <span class="muted">${namesList.map(n=>escOperator(n)).join(" • ")}</span><br>
+        <span class="badge">${sets.map(x=>"S"+x.set_number+" "+x.games_a+"-"+x.games_b).join(" · ")}</span></div>
+        <div class="actions"><button class="smallbtn edit" onclick="openEdit(${m.id})">✏️ Modifica</button><button class="smallbtn danger" onclick="deleteMatch(${m.id})">🗑️ Elimina</button></div>
+      </div>`;
+    }).join("");
+  }catch(e){
+    console.error("Errore storico area operatori:",e);
+    box.innerHTML=`<div style="color:#b42318">Errore caricamento storico: ${escOperator(e.message||e)}</div>`;
   }
-  $("history").innerHTML=parts.join("");
+}
+function escOperator(v){
+  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 async function deleteMatch(id){
   if(!confirm("Eliminare definitivamente questa partita?"))return;
   const {error}=await sb.from("matches").delete().eq("id",id);
   if(error){alert("Errore: "+error.message);return}
-  await loadRanking();await loadHistory();
+  await loadRanking();await loadOperatorHistory();
 }
 
 
@@ -540,7 +565,7 @@ async function updateMatch(){
   const mv=[...document.querySelectorAll("#editMvp input:checked")].map(x=>+x.value),im=[...document.querySelectorAll("#editImb input:checked")].map(x=>+x.value);
   const awards=[...mv.map(pid=>({match_id:id,player_id:pid,award_type:"MVP"})),...im.map(pid=>({match_id:id,player_id:pid,award_type:"IMBATTUTO"}))];
   if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){$("editMsg").className="msg err";$("editMsg").textContent=ae.message;return}}
-  closeEdit();await loadRanking();await loadHistory();
+  closeEdit();await loadRanking();await loadOperatorHistory();
 }
 $("publicBtn").onclick=()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");$("partialBtn")?.classList.remove("primary");loadRanking()};
 $("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){$("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");await loadHistory()}}};
