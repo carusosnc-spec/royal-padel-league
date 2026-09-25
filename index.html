@@ -99,7 +99,7 @@ window.esc = window.esc || function(v){
 .score-selects{position:relative}
 .score-label{font-size:10px;font-weight:800;letter-spacing:.5px;display:none}
 </style>
-</head>
+<style id="rpl-score-final-style">.score-selects{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%}.score-selects select{width:58px!important;min-width:58px!important;height:42px!important;padding:6px!important;font-size:18px!important;font-weight:800!important;text-align:center!important;border:1px solid #bbb!important;border-radius:10px!important;background:#fff!important;color:#111!important}.score-dash{display:inline-block!important;font-size:20px!important;font-weight:900!important}</style></head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -292,7 +292,7 @@ function buildSets(){
 }
 function refreshSets(){
   const ids=["p1","p2","p3","p4"].map(x=>+$(x).value);
-  document.querySelectorAll(".set select").forEach(s=>{
+  document.querySelectorAll(".set select.a1,.set select.a2,.set select.b1,.set select.b2").forEach(s=>{
     let old=s.value;
     s.innerHTML='<option value="">Giocatore</option>'+ids.map(i=>`<option value="${i}">${playerName(i)}</option>`).join("");
     if(ids.includes(+old)) s.value=old;
@@ -491,7 +491,7 @@ function editSetMarkup(){
 }
 function refreshEditSets(){
   const ids=["ep1","ep2","ep3","ep4"].map(x=>+$(x).value);
-  document.querySelectorAll("#editSets select").forEach(s=>{let old=s.value;s.innerHTML='<option value="">Giocatore</option>'+ids.map(i=>`<option value="${i}">${playerName(i)}</option>`).join("");if(ids.includes(+old))s.value=old});
+  document.querySelectorAll("#editSets select.ea1,#editSets select.ea2,#editSets select.eb1,#editSets select.eb2").forEach(s=>{let old=s.value;s.innerHTML='<option value="">Giocatore</option>'+ids.map(i=>`<option value="${i}">${playerName(i)}</option>`).join("");if(ids.includes(+old))s.value=old});
 }
 function fillEditPlayers(){
   ["ep1","ep2","ep3","ep4"].forEach((id,i)=>{$(id).innerHTML=opts();if(dbPlayers[i])$(id).value=dbPlayers[i].id});
