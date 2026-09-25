@@ -99,7 +99,10 @@ window.esc = window.esc || function(v){
 .score-selects{position:relative}
 .score-label{font-size:10px;font-weight:800;letter-spacing:.5px;display:none}
 </style>
-<style id="rpl-score-final-style">.score-selects{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%}.score-selects select{width:58px!important;min-width:58px!important;height:42px!important;padding:6px!important;font-size:18px!important;font-weight:800!important;text-align:center!important;border:1px solid #bbb!important;border-radius:10px!important;background:#fff!important;color:#111!important}.score-dash{display:inline-block!important;font-size:20px!important;font-weight:900!important}</style></head>
+<style id="rpl-score-final-style">.score-selects{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%}.score-selects select{width:58px!important;min-width:58px!important;height:42px!important;padding:6px!important;font-size:18px!important;font-weight:800!important;text-align:center!important;border:1px solid #bbb!important;border-radius:10px!important;background:#fff!important;color:#111!important}.score-dash{display:inline-block!important;font-size:20px!important;font-weight:900!important}</style><style id="guest-player-style">
+#guestLegend{color:#f5d76e!important}
+</style>
+</head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -162,7 +165,7 @@ window.esc = window.esc || function(v){
 <div class="card"><h2>➕ Inserisci partita</h2>
 <label>Data e ora di inizio partita</label><input id="date" type="datetime-local">
 <div class="muted" style="margin-top:6px">Dal 1° novembre il sistema userà la classifica precedente alla partita per congelare le fasce del match.</div>
-<div class="players">
+<div id="guestLegend" class="muted" style="margin:6px 0 10px">⭐ = Ospite · gioca la partita ma non entra in classifica e non riceve punti.</div><div class="players">
 <div><label>Giocatore 1</label><select id="p1"></select></div><div><label>Giocatore 2</label><select id="p2"></select></div>
 <div><label>Giocatore 3</label><select id="p3"></select></div><div><label>Giocatore 4</label><select id="p4"></select></div>
 </div>
@@ -233,10 +236,18 @@ async function loadPlayers(){
   dbPlayers=data;
   fill();
 }
-function opts(){return dbPlayers.map(p=>`<option value="${p.id}">${p.name} — ${p.nickname||""}</option>`).join("")}
+function opts(){
+  return dbPlayers.map(p=>{
+    const guest=p.is_guest===true;
+    const label=guest?`⭐ ${p.name} — ${p.nickname||""}`:`${p.name} — ${p.nickname||""}`;
+    return `<option value="${p.id}" data-guest="${guest}">${label}</option>`;
+  }).join("");
+}
 function fill(){
   ["p1","p2","p3","p4"].forEach((id,i)=>{$(id).innerHTML=opts(); if(dbPlayers[i]) $(id).value=dbPlayers[i].id});
-  ["mvp","imb"].forEach(id=>{$(id).innerHTML=dbPlayers.map(p=>`<label class="check"><input type="checkbox" value="${p.id}"> ${p.name} — ${p.nickname||""}</label>`).join("")});
+  ["mvp","imb"].forEach(id=>{
+  $(id).innerHTML=dbPlayers.filter(p=>!p.is_guest).map(p=>`<label class="check"><input type="checkbox" value="${p.id}"> ${p.name} — ${p.nickname||""}</label>`).join("");
+});
 }
 function scoreOptions(){
   return `<option value="">–</option>${Array.from({length:8},(_,i)=>`<option value="${i}">${i}</option>`).join("")}`;
@@ -301,7 +312,7 @@ function refreshSets(){
 ["p1","p2","p3","p4"].forEach(id=>$(id).addEventListener("change",refreshSets));
 
 function emptyStats(){
-  return dbPlayers.map(p=>({id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,sets:0,pt:0,games:0,mvp:0,imb:0}));
+  return dbPlayers.filter(p=>!p.is_guest).map(p=>({id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,sets:0,pt:0,games:0,mvp:0,imb:0}));
 }
 function minSetsRequired(){
   const now=new Date();
@@ -418,6 +429,11 @@ async function saveMatch(){
   }else{
     const pre=await calculateStandingsBefore(playedAt);
     ids.forEach((pid,idx)=>{
+      const p=dbPlayers.find(x=>x.id===pid);
+      if(p?.is_guest){
+        snapshot[pid]={fascia:+p.fascia,fascia_value:+p.fascia_value};
+        return;
+      }
       const rank=pre.findIndex(x=>x.id===pid)+1;
       let fascia=rank<=4?1:rank<=8?2:rank<=12?3:4;
       let val=fascia===1?5:fascia===2?4:fascia===3?3:2;
@@ -445,14 +461,14 @@ async function saveMatch(){
 }
 async function calculateStandingsBefore(timestamp){
   const {data:matches}=await sb.from("matches").select("id,played_at").lt("played_at",timestamp).order("played_at",{ascending:true});
-  if(!matches||!matches.length)return dbPlayers.map(p=>({id:p.id,base:0,total:0}));
+  if(!matches||!matches.length)return dbPlayers.filter(p=>!p.is_guest).map(p=>({id:p.id,base:0,total:0}));
   const ids=matches.map(m=>m.id);
   const [{data:mp},{data:sets},{data:aw}]=await Promise.all([
     sb.from("match_players").select("*").in("match_id",ids),
     sb.from("sets").select("*").in("match_id",ids),
     sb.from("match_awards").select("*").in("match_id",ids)
   ]);
-  let s=dbPlayers.map(p=>({id:p.id,sets:0,pt:0,games:0,mvp:0,imb:0}));
+  let s=dbPlayers.filter(p=>!p.is_guest).map(p=>({id:p.id,sets:0,pt:0,games:0,mvp:0,imb:0}));
   const snap={};(mp||[]).forEach(x=>snap[x.match_id+"_"+x.player_id]=x);
   (sets||[]).forEach(x=>{let A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],win=x.games_a>x.games_b?A:B,lose=x.games_a>x.games_b?B:A,wg=Math.max(x.games_a,x.games_b),lg=Math.min(x.games_a,x.games_b);
     win.forEach(pid=>{let z=s.find(a=>a.id===pid);if(z){z.sets++;z.games+=wg;z.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0)}});
@@ -639,9 +655,9 @@ $("date").value=new Date().toISOString().slice(0,16);
 
   function getPartialPlayers(){
     try{
-      if(typeof dbPlayers!=="undefined" && Array.isArray(dbPlayers)) return dbPlayers;
+      if(typeof dbPlayers!=="undefined" && Array.isArray(dbPlayers)) return dbPlayers.filter(p=>!p.is_guest);
     }catch(e){}
-    return Array.isArray(window.dbPlayers)?window.dbPlayers:[];
+    return Array.isArray(window.dbPlayers)?window.dbPlayers.filter(p=>!p.is_guest):[];
   }
 
   function emptyPartial(){
