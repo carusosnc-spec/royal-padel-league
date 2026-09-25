@@ -90,6 +90,11 @@ window.esc = window.esc || function(v){
   });
 };
 </script>
+<style id="rpl-score-select-native-style">
+.score-selects{display:flex;align-items:center;justify-content:center;gap:8px}
+.score-selects select{width:64px;min-width:64px;padding:9px 8px;border:1px solid #ccc;border-radius:10px;font-size:17px;font-weight:800;text-align:center;background:#fff;color:#111}
+.score-dash{font-weight:900;font-size:18px}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -209,7 +214,7 @@ function validateAllPlayedSets(){
       alert(`Completa le coppie del set ${i+1}.`);
       return false;
     }
-    const score=r.querySelector(".score")?.value?.trim()||"";
+    const score=scoreValue(r,"score").trim();
     if(!score){
       alert(`Inserisci il risultato del set ${i+1}.`);
       return false;
@@ -229,13 +234,35 @@ function fill(){
   ["p1","p2","p3","p4"].forEach((id,i)=>{$(id).innerHTML=opts(); if(dbPlayers[i]) $(id).value=dbPlayers[i].id});
   ["mvp","imb"].forEach(id=>{$(id).innerHTML=dbPlayers.map(p=>`<label class="check"><input type="checkbox" value="${p.id}"> ${p.name} — ${p.nickname||""}</label>`).join("")});
 }
+function scoreOptions(){
+  return `<option value="">–</option>${Array.from({length:8},(_,i)=>`<option value="${i}">${i}</option>`).join("")}`;
+}
+function scoreSelects(prefix){
+  return `<div class="score-selects" aria-label="Risultato set">
+    <select class="${prefix}A" aria-label="Game squadra A">${scoreOptions()}</select>
+    <span class="score-dash">–</span>
+    <select class="${prefix}B" aria-label="Game squadra B">${scoreOptions()}</select>
+  </div>`;
+}
+function scoreValue(row, prefix){
+  const a=row.querySelector("."+prefix+"A")?.value||"";
+  const b=row.querySelector("."+prefix+"B")?.value||"";
+  return (a!==""&&b!=="")?`${a}-${b}`:"";
+}
+function setScoreValue(row, prefix, value){
+  const m=String(value||"").match(/^\s*([0-7])\s*[-:]\s*([0-7])\s*$/);
+  if(m){
+    const a=row.querySelector("."+prefix+"A"), b=row.querySelector("."+prefix+"B");
+    if(a)a.value=m[1]; if(b)b.value=m[2];
+  }
+}
 function setCard(n, edit=false){
   const p=edit?["ea1","ea2","eb1","eb2"]:["a1","a2","b1","b2"];
-  const score=edit?"escore":"score";
+  const prefix=edit?"escore":"score";
   return `<div class="set"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>SET ${n}</b><button type="button" class="removeSet" onclick="removeSet(this)">✕ Rimuovi</button></div><div class="setgrid">
   <div><label>Coppia A</label><select class="${p[0]}"></select><select class="${p[1]}"></select></div>
   <div><label>Coppia B</label><select class="${p[2]}"></select><select class="${p[3]}"></select></div>
-  <div><label>Game</label><input class="${score}" placeholder="6-4" inputmode="numeric"></div>
+  <div><label>Game</label>${scoreSelects(prefix)}</div>
   </div></div>`;
 }
 function renumberSets(container){
@@ -346,7 +373,7 @@ async function loadRanking(){
   (aw||[]).forEach(x=>{let s=stats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++});
   render();
 }
-function resetForm(){["p1","p2","p3","p4"].forEach((id,i)=>{if(dbPlayers[i])$(id).value=dbPlayers[i].id});refreshSets();document.querySelectorAll(".score").forEach(x=>x.value="");document.querySelectorAll("#mvp input,#imb input").forEach(x=>x.checked=false);$("date").value=new Date().toISOString().slice(0,16)}
+function resetForm(){["p1","p2","p3","p4"].forEach((id,i)=>{if(dbPlayers[i])$(id).value=dbPlayers[i].id});refreshSets();document.querySelectorAll(".scoreA,.scoreB").forEach(x=>x.value="");document.querySelectorAll("#mvp input,#imb input").forEach(x=>x.checked=false);$("date").value=new Date().toISOString().slice(0,16)}
 async function isOperator(){
   const {data,error}=await sb.from("operators").select("user_id").eq("user_id",currentUser.id).maybeSingle();
   return !error && !!data;
@@ -368,7 +395,7 @@ async function saveMatch(){
   const playedAt=new Date($("date").value).toISOString();
   let rows=[...document.querySelectorAll(".set")], parsed=[];
   for(let n=0;n<rows.length;n++){
-    let r=rows[n],t=r.querySelector(".score").value.trim();
+    let r=rows[n],t=scoreValue(r,"score").trim();
     if(!t)continue;
     let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);
     if(!m){$("msg").className="msg err";$("msg").textContent=`Set ${n+1}: inserisci ad esempio 6-4.`;return}
@@ -481,7 +508,7 @@ async function openEdit(id){
   (mp||[]).forEach((x,i)=>{if(i<4)$("ep"+(i+1)).value=x.player_id});
   refreshEditSets();
   while(document.querySelectorAll("#editSets .set").length < (sets||[]).length) addSet(true);
-  (sets||[]).forEach((x,i)=>{let r=document.querySelectorAll("#editSets .set")[i];if(!r)return;r.querySelector(".ea1").value=x.pair_a_player_1;r.querySelector(".ea2").value=x.pair_a_player_2;r.querySelector(".eb1").value=x.pair_b_player_1;r.querySelector(".eb2").value=x.pair_b_player_2;r.querySelector(".escore").value=x.games_a+"-"+x.games_b});
+  (sets||[]).forEach((x,i)=>{let r=document.querySelectorAll("#editSets .set")[i];if(!r)return;r.querySelector(".ea1").value=x.pair_a_player_1;r.querySelector(".ea2").value=x.pair_a_player_2;r.querySelector(".eb1").value=x.pair_b_player_1;r.querySelector(".eb2").value=x.pair_b_player_2;setScoreValue(r,"escore",x.games_a+"-"+x.games_b)});
   refreshEditSets();
   (aw||[]).forEach(x=>{let box=x.award_type==="MVP"?"#editMvp":"#editImb";let el=document.querySelector(`${box} input[value="${x.player_id}"]`);if(el)el.checked=true});
   $("editMsg").textContent="";
@@ -493,7 +520,7 @@ async function updateMatch(){
   const ids=["ep1","ep2","ep3","ep4"].map(x=>+$(x).value);
   if(new Set(ids).size<4){$("editMsg").className="msg err";$("editMsg").textContent="Scegli quattro giocatori diversi.";return}
   const rows=[...document.querySelectorAll("#editSets .set")],parsed=[];
-  for(let n=0;n<rows.length;n++){let r=rows[n],t=r.querySelector(".escore").value.trim();if(!t)continue;let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);if(!m){$("editMsg").className="msg err";$("editMsg").textContent=`Set ${n+1}: formato non valido.`;return}let v=["ea1","ea2","eb1","eb2"].map(c=>+r.querySelector("."+c).value);if(v.some(Number.isNaN)||new Set(v).size!==4){$("editMsg").className="msg err";$("editMsg").textContent=`Completa le coppie del set ${n+1}.`;return}if(+m[1]===+m[2]){ $("editMsg").className="msg err";$("editMsg").textContent="Un set non può finire in parità.";return}parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga:+m[1],gb:+m[2]})}
+  for(let n=0;n<rows.length;n++){let r=rows[n],t=scoreValue(r,"escore").trim();if(!t)continue;let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);if(!m){$("editMsg").className="msg err";$("editMsg").textContent=`Set ${n+1}: formato non valido.`;return}let v=["ea1","ea2","eb1","eb2"].map(c=>+r.querySelector("."+c).value);if(v.some(Number.isNaN)||new Set(v).size!==4){$("editMsg").className="msg err";$("editMsg").textContent=`Completa le coppie del set ${n+1}.`;return}if(+m[1]===+m[2]){ $("editMsg").className="msg err";$("editMsg").textContent="Un set non può finire in parità.";return}parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga:+m[1],gb:+m[2]})}
   if(!parsed.length){$("editMsg").className="msg err";$("editMsg").textContent="Inserisci almeno un set.";return}
   const {error:me}=await sb.from("matches").update({played_at:new Date($("editDate").value).toISOString()}).eq("id",id);if(me){$("editMsg").className="msg err";$("editMsg").textContent=me.message;return}
   const {data:oldMp}=await sb.from("match_players").select("*").eq("match_id",id);
@@ -960,41 +987,5 @@ $("date").value=new Date().toISOString().slice(0,16);
 .rpl-score-selects select{width:62px;min-width:62px;padding:9px 8px;border:1px solid #ccc;border-radius:10px;font-size:17px;font-weight:800;text-align:center;background:#fff}
 .rpl-score-dash{font-weight:900;font-size:18px}
 </style>
-<script id="rpl-score-select-fix">
-(function(){
-  function makeSelect(){
-    const s=document.createElement("select");
-    s.className="rpl-score-part";
-    let o=document.createElement("option"); o.value=""; o.textContent="–"; s.appendChild(o);
-    for(let n=0;n<=7;n++){o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);}
-    return s;
-  }
-  function install(root){
-    const inputs=[...root.querySelectorAll("input")].filter(i=>{
-      const m=((i.id||"")+" "+(i.name||"")+" "+(i.placeholder||"")).toLowerCase();
-      return /score|risultato|punteggio/.test(m) || /^\s*[0-7]\s*[-–]\s*[0-7]\s*$/.test(i.value||"");
-    });
-    inputs.forEach(input=>{
-      if(input.dataset.rplScoreSelect==="1") return;
-      const wrap=document.createElement("div"); wrap.className="rpl-score-selects";
-      const a=makeSelect(), b=makeSelect(), dash=document.createElement("span");
-      dash.className="rpl-score-dash"; dash.textContent="–";
-      const m=String(input.value||"").match(/^\s*([0-7])\s*[-–]\s*([0-7])\s*$/);
-      if(m){a.value=m[1];b.value=m[2];}
-      wrap.append(a,dash,b);
-      input.style.display="none"; input.dataset.rplScoreSelect="1";
-      input.parentNode.insertBefore(wrap,input);
-      const sync=()=>{
-        input.value=(a.value!==""&&b.value!=="")?a.value+"-"+b.value:"";
-        input.dispatchEvent(new Event("input",{bubbles:true}));
-        input.dispatchEvent(new Event("change",{bubbles:true}));
-      };
-      a.addEventListener("change",sync); b.addEventListener("change",sync); sync();
-    });
-  }
-  const go=()=>install(document);
-  new MutationObserver(go).observe(document.documentElement,{childList:true,subtree:true});
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",go); else go();
-})();
-</script>
+<script id="rpl-score-select-fix">/* Native score inputs removed in V6.5.21. */</script>
 </body></html>
