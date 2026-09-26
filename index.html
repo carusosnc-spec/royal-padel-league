@@ -337,6 +337,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 /* V6.5.45 - il calendario pubblico compare esclusivamente nella sezione Calendario */
 #publicCalendarSection.rpl-calendar-hidden { display:none !important; }
 </style>
+
+<style id="rpl-v6548-nav-order">
+/* V6.5.48 - ordine ufficiale: Calendario, Parziale, Classifica, Storico, Area Riservata */
+#calendarPublicBtn{order:1 !important;}
+#partialBtn{order:2 !important;}
+#publicBtn{order:3 !important;}
+#historyBtn{order:4 !important;}
+#adminBtn{order:5 !important;}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1605,6 +1614,7 @@ $("date").value=new Date().toISOString().slice(0,16);
   function showHomeNow(){
     const b=navButtons();
     location.hash="";
+    document.getElementById("publicCalendarPage")?.classList.add("hidden");
     document.getElementById("partialPage")?.classList.add("hidden");
     document.getElementById("historyView")?.style.setProperty("display","none");
     document.getElementById("publicCalendarPage")?.classList.add("hidden");
@@ -1657,15 +1667,19 @@ $("date").value=new Date().toISOString().slice(0,16);
 
   function install(){
     const b=navButtons();
-    if(!b.home||!b.partial||!b.history||!b.admin)return;
+    if(!b.home||!b.calendar||!b.partial||!b.history||!b.admin)return;
 
     // Replace navigation listeners with a single deterministic capture handler.
     b.home.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showHomeNow();},true);
+    b.calendar.addEventListener("click",e=>{
+      e.preventDefault();e.stopImmediatePropagation();
+      if(typeof window.showPublicCalendar==="function") window.showPublicCalendar();
+    },true);
     b.partial.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showPartialNow();},true);
     b.history.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showHistoryNow();},true);
     b.admin.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showAdminNow();},true);
 
-    active(location.hash==="#history"?"history":location.hash==="#partial"?"partial":"home");
+    active(location.hash==="#calendar"?"calendar":location.hash==="#history"?"history":location.hash==="#partial"?"partial":"home");
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);
   else install();
@@ -1766,7 +1780,7 @@ $("date").value=new Date().toISOString().slice(0,16);
   });
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.46</div>
+<div id="rplVersionBadge">RPL v6.5.48</div>
 <script id="rpl-v6545-calendar-visibility-script">
 (function(){
   function rplHideCalendar(){
