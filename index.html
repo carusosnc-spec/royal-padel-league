@@ -371,7 +371,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
     <div class="rpl-public-cal-kicker">ROYAL PADEL LEAGUE</div>
     <div class="rpl-public-cal-title">📅 CALENDARIO</div>
     <div class="rpl-public-cal-sub">I prossimi appuntamenti • aggiornamento automatico</div>
-    <div id="publicCalendarContent"><div class="rpl-public-cal-empty">Caricamento calendario…</div></div>
+    <div id="publicCalendarContent"><div class="rpl-public-cal-empty">Non ci sono partite programmate</div></div>
   </div>
 </section>
 
@@ -1787,145 +1787,117 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
     $('calendarPublicBtn')?.classList.remove('primary');
   }
   window.showPublicCalendar=showCalendar;
-  document.addEventListener('DOMContentLoaded',()=>{
-    $('calendarPublicBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showCalendar();},true);
-    // Classifica navigation is handled by the central RPL navigation controller.
-  });
-  // Direct hash navigation is handled by the central RPL navigation controller.
+  // Navigation is handled exclusively by the final RPL navigation controller.
+  // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.51</div>
-<script id="rpl-v6545-calendar-visibility-script">
-(function(){
-  function rplHideCalendar(){
-    const el=document.getElementById("publicCalendarSection");
-    if(el) el.classList.add("rpl-calendar-hidden");
-  }
-  function rplShowCalendar(){
-    const el=document.getElementById("publicCalendarSection");
-    if(el) el.classList.remove("rpl-calendar-hidden");
-  }
-  window.rplSetCalendarPublicVisibility=function(show){
-    if(show) rplShowCalendar(); else rplHideCalendar();
-  };
-  document.addEventListener("DOMContentLoaded", rplHideCalendar);
-})();
-</script>
-
-<script id="rpl-v6545-calendar-nav-fallback">
-(function(){
-  function sync(){
-    const cal=document.getElementById("publicCalendarSection");
-    if(!cal) return;
-    const active=document.querySelector('[data-section="calendar"].active,[data-page="calendar"].active,#navCalendar.active,.nav-calendar.active');
-    if(active) cal.classList.remove("rpl-calendar-hidden");
-  }
-  document.addEventListener("click",function(e){
-    const t=e.target.closest("button,a");
-    if(!t) return;
-    const s=((t.getAttribute("data-section")||"")+" "+(t.getAttribute("data-page")||"")+" "+(t.id||"")+" "+(t.textContent||"")).toLowerCase();
-    if(s.includes("calendar")||s.includes("calendario")){
-      setTimeout(function(){ if(window.rplSetCalendarPublicVisibility) rplSetCalendarPublicVisibility(true); },0);
-    }else if(s.includes("classifica")||s.includes("storico")||s.includes("area riservata")||s.includes("riservata")||s.includes("parziale")){
-      setTimeout(function(){ if(window.rplSetCalendarPublicVisibility) rplSetCalendarPublicVisibility(false); },0);
-    }
-  },true);
-})();
-</script>
+<div id="rplVersionBadge">RPL v6.5.52</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
-<style id="rpl-v6550-nav-final">
-/* V6.5.50 - one active section at a time */
-#calendarPublicBtn.primary,
-#publicBtn.primary,
-#partialBtn.primary,
-#historyBtn.primary,
-#adminBtn.primary{
-  background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;
-  color:#171717!important;
-  border-color:#c59a27!important;
-  box-shadow:0 2px 7px rgba(0,0,0,.14)!important;
-}
+
+<style id="rpl-v6552-nav-final">
+/* V6.5.52 - final exclusive public navigation */
+#calendarPublicBtn{order:1!important}
+#partialBtn{order:2!important}
+#publicBtn{order:3!important}
+#historyBtn{order:4!important}
+#adminBtn{order:5!important}
 </style>
-<script id="rpl-v6550-final-navigation">
+<script id="rpl-v6552-final-navigation">
 (function(){
-  const navIds=['calendarPublicBtn','partialBtn','publicBtn','historyBtn','adminBtn'];
-  const sectionIds=['publicCalendarPage','publicPage','partialPage','historyView','adminPage'];
+  const NAV=['calendarPublicBtn','partialBtn','publicBtn','historyBtn','adminBtn'];
+  const SEC=['publicCalendarPage','publicPage','partialPage','historyView','adminPage'];
 
-  function reset(){
-    navIds.forEach(id=>document.getElementById(id)?.classList.remove('primary'));
-    sectionIds.forEach(id=>{
-      const el=document.getElementById(id);
-      if(!el)return;
-      if(id==='historyView') el.style.display='none';
-      else el.classList.add('hidden');
+  function el(id){return document.getElementById(id);}
+  function hideAll(){
+    SEC.forEach(id=>{
+      const x=el(id); if(!x)return;
+      if(id==='historyView') x.style.display='none';
+      else {x.classList.add('hidden'); x.style.removeProperty('display');}
     });
+    NAV.forEach(id=>el(id)?.classList.remove('primary'));
   }
-  function activate(id){
-    document.getElementById(id)?.classList.add('primary');
-  }
+  function active(id){el(id)?.classList.add('primary');}
 
-  document.addEventListener('click',function(e){
-    const el=e.target.closest('#calendarPublicBtn,#partialBtn,#publicBtn,#historyBtn,#adminBtn');
-    if(!el)return;
-
-    // Take exclusive control of the event so older listeners cannot reopen
-    // another section after this one.
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    reset();
-
-    if(el.id==='calendarPublicBtn'){
-      activate('calendarPublicBtn');
-      if(typeof window.showPublicCalendar==='function'){
-        window.showPublicCalendar();
-      }else{
-        document.getElementById('publicCalendarPage')?.classList.remove('hidden');
-      }
-    }else if(el.id==='publicBtn'){
-      activate('publicBtn');
-      location.hash='';
-      document.getElementById('publicPage')?.classList.remove('hidden');
-      if(typeof window.loadRanking==='function') window.loadRanking();
-    }else if(el.id==='partialBtn'){
-      activate('partialBtn');
-      location.hash='partial';
-      if(typeof window.showPartial==='function') window.showPartial();
-      else document.getElementById('partialPage')?.classList.remove('hidden');
-    }else if(el.id==='historyBtn'){
-      activate('historyBtn');
-      location.hash='history';
-      if(typeof window.showHistoryNow==='function') window.showHistoryNow();
-      else document.getElementById('historyView')?.style.setProperty('display','block');
-    }else if(el.id==='adminBtn'){
-      activate('adminBtn');
-      location.hash='';
-      if(typeof window.showAdminNow==='function') window.showAdminNow();
-      else document.getElementById('adminPage')?.classList.remove('hidden');
-    }
-  },true);
-
-  function normalize(){
-    const h=location.hash;
-    if(h==='#calendar'){
-      reset(); activate('calendarPublicBtn');
-      document.getElementById('publicCalendarPage')?.classList.remove('hidden');
-    }else if(h==='#partial'){
-      reset(); activate('partialBtn');
-      document.getElementById('partialPage')?.classList.remove('hidden');
-    }else if(h==='#history'){
-      reset(); activate('historyBtn');
-      document.getElementById('historyView')?.style.setProperty('display','block');
-    }else if(h===''||h==='#'){
-      reset(); activate('publicBtn');
-      document.getElementById('publicPage')?.classList.remove('hidden');
+  function calendar(){
+    hideAll();
+    active('calendarPublicBtn');
+    location.hash='calendar';
+    const x=el('publicCalendarPage');
+    if(x){x.classList.remove('hidden');x.style.removeProperty('display');}
+    if(typeof window.showPublicCalendar==='function'){
+      // showPublicCalendar also loads the current/future matches.
+      window.showPublicCalendar();
+      // Reassert exclusivity because older showCalendar code may set state.
+      el('publicPage')?.classList.add('hidden');
+      el('partialPage')?.classList.add('hidden');
+      el('adminPage')?.classList.add('hidden');
+      el('historyView')?.style.setProperty('display','none');
+      NAV.filter(id=>id!=='calendarPublicBtn').forEach(id=>el(id)?.classList.remove('primary'));
+      active('calendarPublicBtn');
     }
   }
-  window.addEventListener('hashchange',normalize);
-  document.addEventListener('DOMContentLoaded',function(){
-    setTimeout(normalize,0);
-  });
+  function ranking(){
+    hideAll();
+    active('publicBtn');
+    location.hash='';
+    el('publicPage')?.classList.remove('hidden');
+    if(typeof window.loadRanking==='function') window.loadRanking();
+  }
+  function partial(){
+    hideAll();
+    active('partialBtn');
+    location.hash='partial';
+    el('partialPage')?.classList.remove('hidden');
+    if(typeof window.showPartial==='function') window.showPartial();
+  }
+  function history(){
+    hideAll();
+    active('historyBtn');
+    location.hash='history';
+    el('historyView')?.style.setProperty('display','block');
+    if(typeof window.showHistoryNow==='function') window.showHistoryNow();
+  }
+  function admin(){
+    hideAll();
+    active('adminBtn');
+    location.hash='';
+    el('adminPage')?.classList.remove('hidden');
+    if(typeof window.showAdminNow==='function') window.showAdminNow();
+  }
+
+  function route(){
+    if(location.hash==='#calendar') calendar();
+    else if(location.hash==='#partial') partial();
+    else if(location.hash==='#history') history();
+    else ranking();
+  }
+
+  // Installed at the very end and in capture phase. No older navigation
+  // listener is allowed to run before it because the competing listeners were
+  // removed above.
+  function install(){
+    const map={
+      calendarPublicBtn:calendar,
+      publicBtn:ranking,
+      partialBtn:partial,
+      historyBtn:history,
+      adminBtn:admin
+    };
+    NAV.forEach(id=>{
+      const b=el(id); if(!b)return;
+      b.addEventListener('click',function(e){
+        e.preventDefault(); e.stopImmediatePropagation();
+        map[id]();
+      },true);
+    });
+    window.addEventListener('hashchange',function(){
+      // Only route hash changes that represent public navigation.
+      if(['#calendar','#partial','#history',''].includes(location.hash)) route();
+    });
+    route();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install);
+  else install();
 })();
 </script>
 </body></html>
