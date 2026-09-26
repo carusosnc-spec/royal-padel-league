@@ -1607,6 +1607,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     location.hash="";
     document.getElementById("partialPage")?.classList.add("hidden");
     document.getElementById("historyView")?.style.setProperty("display","none");
+    document.getElementById("publicCalendarPage")?.classList.add("hidden");
     document.getElementById("publicPage")?.classList.remove("hidden");
     document.getElementById("adminPage")?.classList.add("hidden");
     active("home");
@@ -1617,6 +1618,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     const b=navButtons();
     location.hash="partial";
     document.getElementById("publicPage")?.classList.add("hidden");
+    document.getElementById("publicCalendarPage")?.classList.add("hidden");
     document.getElementById("adminPage")?.classList.add("hidden");
     document.getElementById("historyView")?.style.setProperty("display","none");
     document.getElementById("partialPage")?.classList.remove("hidden");
@@ -1628,6 +1630,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     const b=navButtons();
     location.hash="history";
     document.getElementById("publicPage")?.classList.add("hidden");
+    document.getElementById("publicCalendarPage")?.classList.add("hidden");
     document.getElementById("adminPage")?.classList.add("hidden");
     document.getElementById("partialPage")?.classList.add("hidden");
     active("history");
@@ -1640,6 +1643,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     document.getElementById("partialPage")?.classList.add("hidden");
     document.getElementById("historyView")?.style.setProperty("display","none");
     document.getElementById("publicPage")?.classList.add("hidden");
+    document.getElementById("publicCalendarPage")?.classList.add("hidden");
     document.getElementById("adminPage")?.classList.remove("hidden");
     active("admin");
     // Reuse the existing auth/operator handler, but only after the view is visible.
@@ -1743,6 +1747,12 @@ $("date").value=new Date().toISOString().slice(0,16);
   function showHomeFromCalendar(){
     if(calendarTimer)clearInterval(calendarTimer); calendarTimer=null;
     $('publicCalendarPage')?.classList.add('hidden');
+    $('publicPage')?.classList.remove('hidden');
+    $('partialPage')?.classList.add('hidden');
+    $('historyView')?.style.setProperty('display','none');
+    $('adminPage')?.classList.add('hidden');
+    $('publicBtn')?.classList.add('primary');
+    $('calendarPublicBtn')?.classList.remove('primary');
   }
   window.showPublicCalendar=showCalendar;
   document.addEventListener('DOMContentLoaded',()=>{
@@ -1756,7 +1766,7 @@ $("date").value=new Date().toISOString().slice(0,16);
   });
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.45</div>
+<div id="rplVersionBadge">RPL v6.5.46</div>
 <script id="rpl-v6545-calendar-visibility-script">
 (function(){
   function rplHideCalendar(){
