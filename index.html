@@ -233,6 +233,36 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 .rpl-cal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 @media(max-width:700px){.rpl-cal-grid{grid-template-columns:1fr 1fr}}
 </style>
+
+<style id="rpl-v6540-ui">
+/* V6.5.40 - menu a tendina leggibili anche quando aperti */
+select, select option {
+  color: #111 !important;
+  background-color: #fff !important;
+}
+select:focus, select:active {
+  color: #111 !important;
+  background-color: #fff !important;
+}
+select option:checked {
+  color: #111 !important;
+  background-color: #e9edf2 !important;
+}
+/* Etichetta versione, piccola e discreta */
+#rplVersionBadge{
+  position:fixed;
+  right:8px;
+  bottom:6px;
+  z-index:9999;
+  font-size:9px;
+  line-height:1;
+  opacity:.55;
+  color:#d7b85a;
+  pointer-events:none;
+  user-select:none;
+  letter-spacing:.3px;
+}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1553,4 +1583,4 @@ $("date").value=new Date().toISOString().slice(0,16);
 </script>
 
 
-</body></html>
+<div id="rplVersionBadge">RPL v6.5.40</div></body></html>
