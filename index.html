@@ -346,7 +346,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 #historyBtn{order:4 !important;}
 #adminBtn{order:5 !important;}
 </style>
-</head>
+<meta id="rpl-v6553-ranking-race-fix" name="rpl-fix" content="Prevent concurrent ranking recalculation from double-counting sets"></head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -660,10 +660,10 @@ function render(){
 }
 
 async function loadRanking(){
-  stats=emptyStats();
+  const calculationStats=emptyStats();
   const {data:matches,error:me}=await sb.from("matches").select("id,played_at").order("played_at",{ascending:true});
   if(me){$("status").textContent="Errore caricamento partite: "+me.message;return}
-  if(!matches.length){render();return}
+  if(!matches.length){stats=calculationStats;render();return}
   const ids=matches.map(m=>m.id);
   const [{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
     sb.from("match_players").select("*").in("match_id",ids),
@@ -676,10 +676,11 @@ async function loadRanking(){
     const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
     const ga=x.games_a,gb=x.games_b;
     const win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
-    win.forEach(pid=>{let s=stats.find(z=>z.id===pid);if(!s)return;s.sets++;s.games+=wg;s.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0)});
-    lose.forEach(pid=>{let s=stats.find(z=>z.id===pid);if(s){s.sets++;s.games+=lg}});
+    win.forEach(pid=>{let s=calculationStats.find(z=>z.id===pid);if(!s)return;s.sets++;s.games+=wg;s.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0)});
+    lose.forEach(pid=>{let s=calculationStats.find(z=>z.id===pid);if(s){s.sets++;s.games+=lg}});
   });
-  (aw||[]).forEach(x=>{let s=stats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++});
+  (aw||[]).forEach(x=>{let s=calculationStats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++});
+  stats=calculationStats;
   render();
 }
 function resetForm(){["p1","p2","p3","p4"].forEach((id,i)=>{if(dbPlayers[i])$(id).value=dbPlayers[i].id});refreshSets();document.querySelectorAll(".scoreA,.scoreB").forEach(x=>x.value="");document.querySelectorAll("#mvp input,#imb input").forEach(x=>x.checked=false);$("date").value=new Date().toISOString().slice(0,16)}
@@ -1791,7 +1792,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.52</div>
+<div id="rplVersionBadge">RPL v6.5.53</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
