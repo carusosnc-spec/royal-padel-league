@@ -297,6 +297,41 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   cursor:pointer;
 }
 </style>
+
+<style id="rpl-v6544-public-calendar-style">
+#publicCalendarPage{max-width:1100px;margin:0 auto}
+.rpl-public-cal-hero{position:relative;overflow:hidden;border:1px solid rgba(231,185,78,.55);border-radius:22px;padding:22px;background:radial-gradient(circle at 50% 0%,rgba(231,185,78,.16),transparent 42%),linear-gradient(145deg,#0b1826,#06101a);box-shadow:0 18px 55px rgba(0,0,0,.35)}
+.rpl-public-cal-kicker{color:#ffd86a;font-size:11px;letter-spacing:.24em;font-weight:900;text-align:center}
+.rpl-public-cal-title{text-align:center;font-size:28px;font-weight:950;letter-spacing:.06em;margin:5px 0 3px;color:#fff}
+.rpl-public-cal-sub{text-align:center;color:#9da8b4;font-size:12px}
+.rpl-public-cal-main{margin-top:18px;border:2px solid rgba(255,216,106,.75);border-radius:20px;padding:18px;background:linear-gradient(180deg,rgba(255,216,106,.08),rgba(255,255,255,.025));box-shadow:0 10px 35px rgba(0,0,0,.25)}
+.rpl-public-cal-main .cal-date{color:#ffd86a;font-weight:900;text-align:center;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.rpl-public-cal-main .cal-time{text-align:center;font-size:34px;font-weight:950;margin:3px 0;color:#fff}
+.rpl-public-cal-main .cal-court{text-align:center;color:#cbd4dc;font-size:13px;margin-bottom:15px}
+.rpl-public-cal-players{display:grid;grid-template-columns:1fr 42px 1fr;align-items:center;gap:10px}
+.rpl-cal-side{display:flex;justify-content:center;gap:12px;align-items:center;min-width:0}
+.rpl-cal-side.right{flex-direction:row-reverse}
+.rpl-cal-vs{font-size:12px;font-weight:900;color:#8794a2;text-align:center}
+.rpl-cal-player{text-align:center;width:118px;min-width:0}
+.rpl-cal-logo{width:82px;height:82px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 7px;border:2px solid rgba(255,216,106,.55);background:#07121e;box-shadow:0 7px 18px rgba(0,0,0,.35)}
+.rpl-cal-name{font-weight:850;font-size:12px;line-height:1.15;word-break:break-word;color:#fff}
+.rpl-cal-nick{font-size:10px;color:#ffd86a;margin-top:3px;line-height:1.1}
+.rpl-cal-meta{font-size:9px;color:#9da8b4;margin-top:3px}
+.rpl-public-cal-next{margin-top:22px;color:#ffd86a;font-size:12px;font-weight:900;letter-spacing:.12em}
+.rpl-public-cal-list{display:grid;gap:9px;margin-top:9px}
+.rpl-public-cal-item{display:grid;grid-template-columns:92px 1fr auto;gap:12px;align-items:center;padding:11px 13px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(255,255,255,.025)}
+.rpl-public-cal-item.same-day{border-color:rgba(255,216,106,.4);background:rgba(255,216,106,.045)}
+.rpl-public-cal-item .mini-date{color:#ffd86a;font-weight:850;font-size:11px;text-transform:uppercase}
+.rpl-public-cal-item .mini-time{font-size:16px;font-weight:900;color:#fff}
+.rpl-public-cal-item .mini-court{font-size:10px;color:#9da8b4;margin-top:2px}
+.rpl-public-cal-mini-players{display:flex;align-items:center;gap:5px;min-width:0}
+.rpl-public-cal-mini-logo{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,216,106,.4);background:#07121e}
+.rpl-public-cal-mini-names{font-size:10px;color:#d7dee8;line-height:1.2}
+.rpl-public-cal-empty{text-align:center;padding:35px 15px;color:#9da8b4}
+.rpl-public-cal-error{text-align:center;padding:22px;color:#ff7b84}
+@media(max-width:700px){
+  .rpl-public-cal-hero{padding:15px 10px}.rpl-public-cal-title{font-size:22px}.rpl-public-cal-main{padding:14px 8px}.rpl-public-cal-players{grid-template-columns:1fr 24px 1fr;gap:2px}.rpl-cal-side{gap:3px}.rpl-cal-player{width:105px}.rpl-cal-logo{width:68px;height:68px}.rpl-cal-name{font-size:10px}.rpl-cal-nick{font-size:9px}.rpl-public-cal-item{grid-template-columns:78px 1fr;gap:8px}.rpl-public-cal-item .mini-court{font-size:9px}.rpl-public-cal-mini-players{grid-column:1/-1;justify-content:center}.rpl-public-cal-mini-logo{width:30px;height:30px}}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -308,12 +343,23 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div style="color:#d7dee8;font-size:12px;margin-top:8px">STAGIONE 2026/27</div>
 </header>
 <nav style="padding:14px 0;justify-content:center">
+<button id="calendarPublicBtn">📅 Calendario</button>
 <button id="publicBtn" class="primary">🏆 Classifica</button>
 <button id="partialBtn">📊 Classifica parziale</button>
 <a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
 <button id="adminBtn">🔐 Area riservata</button>
 
 </nav>
+
+
+<section id="publicCalendarPage" class="hidden">
+  <div class="rpl-public-cal-hero">
+    <div class="rpl-public-cal-kicker">ROYAL PADEL LEAGUE</div>
+    <div class="rpl-public-cal-title">📅 CALENDARIO</div>
+    <div class="rpl-public-cal-sub">I prossimi appuntamenti • aggiornamento automatico</div>
+    <div id="publicCalendarContent"><div class="rpl-public-cal-empty">Caricamento calendario…</div></div>
+  </div>
+</section>
 
 <section id="publicPage">
 <div class="card"><div style="text-align:center;margin-bottom:14px"><div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">👑 CLASSIFICA GENERALE</div><div style="font-size:11px;color:#9aa9b8;letter-spacing:.22em;margin-top:8px">PASSIONE • RISPETTO • AMICIZIA • COMPETIZIONE</div></div>
@@ -1541,6 +1587,7 @@ $("date").value=new Date().toISOString().slice(0,16);
   function navButtons(){
     return {
       home:document.getElementById("publicBtn"),
+      calendar:document.getElementById("calendarPublicBtn"),
       partial:document.getElementById("partialBtn"),
       history:document.getElementById("historyBtn"),
       admin:document.getElementById("adminBtn")
@@ -1617,4 +1664,91 @@ $("date").value=new Date().toISOString().slice(0,16);
 </script>
 
 
-<div id="rplVersionBadge">RPL v6.5.43</div></body></html>
+
+<script id="rpl-v6544-public-calendar-script">
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[c]));
+  let calendarTimer=null;
+
+  function playerById(id){return (window.dbPlayers||[]).find(p=>String(p.id)===String(id))||null;}
+  function logoForPlayer(p){
+    try{ return typeof window.logoFile==='function' ? window.logoFile(p?.name||'') : ''; }catch(e){return '';}
+  }
+  function playerCard(id){
+    const p=playerById(id);
+    const name=p?.name||'Giocatore'; const nick=p?.nickname||''; const src=logoForPlayer(p);
+    const logo=src?`<img class="rpl-cal-logo" src="${src}" alt="${esc(name)}" loading="lazy">`:`<div class="rpl-cal-logo" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">${esc(name)}</div>`;
+    return `<div class="rpl-cal-player">${logo}<div class="rpl-cal-name">${esc(name)}</div>${nick?`<div class="rpl-cal-nick">“${esc(nick)}”</div>`:''}${p?.fascia?`<div class="rpl-cal-meta">Fascia ${esc(p.fascia)} · ${esc(p.fascia_value??'')} punti</div>`:''}</div>`;
+  }
+  function miniPlayer(id){
+    const p=playerById(id),name=p?.name||'Giocatore',src=logoForPlayer(p);
+    return `<span title="${esc(name)}">${src?`<img class="rpl-public-cal-mini-logo" src="${src}" alt="${esc(name)}" loading="lazy">`:`<span class="rpl-public-cal-mini-logo" style="display:inline-flex;align-items:center;justify-content:center;font-size:7px;color:#fff">${esc(name)}</span>`}</span>`;
+  }
+  function fmtDate(d){return d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'});}
+  function fmtTime(d){return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+  function fmtDayShort(d){return d.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase();}
+  function matchDate(m){return new Date(m.scheduled_at);}
+  function renderCalendar(matches){
+    const box=$('publicCalendarContent'); if(!box)return;
+    const now=new Date();
+    const future=(matches||[]).map(m=>({...m,_date:matchDate(m)})).filter(m=>!Number.isNaN(m._date.getTime()) && m._date.getTime()>now.getTime()).sort((a,b)=>a._date-b._date);
+    if(!future.length){box.innerHTML='<div class="rpl-public-cal-empty">🏆 Nessuna partita futura in calendario.<br><span style="font-size:11px">Torna presto per il prossimo appuntamento RPL.</span></div>';return;}
+    const first=future[0], firstDay=first._date.toDateString();
+    const main=`<div class="rpl-public-cal-main">
+      <div class="cal-date">⭐ PROSSIMA PARTITA · ${esc(fmtDate(first._date))}</div>
+      <div class="cal-time">${esc(fmtTime(first._date))}</div>
+      <div class="cal-court">📍 ${esc(first.court||'Campo da definire')}</div>
+      <div class="rpl-public-cal-players">
+        <div class="rpl-cal-side">${playerCard(first.player_1)}${playerCard(first.player_2)}</div>
+        <div class="rpl-cal-vs">VS</div>
+        <div class="rpl-cal-side right">${playerCard(first.player_3)}${playerCard(first.player_4)}</div>
+      </div>
+    </div>`;
+    const rest=future.slice(1);
+    const list=rest.length?`<div class="rpl-public-cal-next">PROSSIMI APPUNTAMENTI</div><div class="rpl-public-cal-list">${rest.map(m=>{
+      const same=m._date.toDateString()===firstDay;
+      return `<div class="rpl-public-cal-item ${same?'same-day':''}">
+        <div><div class="mini-date">${esc(fmtDayShort(m._date))}</div><div class="mini-time">${esc(fmtTime(m._date))}</div><div class="mini-court">${esc(m.court||'Campo da definire')}</div></div>
+        <div class="rpl-public-cal-mini-players">${miniPlayer(m.player_1)}${miniPlayer(m.player_2)}<span style="font-weight:900;color:#8794a2;margin:0 2px">VS</span>${miniPlayer(m.player_3)}${miniPlayer(m.player_4)}<span class="rpl-public-cal-mini-names">${esc(playerById(m.player_1)?.name||'')} / ${esc(playerById(m.player_2)?.name||'')} — ${esc(playerById(m.player_3)?.name||'')} / ${esc(playerById(m.player_4)?.name||'')}</span></div>
+        <div style="color:#ffd86a;font-weight:900;font-size:11px">${same?'OGGI':''}</div>
+      </div>`;
+    }).join('')}</div>`:'';
+    box.innerHTML=main+list;
+  }
+  async function loadPublicCalendar(){
+    const box=$('publicCalendarContent'); if(!box)return;
+    try{
+      const {data,error}=await window.sb.from('calendar_matches').select('id,scheduled_at,court,player_1,player_2,player_3,player_4,player_1_name,player_2_name,player_3_name,player_4_name,player_1_nickname,player_2_nickname,player_3_nickname,player_4_nickname').order('scheduled_at',{ascending:true});
+      if(error)throw error;
+      renderCalendar(data||[]);
+    }catch(e){console.error('Errore calendario pubblico:',e);box.innerHTML=`<div class="rpl-public-cal-error">Errore nel caricamento del calendario.<br><small>${esc(e.message||e)}</small></div>`;}
+  }
+  function activeCalendar(){
+    ['publicBtn','calendarPublicBtn','partialBtn','historyBtn','adminBtn'].forEach(id=>$(id)?.classList.remove('primary'));
+    $('calendarPublicBtn')?.classList.add('primary');
+  }
+  function showCalendar(){
+    location.hash='calendar';
+    $('publicPage')?.classList.add('hidden'); $('partialPage')?.classList.add('hidden'); $('historyView')?.style.setProperty('display','none'); $('adminPage')?.classList.add('hidden');
+    $('publicCalendarPage')?.classList.remove('hidden'); activeCalendar(); loadPublicCalendar();
+    if(calendarTimer)clearInterval(calendarTimer); calendarTimer=setInterval(loadPublicCalendar,60000);
+    window.scrollTo(0,0);
+  }
+  function showHomeFromCalendar(){
+    if(calendarTimer)clearInterval(calendarTimer); calendarTimer=null;
+    $('publicCalendarPage')?.classList.add('hidden');
+  }
+  window.showPublicCalendar=showCalendar;
+  document.addEventListener('DOMContentLoaded',()=>{
+    $('calendarPublicBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showCalendar();},true);
+    const oldHome=$('publicBtn');
+    oldHome?.addEventListener('click',()=>showHomeFromCalendar(),true);
+  });
+  // Hash support when opening the page directly.
+  window.addEventListener('hashchange',()=>{
+    if(location.hash==='#calendar')showCalendar();
+  });
+})();
+</script>
+<div id="rplVersionBadge">RPL v6.5.44</div></body></html>
