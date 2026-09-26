@@ -1843,7 +1843,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.55</div>
+<div id="rplVersionBadge">RPL v6.5.56</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2032,151 +2032,58 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
 })();
 </script>
 
-<script id="rpl-v6555-bonus-preview-js">
+
+
+<script id="rpl-v6556-bonus-preview-js">
 (function(){
-  function q(id){return document.getElementById(id)}
+  const $=id=>document.getElementById(id);
   async function runBonusPreview(){
-    const panel=q('bonusPreviewPanel'), content=q('bonusPreviewContent');
-    if(!panel||!content) return;
-    panel.style.display='block';
-    content.innerHTML='<div>Calcolo anteprima in corso…</div>';
-
+    const panel=$("bonusPreviewPanel"), content=$("bonusPreviewContent");
+    if(!panel||!content)return;
+    panel.style.display="block";
+    content.innerHTML="<div>Calcolo anteprima con la stessa logica della Classifica Parziale…</div>";
     try{
-      const start='2026-09-15T00:00:00';
-      const end='2026-10-01T00:00:00';
-
-      const {data:matches,error:me}=await sb.from('matches')
-        .select('id,played_at')
-        .gte('played_at',start).lt('played_at',end)
-        .order('played_at',{ascending:true});
-      if(me) throw me;
-
-      const ids=(matches||[]).map(x=>x.id);
-      if(!ids.length){
-        content.innerHTML='<div>Nessuna partita nel periodo 15–30 settembre.</div>';
-        return;
-      }
-
-      const {data:sets,error:se}=await sb.from('sets')
-        .select('*').in('match_id',ids).order('match_id',{ascending:true});
-      if(se) throw se;
-
-      const {data:players,error:pe}=await sb.from('players')
-        .select('*').eq('is_guest',false);
-      if(pe) throw pe;
-
-      const byId={};
-      (players||[]).forEach(p=>byId[p.id]=p);
-
-      const stats={};
-      (players||[]).forEach(p=>{
-        stats[p.id]={
-          player:p, sets:0, won:0, games:0, mvp:0, imb:0, fascia:Number(p.fascia||p.band||4)||4
-        };
+      const players=(Array.isArray(window.dbPlayers)?window.dbPlayers:[]).filter(p=>!p.is_guest);
+      const stats=players.map(p=>({id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,sets:0,setWins:0,pt:0,games:0,mvp:0,imb:0}));
+      const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at").gte("played_at","2026-09-15T00:00:00").lt("played_at","2026-10-01T00:00:00").order("played_at",{ascending:true});
+      if(me)throw me;
+      if(!matches?.length){content.innerHTML="<div>Nessuna partita nel periodo 15–30 settembre 2026.</div>";return;}
+      const ids=matches.map(m=>m.id);
+      const [{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
+        window.sb.from("match_players").select("*").in("match_id",ids),
+        window.sb.from("sets").select("*").in("match_id",ids).order("set_number"),
+        window.sb.from("match_awards").select("*").in("match_id",ids)
+      ]);
+      if(mpe||se||ae)throw (mpe||se||ae);
+      const snap={}; (mp||[]).forEach(x=>snap[x.match_id+"_"+x.player_id]=x);
+      (sets||[]).forEach(x=>{
+        const A=[x.pair_a_player_1,x.pair_a_player_2], B=[x.pair_b_player_1,x.pair_b_player_2];
+        const ga=+x.games_a, gb=+x.games_b;
+        if(!Number.isFinite(ga)||!Number.isFinite(gb)||ga===gb)return;
+        const win=ga>gb?A:B, lose=ga>gb?B:A, wg=Math.max(ga,gb), lg=Math.min(ga,gb);
+        win.forEach(pid=>{const s=stats.find(z=>z.id===pid);if(!s)return;s.sets++;s.setWins++;s.games+=wg;s.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0);});
+        lose.forEach(pid=>{const s=stats.find(z=>z.id===pid);if(s){s.sets++;s.games+=lg;}});
       });
-
-      function playerIds(s){
-        return [
-          s.pair_a_player_1,s.pair_a_player_2,
-          s.pair_b_player_1,s.pair_b_player_2
-        ].filter(Boolean);
-      }
-
-      (sets||[]).forEach(s=>{
-        const ids4=playerIds(s);
-        const a=[s.pair_a_player_1,s.pair_a_player_2].filter(Boolean);
-        const b=[s.pair_b_player_1,s.pair_b_player_2].filter(Boolean);
-        const ag=Number(s.pair_a_score ?? s.score_a ?? s.a_score ?? 0);
-        const bg=Number(s.pair_b_score ?? s.score_b ?? s.b_score ?? 0);
-        ids4.forEach(pid=>{
-          if(!stats[pid]) return;
-          stats[pid].sets++;
-          stats[pid].games += (a.includes(pid)?ag:bg);
-          if(ag>bg && a.includes(pid)) stats[pid].won++;
-          if(bg>ag && b.includes(pid)) stats[pid].won++;
-        });
-      });
-
-      // MVP / unbeaten are read from existing awards when available.
-      const {data:aw,error:ae}=await sb.from('match_awards')
-        .select('*').in('match_id',ids);
-      if(!ae && aw){
-        aw.forEach(x=>{
-          const pid=x.player_id;
-          if(!stats[pid]) return;
-          const t=String(x.award_type||x.type||'').toLowerCase();
-          if(t.includes('mvp')) stats[pid].mvp++;
-          if(t.includes('imb')) stats[pid].imb++;
-        });
-      }
-
-      // Reproduce the current base score: set points by opponent fascia,
-      // +0.30 per game, normalized by sets, *10.
-      // We calculate it from set rows and current player fascia.
-      (sets||[]).forEach(s=>{
-        const a=[s.pair_a_player_1,s.pair_a_player_2].filter(Boolean);
-        const b=[s.pair_b_player_1,s.pair_b_player_2].filter(Boolean);
-        const ag=Number(s.pair_a_score ?? s.score_a ?? s.a_score ?? 0);
-        const bg=Number(s.pair_b_score ?? s.score_b ?? s.b_score ?? 0);
-        if(ag===bg) return;
-        const winA=ag>bg;
-        const winners=winA?a:b, losers=winA?b:a;
-        winners.forEach(pid=>{
-          if(!stats[pid]) return;
-          const oppF=losers.map(x=>stats[x]?.fascia||4);
-          const best=Math.min(...oppF);
-          const setPts=best===1?5:best===2?4:best===3?3:2;
-          stats[pid].setPoints=(stats[pid].setPoints||0)+setPts;
-        });
-      });
-
-      Object.values(stats).forEach(x=>{
-        x.base=x.sets?((x.setPoints||0)+(x.games*.30))/x.sets*10:0;
-        x.total=x.base+(x.mvp*1.5)+(x.imb*1);
-      });
-
-      const eligible=Object.values(stats).filter(x=>x.sets>=5);
-      eligible.sort((a,b)=>
-        (b.total-a.total) ||
-        (b.won-a.won) ||
-        (b.sets-a.sets) ||
-        (b.mvp-a.mvp) ||
-        (b.imb-a.imb) ||
-        (b.games-a.games) ||
-        (a.fascia-b.fascia)
-      );
-
-      const bonus=[100,72,60,48,40,32,24,16,8,4];
-      const top=eligible.slice(0,10);
-
-      let h='<table><thead><tr><th>POS</th><th>GIOCATORE</th><th>SET</th><th>SET VINTI</th><th>PUNTEGGIO</th><th>MVP</th><th>IMB</th><th>GAME</th><th>FASCIA</th><th>BONUS</th></tr></thead><tbody>';
-      top.forEach((x,i)=>{
-        h+=`<tr><td>${i+1}</td><td>${x.player.name||''} ${x.player.nickname?`“${x.player.nickname}”`:''}</td><td>${x.sets}</td><td>${x.won}</td><td>${x.total.toFixed(2)}</td><td>${x.mvp}</td><td>${x.imb}</td><td>${x.games}</td><td>${x.fascia}</td><td><b>${bonus[i]||0}</b></td></tr>`;
-      });
-      h+='</tbody></table>';
-      h+=`<div class="bonus-preview-note" style="margin-top:10px">Idonei: ${eligible.length}. Primi 10: ${top.length}. Anteprima NON salvata nel database.</div>`;
+      (aw||[]).forEach(x=>{const s=stats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++;});
+      stats.forEach(s=>{s.base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;s.total=s.base+s.mvp*1.5+s.imb;});
+      const eligible=stats.filter(s=>s.sets>=5);
+      eligible.sort((a,b)=>b.total-a.total||b.setWins-a.setWins||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||(Number(a.fascia)||99)-(Number(b.fascia)||99)||a.name.localeCompare(b.name,"it"));
+      const bonus=[100,72,60,48,40,32,24,16,8,4], top=eligible.slice(0,10);
+      let h='<div class="bonus-preview-note"><b>Anteprima provvisoria — 15/09/2026 → 30/09/2026</b><br>Minimo richiesto: 5 set. Calcolo identico alla Classifica Parziale. Nessun dato viene salvato.</div>';
+      h+='<div class="scroll"><table><thead><tr><th>POS</th><th>GIOCATORE</th><th>SET</th><th>SET VINTI</th><th>PT SET</th><th>GAME</th><th>BASE</th><th>MVP</th><th>IMB</th><th>FASCIA</th><th>BONUS</th></tr></thead><tbody>';
+      top.forEach((s,i)=>{h+=`<tr><td><b>${i+1}</b></td><td>${s.name}${s.nick?` <span style="color:#ffd86a;font-size:11px">“${s.nick}”</span>`:""}</td><td>${s.sets}</td><td>${s.setWins}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td>F${s.fascia}</td><td><b style="color:var(--gold)">${bonus[i]}</b></td></tr>`;});
+      h+="</tbody></table></div>";
+      h+=`<div class="bonus-preview-note" style="margin-top:10px">Giocatori idonei: ${eligible.length} · Primi 10: ${top.length}. I punti Bonus sono simulati e non sono stati registrati.</div>`;
       content.innerHTML=h;
-    }catch(err){
-      console.error(err);
-      content.innerHTML='<div style="color:#ff8d8d">Errore nel calcolo dell’anteprima. Controlla la console.</div>';
-    }
+    }catch(e){console.error(e);content.innerHTML='<div style="color:#ff8d8d">Errore nel calcolo dell’anteprima: '+String(e.message||e)+'</div>';}
   }
-
   function install(){
-    const admin=q('bonusPreviewAdmin'), btn=q('bonusPreviewBtn');
-    if(!admin||!btn) return;
-    // Show only while Area Riservata is active.
-    function sync(){
-      const ap=q('adminPage');
-      admin.style.display=(ap && !ap.classList.contains('hidden'))?'block':'none';
-    }
-    btn.addEventListener('click',runBonusPreview);
-    sync();
-    const obs=new MutationObserver(sync);
-    if(q('adminPage')) obs.observe(q('adminPage'),{attributes:true,attributeFilter:['class']});
+    const admin=$("bonusPreviewAdmin"), btn=$("bonusPreviewBtn"); if(!admin||!btn)return;
+    btn.addEventListener("click",runBonusPreview);
+    function sync(){const op=$("adminPage");admin.style.display=(op&&!op.classList.contains("hidden"))?"block":"none";}
+    sync(); if($("adminPage"))new MutationObserver(sync).observe($("adminPage"),{attributes:true,attributeFilter:["class"]});
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install);
-  else install();
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);else install();
 })();
 </script>
 </body></html>
