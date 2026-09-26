@@ -368,6 +368,33 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 #bonusPreviewPanel th,#bonusPreviewPanel td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
 #bonusPreviewPanel .bonus-preview-note{font-size:12px;opacity:.75;margin-bottom:10px}
 </style>
+
+<style id="rpl-v6558-bonus-visibility-fix">
+/* V6.5.58 - Classifica Bonus sempre visibile nel menu pubblico */
+#bonusBtn{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  order:5 !important;
+}
+#adminBtn{order:6 !important;}
+#calendarPublicBtn{order:1 !important;}
+#partialBtn{order:2 !important;}
+#publicBtn{order:3 !important;}
+#historyBtn{order:4 !important;}
+
+/* Anteprima Bonus sempre disponibile nell'Area Riservata */
+#bonusPreviewAdmin{
+  display:block !important;
+}
+#bonusPreviewBtn{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  align-items:center;
+  justify-content:center;
+}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1839,7 +1866,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.57</div>
+<div id="rplVersionBadge">RPL v6.5.58</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
