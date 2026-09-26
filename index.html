@@ -1135,7 +1135,7 @@ async function updateMatch(){
   if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){$("editMsg").className="msg err";$("editMsg").textContent=ae.message;return}}
   closeEdit();await loadRanking();await loadOperatorHistory();
 }
-$("publicBtn").onclick=()=>{location.hash="";$("publicCalendarPage")?.classList.add("hidden");$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");$("calendarPublicBtn")?.classList.remove("primary");$("partialBtn")?.classList.remove("primary");$("historyBtn")?.classList.remove("primary");$("adminBtn")?.classList.remove("primary");$("publicBtn")?.classList.add("primary");loadRanking()};
+$("publicBtn").onclick=()=>{location.hash="";const cal=$("publicCalendarPage");if(cal){cal.classList.add("hidden");cal.style.display="none";}$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("publicPage").style.display="";$("adminPage").classList.add("hidden");$("calendarPublicBtn")?.classList.remove("primary");$("partialBtn")?.classList.remove("primary");$("historyBtn")?.classList.remove("primary");$("adminBtn")?.classList.remove("primary");$("publicBtn")?.classList.add("primary");loadRanking()};
 $("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){
   $("loginBox").classList.add("hidden");
   $("operatorBox").classList.remove("hidden");
@@ -1734,7 +1734,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
     const box=$('publicCalendarContent'); if(!box)return;
     const now=new Date();
     const future=(matches||[]).map(m=>({...m,_date:matchDate(m)})).filter(m=>!Number.isNaN(m._date.getTime()) && m._date.getTime()>now.getTime()).sort((a,b)=>a._date-b._date);
-    if(!future.length){box.innerHTML='<div class="rpl-public-cal-empty">🏆 Nessuna partita futura in calendario.<br><span style="font-size:11px">Torna presto per il prossimo appuntamento RPL.</span></div>';return;}
+    if(!future.length){box.innerHTML='<div class="rpl-public-cal-empty">Non ci sono partite programmate</div>';return;}
     const first=future[0], firstDay=first._date.toDateString();
     const main=`<div class="rpl-public-cal-main">
       <div class="cal-date">⭐ PROSSIMA PARTITA · ${esc(fmtDate(first._date))}</div>
@@ -1772,7 +1772,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   function showCalendar(){
     location.hash='calendar';
     $('publicPage')?.classList.add('hidden'); $('partialPage')?.classList.add('hidden'); $('historyView')?.style.setProperty('display','none'); $('adminPage')?.classList.add('hidden');
-    $('publicCalendarPage')?.classList.remove('hidden'); activeCalendar(); loadPublicCalendar();
+    $('publicCalendarPage')?.classList.remove('hidden'); $('publicCalendarPage')?.style.removeProperty('display'); activeCalendar(); loadPublicCalendar();
     if(calendarTimer)clearInterval(calendarTimer); calendarTimer=setInterval(loadPublicCalendar,60000);
     window.scrollTo(0,0);
   }
@@ -1789,16 +1789,12 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   window.showPublicCalendar=showCalendar;
   document.addEventListener('DOMContentLoaded',()=>{
     $('calendarPublicBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showCalendar();},true);
-    const oldHome=$('publicBtn');
-    oldHome?.addEventListener('click',()=>showHomeFromCalendar(),true);
+    // Classifica navigation is handled by the central RPL navigation controller.
   });
-  // Hash support when opening the page directly.
-  window.addEventListener('hashchange',()=>{
-    if(location.hash==='#calendar')showCalendar();
-  });
+  // Direct hash navigation is handled by the central RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.50</div>
+<div id="rplVersionBadge">RPL v6.5.51</div>
 <script id="rpl-v6545-calendar-visibility-script">
 (function(){
   function rplHideCalendar(){
