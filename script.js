@@ -1,356 +1,4 @@
-<!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Royal Padel League</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*{box-sizing:border-box}
-:root{--gold:#e7b94e;--gold2:#ffd86a;--navy:#06121f;--navy2:#0a1d2e;--line:rgba(231,185,78,.34)}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:
-radial-gradient(circle at 50% -10%,rgba(31,91,133,.34),transparent 42%),linear-gradient(180deg,#02070d,#06121f 45%,#02070d);color:#f8fafc}
-main{max-width:1180px;margin:auto;padding:0 14px 28px}
-main{max-width:1120px;margin:auto;padding:18px}.top{background:#111827;color:#fff;border-radius:18px;padding:18px;margin-bottom:14px}
-h1{margin:0;font-size:25px}.sub{color:#cbd5e1;font-size:13px;margin-top:4px}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}nav button{min-height:44px}
-button{border:1px solid #7f6a32;background:#0b1825;color:#fff;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-.primary{background:linear-gradient(135deg,#8e681d,#f2ca63);color:#080d12;border-color:#f2ca63}.danger{color:#b42318}.grid{display:grid;grid-template-columns:1fr 1.5fr;gap:14px}
-.card{background:linear-gradient(180deg,rgba(8,25,40,.96),rgba(3,12,21,.96));border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 12px 35px rgba(0,0,0,.28)}
-h2{font-size:19px;margin:0 0 12px;color:#fff}label{font-size:12px;color:#667085;display:block;margin:8px 0 4px}
-input,select{width:100%;padding:10px;border:1px solid #34495c;border-radius:9px;font-size:16px;background:#0b1b2a;color:#fff}
-.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}.set{border-top:1px solid #e5e7eb;padding-top:11px;margin-top:11px}
-.setgrid{display:grid;grid-template-columns:1fr 1fr 90px;gap:8px}.scroll{overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:9px 6px;border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}th{font-size:10px;color:var(--gold2)}
-.checklist{border:1px solid #d9dee5;border-radius:10px;padding:8px;max-height:160px;overflow:auto}.check{display:flex;gap:7px;align-items:center;padding:5px 0;font-size:13px}.check input{width:18px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.muted{font-size:12px;color:#9aa9b8}.msg{font-size:13px;margin-top:9px}
-.hidden{display:none}.login{max-width:420px;margin:20px auto}.ok{color:#067647}.err{color:#b42318}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(231,185,78,.14);border:1px solid rgba(231,185,78,.32);color:#ffd86a;font-size:11px;font-weight:700}
-.smallbtn{padding:7px 9px;font-size:11px}.edit{color:#175cd3}.historyrow{display:flex;justify-content:space-between;gap:10px;align-items:center}.actions{display:flex;gap:6px;flex-wrap:wrap}
-@media(max-width:760px){.grid,.players,.setgrid,.two{grid-template-columns:1fr}}
-</style>
-<style id="fascia-colors-v55">
-.fascia-badge{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:4px 8px;border-radius:999px;font-weight:800;border:1px solid transparent}
-.fascia-badge.f1{background:#d4af37!important;color:#111!important;border-color:#f2ca63!important}
-.fascia-badge.f2{background:#2563eb!important;color:#fff!important;border-color:#60a5fa!important}
-.fascia-badge.f3{background:#16a34a!important;color:#fff!important;border-color:#4ade80!important}
-.fascia-badge.f4{background:#dc2626!important;color:#fff!important;border-color:#f87171!important}
-</style>
-<style id="all-sets-update">
-.removeSet{font-size:11px;padding:4px 8px;border:1px solid #7b8794;background:transparent;color:#b9c4d0;border-radius:7px}
-.removeSet:hover{border-color:var(--gold);color:var(--gold)}
-</style>
 
-<style id="minimum-sets-status">
-tr.rpl-ineligible{opacity:.42;filter:grayscale(1)}
-tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
-.rpl-set-status{display:block;margin-top:4px;font-size:10px;line-height:1.2;color:#c4cbd3}
-.rpl-set-status.warning{color:#bfc5cc}
-</style>
-
-
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=63">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=63">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=63">
-  <link rel="manifest" href="manifest.webmanifest?v=63">
-  <meta name="theme-color" content="#061522">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Royal Padel League">
-
-
-<style id="history-v654-style">
-#historyView{display:none}.history-filters{display:grid;grid-template-columns:1fr 1fr 1.4fr auto;gap:10px;align-items:end;margin:14px 0}.history-actions{display:flex;gap:8px}.history-list{display:grid;gap:10px;margin-top:12px}.history-card{border:1px solid rgba(255,216,106,.22);border-radius:12px;padding:13px;background:rgba(255,255,255,.025);cursor:pointer}.history-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}.history-date{color:#ffd86a;font-weight:700}.history-meta{font-size:12px;color:#9da8b4}.history-score{font-size:18px;font-weight:800}.history-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}.history-team{text-align:center}.history-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}.history-card.open .history-detail{display:block}.history-set{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}.history-empty{padding:28px;text-align:center;color:#9da8b4}@media(max-width:700px){.history-filters{grid-template-columns:1fr 1fr}.history-filters>div:nth-child(3){grid-column:1/-1}.history-actions{grid-column:1/-1}.history-actions button{flex:1}.history-teams{grid-template-columns:1fr}.history-score{order:-1;text-align:center}}
-</style>
-<style id="history-v655-style">
-.history-card{cursor:pointer}
-.history-card .history-detail{display:none}
-.history-card.open .history-detail{display:block}
-</style><style id="history-v657-nav-style">
-nav[style*="justify-content:center"]{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#historyView{display:none}
-</style><style id="history-v658-style">
-#historyBtn{display:inline-block;padding:9px 13px;border:1px solid #2f4052;border-radius:9px;background:#0b1723;color:#d7dee8;font:inherit;cursor:pointer}
-#historyBtn.primary{border-color:var(--gold);color:var(--gold2)}
-</style><style id="history-v6514-style">
-.history-set{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-.history-set-title{text-align:center;font-size:13px;color:#d7dee8;letter-spacing:.06em}
-.history-set-score{text-align:center;font-size:28px;font-weight:900;line-height:1.1;margin:8px 0 14px}
-.score.win{color:#39d98a}.score.loss{color:#ff5c66}.score.draw{color:#d7dee8}.score-sep{color:#7f8b98;margin:0 7px}
-.history-set-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px}
-.history-team-side{display:flex;justify-content:center;align-items:center;gap:10px;min-width:0}.history-team-side.team-a{border-right:1px solid rgba(255,255,255,.07);padding-right:10px}.history-team-side.team-b{padding-left:10px}
-.history-plus,.history-vs{font-weight:900;color:#aeb8c4}.history-vs{font-size:12px;letter-spacing:.08em}
-.history-player{width:92px;text-align:center;min-width:0}.history-logo-wrap{width:64px;height:64px;margin:0 auto 5px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,216,106,.55);background:#07121e;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.history-logo-wrap img{width:100%;height:100%;object-fit:cover;display:block}.history-player-fallback{width:100%;height:100%;align-items:center;justify-content:center;padding:4px;font-size:9px;line-height:1.05;color:#fff;background:#142638}
-.history-player-name{font-size:10px;line-height:1.15;font-weight:700;word-break:break-word}.history-player-name small{display:block;color:#aeb8c4;font-size:9px;font-weight:600;margin-top:2px}
-@media(max-width:700px){.history-set-teams{grid-template-columns:1fr}.history-team-side{gap:7px}.history-team-side.team-a{border-right:0;border-bottom:1px solid rgba(255,255,255,.07);padding:0 0 10px}.history-team-side.team-b{padding:10px 0 0}.history-vs{display:none}.history-player{width:86px}.history-logo-wrap{width:58px;height:58px}}
-</style><script id="global-esc-helper">
-window.esc = window.esc || function(v){
-  return String(v ?? "").replace(/[&<>"']/g,function(c){
-    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
-  });
-};
-</script>
-<style id="rpl-score-select-native-style">
-.score-selects{display:flex;align-items:center;justify-content:center;gap:8px}
-.score-selects select{width:64px;min-width:64px;padding:9px 8px;border:1px solid #ccc;border-radius:10px;font-size:17px;font-weight:800;text-align:center;background:#fff;color:#111}
-.score-dash{font-weight:900;font-size:18px}
-</style>
-<style id="rpl-score-label-style">
-.score-selects{position:relative}
-.score-label{font-size:10px;font-weight:800;letter-spacing:.5px;display:none}
-</style>
-<style id="rpl-score-final-style">.score-selects{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%}.score-selects select{width:58px!important;min-width:58px!important;height:42px!important;padding:6px!important;font-size:18px!important;font-weight:800!important;text-align:center!important;border:1px solid #bbb!important;border-radius:10px!important;background:#fff!important;color:#111!important}.score-dash{display:inline-block!important;font-size:20px!important;font-weight:900!important}</style><style id="guest-player-style">
-#guestLegend{color:#f5d76e!important}
-</style>
-
-<style id="rpl-professional-buttons-v6530">
-nav button,nav a,.tabs button,.tabs a,.menu button,.menu a{
-  border-radius:10px;
-  font-weight:700;
-  transition:transform .15s ease,box-shadow .15s ease;
-}
-nav button:hover,nav a:hover,.tabs button:hover,.tabs a:hover,.menu button:hover,.menu a:hover{
-  transform:translateY(-1px);
-}
-</style>
-
-<style id="rpl-nav-uniform-v6531">
-/* Uniforma tutti i pulsanti della navigazione pubblica */
-nav button, nav a, .tabs button, .tabs a, .menu button, .menu a {
-  box-sizing:border-box !important;
-  min-height:42px !important;
-  height:42px !important;
-  padding:0 15px !important;
-  border:1px solid rgba(31,41,55,.18) !important;
-  border-radius:10px !important;
-  display:inline-flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  gap:7px !important;
-  font-weight:700 !important;
-  line-height:1 !important;
-  box-shadow:none !important;
-}
-nav button:hover, nav a:hover, .tabs button:hover, .tabs a:hover, .menu button:hover, .menu a:hover {
-  transform:translateY(-1px);
-}
-/* Colori delle piccole icone, mantenendo il testo neutro */
-nav button .icon, nav a .icon, .tabs button .icon, .tabs a .icon, .menu button .icon, .menu a .icon {
-  font-size:18px !important;
-  line-height:1 !important;
-}
-.rpl-nav-icon-classifica{color:#2563eb !important}
-.rpl-nav-icon-storico{color:#f59e0b !important}
-.rpl-nav-icon-parziale{color:#16a34a !important}
-.rpl-nav-icon-riservata{color:#7c3aed !important}
-
-/* Se le icone sono emoji/testo dentro uno span, assegna comunque il colore */
-nav button[data-nav="classifica"] > span:first-child,
-nav a[data-nav="classifica"] > span:first-child{color:#2563eb !important}
-nav button[data-nav="storico"] > span:first-child,
-nav a[data-nav="storico"] > span:first-child{color:#f59e0b !important}
-nav button[data-nav="parziale"] > span:first-child,
-nav a[data-nav="parziale"] > span:first-child{color:#16a34a !important}
-nav button[data-nav="riservata"] > span:first-child,
-nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
-</style>
-
-<style id="rpl-nav-controller-v6533">
-/* One consistent visual state: only .primary is active. */
-#publicBtn,#partialBtn,#historyBtn,#adminBtn{
-  box-sizing:border-box!important;
-  min-height:42px!important;
-  height:42px!important;
-  padding:0 15px!important;
-  border:1px solid rgba(31,41,55,.18)!important;
-  border-radius:10px!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:7px!important;
-  font-weight:700!important;
-  line-height:1!important;
-  text-decoration:none!important;
-  cursor:pointer!important;
-}
-#publicBtn.primary,#partialBtn.primary,#historyBtn.primary,#adminBtn.primary{
-  background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;
-  color:#171717!important;
-  border-color:#c59a27!important;
-  box-shadow:0 2px 7px rgba(0,0,0,.14)!important;
-}
-</style>
-<style id="rpl-nav-order-v6534">
-nav[style*="justify-content:center"]{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;flex-wrap:wrap!important}
-#publicBtn,#partialBtn,#historyBtn,#adminBtn{order:initial!important}
-</style>
-<style id="rpl-v6536-submenu">
-.rpl-admin-submenu{
-  display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;
-  padding:10px;border-radius:12px;background:rgba(0,0,0,.035);
-}
-.rpl-admin-submenu button{
-  border:1px solid rgba(31,41,55,.18);border-radius:10px;
-  padding:10px 16px;font-weight:700;background:#fff;cursor:pointer;
-}
-.rpl-admin-submenu button.active{
-  background:linear-gradient(180deg,#f6d86b,#d9ad32);
-  border-color:#c59a27;color:#171717;
-}
-.rpl-admin-panel{display:none}
-.rpl-admin-panel.active{display:block}
-</style>
-
-<style id="rpl-v6537-calendar">
-.rpl-cal-wrap{margin-top:10px}
-.rpl-cal-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;padding:14px;border:1px solid rgba(31,41,55,.12);border-radius:14px;background:#fff}
-.rpl-cal-toolbar label{display:flex;flex-direction:column;gap:5px;font-weight:700;font-size:13px}
-.rpl-cal-toolbar input{min-height:40px;border:1px solid #d1d5db;border-radius:9px;padding:0 10px}
-.rpl-cal-list{display:grid;gap:12px;margin-top:14px}
-.rpl-cal-card{padding:14px;border:1px solid rgba(31,41,55,.14);border-radius:14px;background:#fff}
-.rpl-cal-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.rpl-cal-field{display:flex;flex-direction:column;gap:5px}
-.rpl-cal-field label{font-size:12px;font-weight:700}
-.rpl-cal-field input,.rpl-cal-field select{min-height:40px;border:1px solid #d1d5db;border-radius:9px;padding:0 9px;background:#fff}
-.rpl-cal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.rpl-cal-actions button{border:1px solid #d1d5db;border-radius:9px;padding:9px 12px;font-weight:700;cursor:pointer}
-.rpl-cal-save{background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;border-color:#c59a27!important}
-.rpl-cal-week-list{margin-top:16px}
-@media(max-width:700px){.rpl-cal-grid{grid-template-columns:1fr 1fr}.rpl-cal-toolbar{display:grid}.rpl-cal-card{padding:11px}}
-</style>
-
-<style id="rpl-v6538-admin">
-#operatorSubmenu{margin-top:0}
-#operatorSubmenu > div{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important}
-#operatorSubmenu button{min-height:48px;font-weight:800;border-radius:12px}
-#operatorSubmenu button.primary{background:linear-gradient(180deg,#f6d86b,#d9ad32);color:#171717}
-#operatorCalendarSection select#calCourt{width:100%;min-height:42px}
-@media(max-width:600px){#operatorSubmenu > div{grid-template-columns:1fr}}
-</style>
-<style id="rpl-v6539-calendar-style">
-.calendar-row{background:#081827;border:1px solid #34495c;border-radius:14px;padding:13px;margin:10px 0}
-.calendar-row-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.calendar-row-grid .full{grid-column:1/-1}
-.calendar-row-actions{display:flex;justify-content:flex-end;margin-top:10px}
-.calendar-player-meta{font-size:10px;color:#ffd86a;margin-top:3px}
-.calendar-week-card{background:rgba(255,255,255,.025);border:1px solid rgba(231,185,78,.24);border-radius:14px;padding:14px;margin:10px 0}
-.calendar-week-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.calendar-week-title{font-weight:900;color:#ffd86a}
-@media(max-width:700px){.calendar-row-grid{grid-template-columns:1fr}}
-</style></head>
-<body><main>
-<header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
-<div style="display:flex;justify-content:center">
-<img src="data:image/jpeg;base64,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" alt="Royal Padel League" style="width:118px;height:118px;object-fit:cover;border-radius:50%;border:2px solid var(--gold);box-shadow:0 0 28px rgba(231,185,78,.24)">
-</div>
-<div style="font-size:28px;font-weight:900;letter-spacing:.04em;margin-top:10px">ROYAL PADEL LEAGUE</div>
-<div style="color:var(--gold2);font-size:12px;font-weight:800;letter-spacing:.24em;margin-top:5px">WHERE LEGENDS PLAY</div>
-<div style="color:#d7dee8;font-size:12px;margin-top:8px">STAGIONE 2026/27</div>
-</header>
-<nav style="padding:14px 0;justify-content:center">
-<button id="publicBtn" class="primary">🏆 Classifica</button>
-<button id="partialBtn">📊 Classifica parziale</button>
-<a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
-<button id="adminBtn">🔐 Area riservata</button>
-
-</nav>
-
-<section id="publicPage">
-<div class="card"><div style="text-align:center;margin-bottom:14px"><div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">👑 CLASSIFICA GENERALE</div><div style="font-size:11px;color:#9aa9b8;letter-spacing:.22em;margin-top:8px">PASSIONE • RISPETTO • AMICIZIA • COMPETIZIONE</div></div>
-<div class="muted" id="status">Connessione a Supabase…</div>
-<div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Giocatore</th><th>Totale</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Fascia</th></tr></thead><tbody id="ranking"></tbody></table></div></div>
-</section>
-
-<section id="partialPage" class="hidden">
-<div class="card">
-  <div style="text-align:center;margin-bottom:14px">
-    <div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">📊 CLASSIFICA PARZIALE</div>
-    <div style="font-size:11px;color:#9aa9b8;letter-spacing:.18em;margin-top:8px">CLASSIFICA DEL PERIODO SELEZIONATO</div>
-  </div>
-  <div class="history-filters" style="margin-bottom:14px">
-    <div><label>Da data</label><input id="partialFrom" type="date"></div>
-    <div><label>A data</label><input id="partialTo" type="date"></div>
-    <div class="history-actions">
-      <button type="button" id="partialCalculate" class="primary">📊 CALCOLA</button>
-      <button type="button" id="partialReset">↻ RESET</button>
-    </div>
-  </div>
-  <div class="partial-presets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-    <button type="button" class="partial-preset" data-from="2026-09-15" data-to="2026-09-30">15–30 SET</button>
-    <button type="button" class="partial-preset" data-from="2026-10-01" data-to="2026-10-31">OTTOBRE</button>
-    <button type="button" class="partial-preset" data-from="2026-11-01" data-to="2026-11-30">NOVEMBRE</button>
-    <button type="button" class="partial-preset" data-from="2026-12-01" data-to="2026-12-31">DICEMBRE</button>
-  </div>
-  <div id="partialSummary" class="muted">Seleziona un periodo e premi CALCOLA.</div>
-  <div class="scroll" style="margin-top:10px">
-    <table>
-      <thead><tr><th>#</th><th>Giocatore</th><th>Totale</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Fascia</th></tr></thead>
-      <tbody id="partialRanking"></tbody>
-    </table>
-  </div>
-</div>
-</section>
-
-<section id="adminPage" class="hidden">
-<div id="loginBox" class="card login"><h2>🔐 Area riservata</h2><div class="muted">Accesso riservato agli operatori RPL autorizzati.</div>
-<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="operatore@email.it">
-<label>Password</label><input id="password" type="password" autocomplete="current-password">
-<button class="primary" id="login">ACCEDI</button><div id="loginMsg" class="msg"></div></div>
-
-<div id="operatorBox" class="hidden">
-<div id="operatorMatchSection" class="hidden"><div class="card"><h2>➕ Inserisci partita</h2>
-<label>Data e ora di inizio partita</label><input id="date" type="datetime-local">
-<div class="muted" style="margin-top:6px">Dal 1° novembre il sistema userà la classifica precedente alla partita per congelare le fasce del match.</div>
-<div id="guestLegend" class="muted" style="margin:6px 0 10px">⭐ = Ospite · gioca la partita ma non entra in classifica e non riceve punti.</div><div class="players">
-<div><label>Giocatore 1</label><select id="p1"></select></div><div><label>Giocatore 2</label><select id="p2"></select></div>
-<div><label>Giocatore 3</label><select id="p3"></select></div><div><label>Giocatore 4</label><select id="p4"></select></div>
-</div>
-<div id="sets"></div><button type="button" id="add-set-btn" onclick="addSet(false)" style="margin:10px 0;padding:10px 14px;border-radius:8px;cursor:pointer">➕ AGGIUNGI SET</button><button type="button" onclick="addSet(false)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set giocati possono essere inseriti e saranno conteggiati in classifica.</div>
-<div class="two"><div><label>MVP — anche multipli</label><div id="mvp" class="checklist"></div></div><div><label>Imbattuto — anche multipli</label><div id="imb" class="checklist"></div></div></div>
-<button class="primary" id="save">SALVA PARTITA</button><button id="logout">ESCI</button><div id="msg" class="msg"></div></div>
-</div>
-<div class="card" id="operatorSubmenu">
-<div style="display:flex;gap:8px;flex-wrap:wrap">
-<button type="button" id="opMatchTab" class="primary" onclick="showOperatorSection('match')">🎾 Inserisci partita</button>
-<button type="button" id="opCalendarTab" onclick="showOperatorSection('calendar')">📅 Calendario</button>
-</div>
-</div>
-
-<div id="operatorCalendarSection" class="hidden">
-<div class="card">
-<h2>📅 Calendario settimanale RPL</h2>
-<div class="muted">Crea l'intera settimana, aggiungi tutte le partite e salvale insieme. Ogni partita resta modificabile.</div>
-<div class="two" style="margin-top:12px">
-<div><label>Settimana dal</label><input id="calWeekStart" type="date"></div>
-<div><label>Settimana al</label><input id="calWeekEnd" type="date"></div>
-</div>
-<div id="calWeekMsg" class="msg"></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0">
-<button type="button" class="primary" onclick="addCalendarRow()">➕ AGGIUNGI PARTITA</button>
-<button type="button" onclick="loadCalendarWeek()">🔄 CARICA SETTIMANA</button>
-</div>
-<div id="calendarWeekRows"></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-<button type="button" class="primary" onclick="saveCalendarWeek()">💾 SALVA SETTIMANA</button>
-<button type="button" onclick="copyCalendarWeek()">📋 COPIA SETTIMANA PER POSTER</button>
-<button type="button" onclick="downloadCalendarWeekTxt()">📄 SCARICA TXT</button>
-</div>
-</div>
-<div class="card">
-<h2>📚 Storico settimane</h2>
-<div class="muted">Le settimane salvate possono essere riaperte e modificate.</div>
-<div id="calendarWeeksHistory" class="muted" style="margin-top:10px">Caricamento…</div>
-</div>
-</div>
-<div class="card"><h2>📋 Storico partite</h2><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Storico partite</b><button type="button" class="smallbtn" onclick="loadOperatorHistory()">🔄 Aggiorna</button></div><div id="history" class="muted">Caricamento…</div></div>
-</div></section>
-<div class="card" style="text-align:center;margin-top:18px;padding:18px">
-<div style="color:#ffd86a;font-size:22px;font-weight:900;letter-spacing:.05em">WHERE LEGENDS PLAY</div>
-<div class="muted" style="margin-top:5px">Royal Padel League • Stagione 2026/27</div>
-</div>
-</main>
-
-<script>
 const SUPABASE_URL="https://vanbadzkxvextdvnqwtr.supabase.co";
 const SUPABASE_KEY="sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY); window.sb=sb;
@@ -563,7 +211,7 @@ async function isOperator(){
   const {data,error}=await sb.from("operators").select("user_id").eq("user_id",currentUser.id).maybeSingle();
   return !error && !!data;
 }
-async async function login(){
+async function login(){
   $("loginMsg").textContent="";
   const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
   if(error){$("loginMsg").className="msg err";$("loginMsg").textContent="Accesso non riuscito: "+error.message;return}
@@ -663,105 +311,102 @@ function showOperatorSection(which){
   if(which==="calendar"){
     m?.classList.add("hidden"); c?.classList.remove("hidden");
     mt?.classList.remove("primary"); ct?.classList.add("primary");
-    renderCalendarWeek(); loadCalendarWeeks();
+    fillCalendarPlayers(); loadCalendar();
   }else{
     c?.classList.add("hidden"); m?.classList.remove("hidden");
     ct?.classList.remove("primary"); mt?.classList.add("primary");
   }
 }
-function calendarPlayerOptions(selected=""){
-  return '<option value="">Seleziona giocatore</option>'+dbPlayers.map(p=>{
-    const label=`${p.is_guest?"⭐ ":""}${p.name}${p.nickname?" — "+p.nickname:""} — Fascia ${p.fascia??"—"} · ${p.fascia_value??"—"} punti`;
-    return `<option value="${p.id}" ${String(p.id)===String(selected)?"selected":""}>${escOperator(label)}</option>`;
+function fillCalendarPlayers(){
+  ["calP1","calP2","calP3","calP4"].forEach(id=>{
+    const s=$(id); if(!s)return;
+    const old=s.value;
+    s.innerHTML='<option value="">Giocatore</option>'+opts();
+    if(old)s.value=old;
+  });
+}
+function calendarPlayerName(id){
+  const p=dbPlayers.find(x=>String(x.id)===String(id));
+  return p ? `${p.name}${p.nickname?" — "+p.nickname:""}` : "Giocatore";
+}
+function resetCalendarForm(){
+  $("calEditId").value="";
+  $("calCourt").value="";
+  $("calDate").value="";
+  ["calP1","calP2","calP3","calP4"].forEach(id=>{if($(id))$(id).value=""});
+  $("calSaveBtn").textContent="💾 SALVA PARTITA A CALENDARIO";
+  $("calCancelBtn").classList.add("hidden");
+}
+function cancelCalendarEdit(){resetCalendarForm();$("calMsg").textContent=""}
+async function saveCalendarMatch(){
+  const msg=$("calMsg"); msg.className="msg"; msg.textContent="Salvataggio…";
+  const id=$("calEditId").value;
+  const at=$("calDate").value, court=$("calCourt").value.trim();
+  const pids=["calP1","calP2","calP3","calP4"].map(x=>+$(x).value);
+  if(!at||!court||pids.some(x=>!x)){msg.className="msg err";msg.textContent="Completa data, ora, campo e tutti e 4 i giocatori.";return}
+  if(new Set(pids).size<4){msg.className="msg err";msg.textContent="Scegli quattro giocatori diversi.";return}
+  const courtMap={
+  "Sporting Club Perillo":1,
+  "Sporting Village Tirrito Coperto":2,
+  "Sporting Village Tirrito Scoperto":3,
+  "Padel Club Calascibetta":4
+};
+const payload={scheduled_at:new Date(at).toISOString(),court,court_id:courtMap[court]||null,player_1:pids[0],player_2:pids[1],player_3:pids[2],player_4:pids[3]};
+  let r;
+  if(id) r=await sb.from("calendar_matches").update(payload).eq("id",id).select().single();
+  else r=await sb.from("calendar_matches").insert(payload).select().single();
+  if(r.error){msg.className="msg err";msg.textContent="Errore calendario: "+r.error.message;return}
+  msg.className="msg ok";msg.textContent=id?"✅ Partita modificata. Il cambio è stato memorizzato.":"✅ Partita aggiunta al calendario.";
+  resetCalendarForm(); await loadCalendar();
+}
+function editCalendarMatch(m){
+  $("calEditId").value=m.id;
+  $("calDate").value=new Date(m.scheduled_at).toISOString().slice(0,16);
+  $("calCourt").value=m.court||"";
+  ["calP1","calP2","calP3","calP4"].forEach((id,i)=>$(id).value=m["player_"+(i+1)]);
+  $("calSaveBtn").textContent="💾 SALVA MODIFICHE";
+  $("calCancelBtn").classList.remove("hidden");
+  window.scrollTo({top:document.getElementById("operatorCalendarSection").offsetTop-10,behavior:"smooth"});
+}
+async function deleteCalendarMatch(id){
+  if(!confirm("Eliminare questa partita dal calendario?"))return;
+  const r=await sb.from("calendar_matches").delete().eq("id",id);
+  if(r.error){alert("Errore: "+r.error.message);return}
+  await loadCalendar();
+}
+async function showCalendarChanges(id){
+  const r=await sb.from("calendar_match_changes").select("*").eq("calendar_match_id",id).order("changed_at",{ascending:false});
+  if(r.error){alert("Errore storico cambi: "+r.error.message);return}
+  if(!r.data?.length){alert("Nessun cambio registrato per questa partita.");return}
+  alert(r.data.map(x=>{
+    const d=new Date(x.changed_at).toLocaleString("it-IT");
+    const when=x.old_scheduled_at&&x.new_scheduled_at?`${new Date(x.old_scheduled_at).toLocaleString("it-IT")} → ${new Date(x.new_scheduled_at).toLocaleString("it-IT")}`:"";
+    const court=x.old_court!==x.new_court?`${x.old_court||"—"} → ${x.new_court||"—"}`:"";
+    return `${d}\n${when}\nCampo: ${court}`;
+  }).join("\n\n"));
+}
+async function loadCalendar(){
+  const box=$("calendarList"); if(!box)return;
+  box.innerHTML='<div class="muted">Caricamento…</div>';
+  const r=await sb.from("calendar_matches").select("*").order("scheduled_at",{ascending:true});
+  if(r.error){box.innerHTML=`<div class="msg err">Errore calendario: ${escOperator(r.error.message)}</div>`;return}
+  if(!r.data?.length){box.innerHTML='<div class="muted">Nessuna partita programmata.</div>';return}
+  box.innerHTML=r.data.map(m=>{
+    const players=[m.player_1,m.player_2,m.player_3,m.player_4].map(calendarPlayerName);
+    const dt=new Date(m.scheduled_at).toLocaleString("it-IT",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+    return `<div style="border-top:1px solid #e5e7eb;padding:12px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+        <div><b>📅 ${escOperator(dt)}</b><br><span class="badge">📍 ${escOperator(m.court)}</span>
+        <div class="muted" style="margin-top:7px">👤 ${players.map(escOperator).join(" · ")}</div></div>
+        <div class="actions">
+          <button type="button" class="smallbtn edit" onclick='editCalendarMatch(${JSON.stringify(m)})'>✏️ Modifica</button>
+          <button type="button" class="smallbtn" onclick="showCalendarChanges(${m.id})">🔄 Cambi</button>
+          <button type="button" class="smallbtn danger" onclick="deleteCalendarMatch(${m.id})">🗑️ Elimina</button>
+        </div>
+      </div>
+    </div>`;
   }).join("");
 }
-function calendarCourtOptions(selected=""){
-  const courts=["Sporting Club Perillo","Sporting Village Tirrito Coperto","Sporting Village Tirrito Scoperto","Padel Club Calascibetta"];
-  return '<option value="">Seleziona campo</option>'+courts.map(c=>`<option value="${escOperator(c)}" ${c===selected?"selected":""}>${escOperator(c)}</option>`).join("");
-}
-function calendarPlayerMeta(id){
-  const p=dbPlayers.find(x=>String(x.id)===String(id));
-  return p?`Fascia ${p.fascia??"—"} · ${p.fascia_value??"—"} punti`:"";
-}
-function addCalendarRow(data={}){
-  const host=$("calendarWeekRows"); if(!host)return;
-  const row=document.createElement("div");row.className="calendar-row";row.dataset.id=data.id||"";
-  row.innerHTML=`<div class="calendar-row-grid">
-    <div><label>Data</label><input class="cal-row-date" type="date" value="${escOperator(data.date||"")}"></div>
-    <div><label>Ora</label><input class="cal-row-time" type="time" value="${escOperator(data.time||"")}"></div>
-    <div class="full"><label>Campo di gioco</label><select class="cal-row-court">${calendarCourtOptions(data.court||"")}</select></div>
-    ${[1,2,3,4].map(i=>`<div><label>Giocatore ${i}</label><select class="cal-row-p${i}">${calendarPlayerOptions(data["player_"+i]||"")}</select><div class="calendar-player-meta cal-meta-p${i}">${calendarPlayerMeta(data["player_"+i]||"")}</div></div>`).join("")}
-  </div><div class="calendar-row-actions"><button type="button" onclick="removeCalendarRow(this)">🗑️ Rimuovi partita</button></div>`;
-  host.appendChild(row);
-  [1,2,3,4].forEach(i=>row.querySelector(".cal-row-p"+i).addEventListener("change",e=>row.querySelector(".cal-meta-p"+i).textContent=calendarPlayerMeta(e.target.value)));
-}
-function removeCalendarRow(btn){btn.closest(".calendar-row")?.remove();}
-function calendarRowData(row){return {id:row.dataset.id||null,date:row.querySelector(".cal-row-date").value,time:row.querySelector(".cal-row-time").value,court:row.querySelector(".cal-row-court").value,players:[1,2,3,4].map(i=>+row.querySelector(".cal-row-p"+i).value)}}
-function validateCalendarRows(){
-  const rows=[...document.querySelectorAll("#calendarWeekRows .calendar-row")];
-  if(!rows.length){alert("Aggiungi almeno una partita.");return false}
-  for(let i=0;i<rows.length;i++){const d=calendarRowData(rows[i]);if(!d.date||!d.time||!d.court||d.players.some(x=>!x)){alert(`Completa tutti i dati della partita ${i+1}.`);return false}if(new Set(d.players).size!==4){alert(`La partita ${i+1} deve avere quattro giocatori diversi.`);return false}}
-  return true;
-}
-function renderCalendarWeek(){if($("calendarWeekRows")&&!$("calendarWeekRows").children.length)addCalendarRow();}
-function snapshotPlayer(pid){const p=dbPlayers.find(x=>String(x.id)===String(pid));return {name:p?.name||"",nickname:p?.nickname||"",fascia:p?.fascia??null,fascia_value:p?.fascia_value??null}}
-async function saveCalendarWeek(){
-  const msg=$("calWeekMsg");if(!validateCalendarRows())return;
-  const start=$("calWeekStart").value,end=$("calWeekEnd").value;
-  if(!start||!end){msg.className="msg err";msg.textContent="Inserisci le date della settimana.";return}
-  if(start>end){msg.className="msg err";msg.textContent="La data iniziale non può essere successiva alla finale.";return}
-  msg.className="msg";msg.textContent="Salvataggio settimana…";
-  const wr=await sb.from("calendar_weeks").upsert({week_start:start,week_end:end},{onConflict:"week_start,week_end"}).select().single();
-  if(wr.error){msg.className="msg err";msg.textContent=wr.error.message;return}
-  const existing=await sb.from("calendar_matches").select("id").eq("week_id",wr.data.id);
-  if(existing.error){msg.className="msg err";msg.textContent=existing.error.message;return}
-  const keep=[];
-  for(const row of [...document.querySelectorAll("#calendarWeekRows .calendar-row")]){
-    const d=calendarRowData(row),s=d.players.map(snapshotPlayer);
-    const payload={week_id:wr.data.id,scheduled_at:new Date(`${d.date}T${d.time}:00`).toISOString(),court:d.court,court_id:null,
-      player_1:d.players[0],player_2:d.players[1],player_3:d.players[2],player_4:d.players[3],
-      player_1_name:s[0].name,player_1_nickname:s[0].nickname,player_1_fascia:s[0].fascia,player_1_fascia_points:s[0].fascia_value,
-      player_2_name:s[1].name,player_2_nickname:s[1].nickname,player_2_fascia:s[1].fascia,player_2_fascia_points:s[1].fascia_value,
-      player_3_name:s[2].name,player_3_nickname:s[2].nickname,player_3_fascia:s[2].fascia,player_3_fascia_points:s[2].fascia_value,
-      player_4_name:s[3].name,player_4_nickname:s[3].nickname,player_4_fascia:s[3].fascia,player_4_fascia_points:s[3].fascia_value};
-    let r=row.dataset.id?await sb.from("calendar_matches").update(payload).eq("id",row.dataset.id).select().single():await sb.from("calendar_matches").insert(payload).select().single();
-    if(r.error){msg.className="msg err";msg.textContent=r.error.message;return}
-    row.dataset.id=r.data.id;keep.push(r.data.id);
-  }
-  const old=(existing.data||[]).map(x=>x.id).filter(id=>!keep.includes(id));
-  if(old.length)await sb.from("calendar_matches").delete().in("id",old);
-  msg.className="msg ok";msg.textContent=`✅ Settimana salvata: ${keep.length} partite.`;
-  await loadCalendarWeeks();
-}
-async function loadCalendarWeek(){
-  const start=$("calWeekStart").value,end=$("calWeekEnd").value;if(!start||!end){alert("Inserisci prima le date.");return}
-  const wr=await sb.from("calendar_weeks").select("*").eq("week_start",start).eq("week_end",end).maybeSingle();
-  if(wr.error||!wr.data){alert("Settimana non ancora salvata.");return}
-  const r=await sb.from("calendar_matches").select("*").eq("week_id",wr.data.id).order("scheduled_at",{ascending:true});
-  if(r.error){alert(r.error.message);return}
-  $("calendarWeekRows").innerHTML="";
-  (r.data||[]).forEach(m=>{const d=new Date(m.scheduled_at);addCalendarRow({id:m.id,date:d.toISOString().slice(0,10),time:d.toTimeString().slice(0,5),court:m.court,player_1:m.player_1,player_2:m.player_2,player_3:m.player_3,player_4:m.player_4})});
-  if(!r.data?.length)addCalendarRow();
-  $("calWeekMsg").className="msg ok";$("calWeekMsg").textContent="Settimana caricata.";
-}
-async function loadCalendarWeeks(){
-  const box=$("calendarWeeksHistory");if(!box)return;box.innerHTML="Caricamento…";
-  const r=await sb.from("calendar_weeks").select("*").order("week_start",{ascending:false});
-  if(r.error){box.innerHTML=`<div class="msg err">${escOperator(r.error.message)}</div>`;return}
-  if(!r.data?.length){box.innerHTML='<div class="muted">Nessuna settimana salvata.</div>';return}
-  box.innerHTML=r.data.map(w=>`<div class="calendar-week-card"><div class="calendar-week-head"><div><div class="calendar-week-title">📅 ${escOperator(w.week_start)} – ${escOperator(w.week_end)}</div><div class="muted" data-week-count="${w.id}">Caricamento partite…</div></div><div class="actions"><button type="button" class="smallbtn" onclick="openCalendarWeek('${w.week_start}','${w.week_end}')">✏️ Modifica</button><button type="button" class="smallbtn" onclick="copySavedCalendarWeek(${w.id})">📋 Copia poster</button></div></div></div>`).join("");
-  for(const w of r.data){const c=await sb.from("calendar_matches").select("id").eq("week_id",w.id);const el=document.querySelector(`[data-week-count="${w.id}"]`);if(el)el.textContent=`${c.data?.length||0} partite`}
-}
-async function openCalendarWeek(start,end){$("calWeekStart").value=start;$("calWeekEnd").value=end;await loadCalendarWeek();window.scrollTo({top:$("operatorCalendarSection").offsetTop-10,behavior:"smooth"})}
-function buildCalendarText(matches,start,end){
-  const a=new Date(start+"T12:00:00"),b=new Date(end+"T12:00:00"),out=["ROYAL PADEL LEAGUE","CALENDARIO SETTIMANALE","",`SETTIMANA: ${a.toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"}).toUpperCase()} – ${b.toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"}).toUpperCase()}`,""];
-  matches.forEach((m,i)=>{const d=new Date(m.scheduled_at);out.push("━━━━━━━━━━━━━━━━━━",`PARTITA ${String(i+1).padStart(2,"0")}`,"━━━━━━━━━━━━━━━━━━","",`📅 ${d.toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}).toUpperCase()}`,`🕘 ORE ${d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}`,`📍 ${m.court}`,"");for(let j=1;j<=4;j++){out.push(`👤 ${m[`player_${j}_name`]||calendarPlayerName(m[`player_${j}`])}${m[`player_${j}_nickname`]?` "${m[`player_${j}_nickname`]}"`:""}`,`   FASCIA ${m[`player_${j}_fascia`]??"—"} — ${m[`player_${j}_fascia_points`]??"—"} PUNTI`,"")}});out.push("━━━━━━━━━━━━━━━━━━","","ROYAL PADEL LEAGUE","WHERE LEGENDS PLAY");return out.join("\n");
-}
-async function getWeekMatches(){const start=$("calWeekStart").value,end=$("calWeekEnd").value;if(!start||!end){alert("Seleziona una settimana.");return null}const wr=await sb.from("calendar_weeks").select("*").eq("week_start",start).eq("week_end",end).maybeSingle();if(wr.error||!wr.data){alert("Salva prima la settimana.");return null}const r=await sb.from("calendar_matches").select("*").eq("week_id",wr.data.id).order("scheduled_at",{ascending:true});if(r.error){alert(r.error.message);return null}return {matches:r.data||[],start,end}}
-async function copyCalendarWeek(){const x=await getWeekMatches();if(!x)return;const t=buildCalendarText(x.matches,x.start,x.end);try{await navigator.clipboard.writeText(t);$("calWeekMsg").className="msg ok";$("calWeekMsg").textContent="✅ Settimana copiata. Ora puoi incollarla qui in ChatGPT per il poster."}catch(e){prompt("Copia questo testo:",t)}}
-async function downloadCalendarWeekTxt(){const x=await getWeekMatches();if(!x)return;const t=buildCalendarText(x.matches,x.start,x.end),b=new Blob([t],{type:"text/plain;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`RPL_Calendario_${x.start}_${x.end}.txt`;a.click();URL.revokeObjectURL(a.href)}
-async function copySavedCalendarWeek(id){const w=await sb.from("calendar_weeks").select("*").eq("id",id).single(),r=await sb.from("calendar_matches").select("*").eq("week_id",id).order("scheduled_at",{ascending:true});if(w.error||r.error){alert("Errore caricamento settimana.");return}const t=buildCalendarText(r.data||[],w.data.week_start,w.data.week_end);try{await navigator.clipboard.writeText(t);alert("Calendario copiato negli appunti.")}catch(e){prompt("Copia questo testo:",t)}}
-
 async function loadOperatorHistory(){
   const box=$("history");
   if(!box)return;
@@ -910,532 +555,3 @@ $("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add
 $("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
 (async()=>{await loadPlayers();buildSets();await loadRanking()})();
-</script>
-<div id="editModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);padding:18px;z-index:20;overflow:auto">
-<div class="card" style="max-width:850px;margin:30px auto">
-<div style="display:flex;justify-content:space-between;align-items:center"><h2>✏️ Modifica partita</h2><button onclick="closeEdit()">✕</button></div>
-<div class="muted">Le modifiche ricalcolano automaticamente la classifica. Le fasce congelate della partita vengono mantenute.</div>
-<input type="hidden" id="editId">
-<label>Data e ora di inizio partita</label><input id="editDate" type="datetime-local">
-<div class="players">
-<div><label>Giocatore 1</label><select id="ep1"></select></div><div><label>Giocatore 2</label><select id="ep2"></select></div>
-<div><label>Giocatore 3</label><select id="ep3"></select></div><div><label>Giocatore 4</label><select id="ep4"></select></div>
-</div>
-<div id="editSets"></div><button type="button" onclick="addSet(true)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set della partita vengono mantenuti e conteggiati.</div>
-<div class="two"><div><label>MVP</label><div id="editMvp" class="checklist"></div></div><div><label>Imbattuto</label><div id="editImb" class="checklist"></div></div></div>
-<button class="primary" onclick="updateMatch()">SALVA MODIFICHE</button><button onclick="closeEdit()">ANNULLA</button>
-<div id="editMsg" class="msg"></div>
-</div></div>
-<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "95157cef4197481ca08c16aadd0f1329"}'></script><!-- End Cloudflare Web Analytics -->
-
-
-<section id="historyView">
-<div class="card">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><div class="muted">ROYAL PADEL LEAGUE</div><h2>📚 STORICO PARTITE</h2></div><button type="button" id="historyBack">← Classifica</button></div>
-<div class="history-filters"><div><label>Da data</label><input id="historyFrom" type="date"></div><div><label>A data</label><input id="historyTo" type="date"></div><div><label>Giocatore</label><select id="historyPlayer"><option value="">Tutti i giocatori</option></select></div><div class="history-actions"><button type="button" id="historySearch">🔎 CERCA</button><button type="button" id="historyReset">↻ RESET</button></div></div>
-<div id="historySummary" class="muted"></div><div id="historyList" class="history-list"></div>
-</div></section>
-
-
-
-
-
-<script id="partial-v6516-script">
-(function(){
-  const $=id=>document.getElementById(id);
-  const escp=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const hide=id=>$(id)?.classList.add("hidden");
-  const show=id=>$(id)?.classList.remove("hidden");
-
-  function getPartialPlayers(){
-    try{
-      if(typeof dbPlayers!=="undefined" && Array.isArray(dbPlayers)) return dbPlayers.filter(p=>!p.is_guest);
-    }catch(e){}
-    return Array.isArray(window.dbPlayers)?window.dbPlayers.filter(p=>!p.is_guest):[];
-  }
-
-  function emptyPartial(){
-    return getPartialPlayers().map(p=>({
-      id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,
-      sets:0,pt:0,games:0,mvp:0,imb:0
-    }));
-  }
-
-  function logoFor(name){
-    try{return typeof window.logoFile==="function"?window.logoFile(name):"";}catch(e){return "";}
-  }
-
-  function renderPartial(stats,from,to){
-    const body=$("partialRanking"), summary=$("partialSummary");
-    if(!body)return;
-    const ranked=stats.map(s=>{
-      const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;
-      return {...s,base,total:base+s.mvp*1.5+s.imb};
-    }).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,"it"));
-
-    body.innerHTML=ranked.map((s,i)=>{
-      const f=String(s.fascia||"").replace(/^F/i,"");
-      return `<tr>
-        <td><b>${i+1}</b></td>
-        <td><div style="display:flex;align-items:center;gap:9px">
-          <img src="${logoFor(s.name)}" alt="${escp(s.name)}" data-player-name="${escp(s.name)}" ${s.name==="Gianni Caruso"?'onclick="openGianniCard();event.stopPropagation()"':''} style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
-          <div><b style="color:#fff">${escp(s.name)}</b><br><span style="color:#ffd86a;font-size:11px">${escp(s.nick)}</span></div>
-        </div></td>
-        <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
-        <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
-        <td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td>
-        <td><span class="badge fascia-badge f${f}">F${f}</span></td>
-      </tr>`;
-    }).join("");
-    const played=stats.filter(s=>s.sets>0).length;
-    summary.textContent=`Periodo: ${from||"—"} → ${to||"—"} · ${played} giocatori con almeno un set. Il punteggio usa lo stesso sistema della classifica generale.`;
-  }
-
-  async function calculatePartial(){
-    const from=$("partialFrom")?.value||"";
-    const to=$("partialTo")?.value||"";
-    const summary=$("partialSummary");
-    if(!from||!to){summary.textContent="Inserisci entrambe le date.";return;}
-    if(from>to){summary.textContent="La data iniziale non può essere successiva a quella finale.";return;}
-    summary.textContent="Calcolo classifica parziale…";
-    const stats=emptyPartial();
-    try{
-      const start=from+"T00:00:00";
-      const end=to+"T23:59:59";
-      const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at").gte("played_at",start).lte("played_at",end).order("played_at",{ascending:true});
-      if(me)throw me;
-      if(!matches?.length){renderPartial(stats,from,to);summary.textContent=`Periodo: ${from} → ${to} · Nessuna partita nel periodo.`;return;}
-      const ids=matches.map(m=>m.id);
-      const [{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
-        window.sb.from("match_players").select("*").in("match_id",ids),
-        window.sb.from("sets").select("*").in("match_id",ids).order("set_number"),
-        window.sb.from("match_awards").select("*").in("match_id",ids)
-      ]);
-      if(mpe||se||ae)throw (mpe||se||ae);
-      const snap={};
-      (mp||[]).forEach(x=>snap[x.match_id+"_"+x.player_id]=x);
-      (sets||[]).forEach(x=>{
-        const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
-        const ga=+x.games_a,gb=+x.games_b;
-        const win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
-        win.forEach(pid=>{const s=stats.find(z=>z.id===pid);if(!s)return;s.sets++;s.games+=wg;s.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0);});
-        lose.forEach(pid=>{const s=stats.find(z=>z.id===pid);if(s){s.sets++;s.games+=lg;}});
-      });
-      (aw||[]).forEach(x=>{const s=stats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++;});
-      renderPartial(stats,from,to);
-      summary.textContent=`Periodo: ${from} → ${to} · ${matches.length} partite · classifica calcolata.`;
-    }catch(e){
-      console.error(e);
-      $("partialRanking").innerHTML="";
-      summary.textContent="Errore nel calcolo della classifica parziale: "+(e.message||e);
-    }
-  }
-
-  function showPartial(){
-    hide("publicPage");hide("adminPage");hide("historyView");show("partialPage");
-    $("publicBtn")?.classList.remove("primary");
-    $("adminBtn")?.classList.remove("primary");
-    $("historyBtn")?.classList.remove("primary");
-    $("partialBtn")?.classList.add("primary");
-    if(!$("partialFrom").value)$("partialFrom").value="2026-09-15";
-    if(!$("partialTo").value)$("partialTo").value="2026-09-30";
-    calculatePartial();
-    window.scrollTo(0,0);
-  }
-
-  function showHome(){
-    hide("partialPage");
-    show("publicPage");
-    $("partialBtn")?.classList.remove("primary");
-  }
-
-  window.showPartial=showPartial;
-  window.calculatePartial=calculatePartial;
-
-  document.addEventListener("DOMContentLoaded",()=>{
-    $("partialBtn")?.addEventListener("click",()=>{location.hash="partial";});
-    $("partialCalculate")?.addEventListener("click",calculatePartial);
-    $("partialReset")?.addEventListener("click",()=>{
-      $("partialFrom").value="";
-      $("partialTo").value="";
-      $("partialRanking").innerHTML="";
-      $("partialSummary").textContent="Seleziona un periodo e premi CALCOLA.";
-    });
-    document.querySelectorAll(".partial-preset").forEach(b=>b.addEventListener("click",()=>{
-      $("partialFrom").value=b.dataset.from;
-      $("partialTo").value=b.dataset.to;
-      calculatePartial();
-    }));
-  });
-})();
-</script>
-<script id="history-v6514-script">
-(function(){
-  const $=id=>document.getElementById(id);
-  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-
-  async function openHistory(){
-    const pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
-    if(!hist)return;
-    pub?.classList.add("hidden");
-    admin?.classList.add("hidden");
-    hist.style.display="block";
-    hist.classList.remove("hidden");
-    $("publicBtn")?.classList.remove("primary");
-    $("adminBtn")?.classList.remove("primary");
-    $("historyBtn")?.classList.add("primary");
-    await populateHistoryPlayers();
-    loadHistory();
-    window.scrollTo(0,0);
-  }
-  function openHome(){
-    $("historyView")?.style.setProperty("display","none");
-    $("adminPage")?.classList.add("hidden");
-    $("publicPage")?.classList.remove("hidden");
-    $("publicBtn")?.classList.add("primary");
-    $("adminBtn")?.classList.remove("primary");
-    $("historyBtn")?.classList.remove("primary");
-  }
-
-  async function populateHistoryPlayers(){
-    const s=$("historyPlayer");
-    if(!s)return;
-    const current=s.value;
-    s.innerHTML='<option value="">Tutti i giocatori</option>';
-    try{
-      let list=[];
-      // Always read the canonical players table. This avoids depending on
-      // when/if the main ranking has finished loading its local player array.
-      if(window.sb){
-        const r=await window.sb.from("players").select("id,name,nickname").order("name",{ascending:true});
-        if(r.error)throw r.error;
-        list=r.data||[];
-      }
-      // Fallback to the already loaded player array if the query returned none.
-      if(!list.length) list=window.dbPlayers||[];
-      list.forEach(p=>{
-        const o=document.createElement("option");
-        o.value=String(p.id);
-        o.textContent=(p.name||"Giocatore")+(p.nickname?" — "+p.nickname:"");
-        s.appendChild(o);
-      });
-      if(current && [...s.options].some(o=>o.value===current))s.value=current;
-    }catch(e){
-      console.error("Errore caricamento giocatori storico:",e);
-    }
-  }
-
-  async function loadHistory(){
-    const list=$("historyList"), summary=$("historySummary");
-    if(!list)return;
-    list.innerHTML='<div class="history-empty">Caricamento storico…</div>';
-    try{
-      const from=$("historyFrom")?.value||"";
-      const to=$("historyTo")?.value||"";
-      const player=$("historyPlayer")?.value||"";
-
-      let mq=window.sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
-      if(from)mq=mq.gte("played_at",from+"T00:00:00");
-      if(to)mq=mq.lte("played_at",to+"T23:59:59");
-      let mr=await mq;
-      if(mr.error)throw mr.error;
-      let matches=mr.data||[];
-
-      if(player){
-        const pr=await window.sb.from("match_players").select("match_id").eq("player_id",Number(player));
-        if(pr.error)throw pr.error;
-        const ids=new Set((pr.data||[]).map(x=>String(x.match_id)));
-        matches=matches.filter(m=>ids.has(String(m.id)));
-      }
-
-      summary.textContent=`${matches.length} partite trovate`;
-      if(!matches.length){
-        list.innerHTML='<div class="history-empty">Nessuna partita trovata con questi filtri.</div>';
-        return;
-      }
-
-      const ids=matches.map(m=>m.id);
-      const [sr,mpR,plR]=await Promise.all([
-        window.sb.from("sets").select("*").in("match_id",ids).order("set_number"),
-        window.sb.from("match_players").select("*").in("match_id",ids),
-        window.sb.from("players").select("id,name,nickname")
-      ]);
-      if(sr.error)throw sr.error;
-      if(mpR.error)throw mpR.error;
-      if(plR.error)throw plR.error;
-
-      const names={};
-      (plR.data||[]).forEach(p=>names[String(p.id)]=p.name+(p.nickname?" — "+p.nickname:""));
-      const setsBy={};
-      (sr.data||[]).forEach(s=>(setsBy[String(s.match_id)]??=[]).push(s));
-
-      list.innerHTML=matches.map(m=>{
-        const sets=setsBy[String(m.id)]||[];
-        const date=new Date(m.played_at);
-        const dateText=isNaN(date)?String(m.played_at):date.toLocaleString("it-IT",{dateStyle:"medium",timeStyle:"short"});
-
-        const involved=[];
-        (mpR.data||[]).filter(x=>String(x.match_id)===String(m.id)).forEach(x=>{
-          if(names[String(x.player_id)] && !involved.includes(names[String(x.player_id)]))involved.push(names[String(x.player_id)]);
-        });
-
-        const results=sets.map(s=>`${s.games_a}-${s.games_b}`).join(" · ");
-
-        const detail=sets.map((s,i)=>{
-          const a1=names[String(s.pair_a_player_1)]||"Giocatore";
-          const a2=names[String(s.pair_a_player_2)]||"Giocatore";
-          const b1=names[String(s.pair_b_player_1)]||"Giocatore";
-          const b2=names[String(s.pair_b_player_2)]||"Giocatore";
-          const ga=Number(s.games_a), gb=Number(s.games_b);
-          const aClass=ga>gb?'win':ga<gb?'loss':'draw';
-          const bClass=gb>ga?'win':gb<ga?'loss':'draw';
-          return `<div class="history-set">
-            <div class="history-set-title"><b>SET ${i+1}</b></div>
-            <div class="history-set-score"><span class="score ${aClass}">${esc(s.games_a)}</span><span class="score-sep">-</span><span class="score ${bClass}">${esc(s.games_b)}</span></div>
-            <div class="history-set-teams">
-              <div class="history-team-side team-a">${playerVisual(a1)}<span class="history-plus">+</span>${playerVisual(a2)}</div>
-              <div class="history-vs">VS</div>
-              <div class="history-team-side team-b">${playerVisual(b1)}<span class="history-plus">+</span>${playerVisual(b2)}</div>
-            </div>
-          </div>`;
-        }).join("");
-
-        return `<div class="history-card" onclick="this.classList.toggle('open')">
-          <div class="history-head">
-            <span class="history-date">${esc(dateText)}</span>
-            <span class="history-meta">${sets.length} set</span>
-          </div>
-          <div class="history-team" style="font-size:13px;margin-bottom:7px">${involved.map(esc).join(" · ")}</div>
-          <div class="history-score">${esc(results||"—")}</div>
-          <div class="history-detail">${detail}</div>
-        </div>`;
-      }).join("");
-    }catch(e){
-      console.error(e);
-      summary.textContent="";
-      list.innerHTML=`<div class="history-empty">Errore nel caricamento dello storico.<br><small>${esc(e.message||e)}</small></div>`;
-    }
-  }
-
-  window.showHistory=openHistory;
-  window.showHome=openHome;
-  window.populateHistoryPlayers=populateHistoryPlayers;
-  window.loadHistory=loadHistory;
-
-  document.addEventListener("DOMContentLoaded",()=>{
-    $("historyBtn")?.addEventListener("click",()=>{location.hash="history"});
-    $("historyBack")?.addEventListener("click",()=>{location.hash=""});
-    $("historySearch")?.addEventListener("click",loadHistory);
-    $("historyReset")?.addEventListener("click",()=>{
-      $("historyFrom").value="";
-      $("historyTo").value="";
-      populateHistoryPlayers().then(loadHistory);
-    });
-    function route(){if(location.hash==="#history")openHistory();else if(location.hash==="#partial"&&window.showPartial)window.showPartial();else openHome();}
-    window.addEventListener("hashchange",route);
-    route();
-  });
-})();
-</script>
-<!-- RPL PLAYER CARD PROTOTYPE: GIANNI CARUSO -->
-<div id="rplPlayerCardGianni" class="rpl-player-card-overlay" aria-hidden="true">
-  <div class="rpl-player-card-backdrop" data-close-player-card></div>
-  <div class="rpl-player-card-modal" role="dialog" aria-modal="true" aria-label="Scheda Gianni Caruso">
-    <button class="rpl-player-card-close" type="button" data-close-player-card aria-label="Chiudi">×</button>
-    <div class="rpl-player-card">
-      <div class="rpl-card-corner">
-        <div class="rpl-card-ovr">75</div>
-        <div class="rpl-card-label">OVR</div>
-        <div class="rpl-card-fascia">F1</div>
-      </div>
-      <div class="rpl-card-brand">ROYAL PADEL LEAGUE</div>
-      <div class="rpl-card-hero">
-        <img id="rplGianniLogo" alt="Gianni Caruso — The Golden President">
-      </div>
-      <div class="rpl-card-name">GIANNI CARUSO</div>
-      <div class="rpl-card-nick">THE GOLDEN PRESIDENT</div>
-      <div class="rpl-card-stats">
-        <div class="rpl-stat"><b>60</b><span>VELOCITÀ</span></div>
-        <div class="rpl-stat"><b>70</b><span>POTENZA</span></div>
-        <div class="rpl-stat"><b>95</b><span>PRECISIONE</span></div>
-        <div class="rpl-stat"><b>90</b><span>TATTICA</span></div>
-        <div class="rpl-stat"><b>85</b><span>DIFESA</span></div>
-        <div class="rpl-stat"><b>50</b><span>RESISTENZA</span></div>
-      </div>
-      <div class="rpl-card-footer">
-        <span>ROYAL PADEL LEAGUE</span>
-        <span>WHERE LEGENDS PLAY</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style id="rpl-player-card-style">
-.rpl-player-card-overlay{display:none;position:fixed;inset:0;z-index:99999}
-.rpl-player-card-overlay.open{display:block}
-.rpl-player-card-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px)}
-.rpl-player-card-modal{position:relative;z-index:2;width:min(92vw,390px);margin:3vh auto 0}
-.rpl-player-card-close{position:absolute;right:-7px;top:-10px;width:40px;height:40px;border:2px solid #fff;border-radius:50%;background:#111;color:#fff;font-size:28px;line-height:32px;cursor:pointer;z-index:4}
-.rpl-player-card{position:relative;overflow:hidden;border-radius:26px;padding:17px 18px 18px;
-  background:
-    radial-gradient(circle at 50% 30%,rgba(255,255,255,.72),transparent 27%),
-    linear-gradient(145deg,#fff4bd 0%,#e4c35b 28%,#b88922 52%,#f5df91 76%,#9c701b 100%);
-  border:3px solid #fff2a5;box-shadow:0 28px 80px rgba(0,0,0,.65);color:#111}
-.rpl-player-card:before{content:"";position:absolute;inset:8px;border:1px solid rgba(255,255,255,.7);border-radius:20px;pointer-events:none}
-.rpl-card-brand{text-align:center;font-weight:900;font-size:11px;letter-spacing:2.3px;margin:2px 0 2px;position:relative}
-.rpl-card-corner{position:absolute;left:20px;top:34px;z-index:2;text-align:center}
-.rpl-card-ovr{font-size:48px;font-weight:950;line-height:.86}
-.rpl-card-label{font-size:9px;font-weight:900;letter-spacing:1.6px;margin-top:4px}
-.rpl-card-fascia{font-size:12px;font-weight:950;margin-top:7px;border-top:1px solid rgba(0,0,0,.35);padding-top:5px}
-.rpl-card-hero{height:235px;margin-top:2px;display:flex;align-items:center;justify-content:center;position:relative}
-.rpl-card-hero img{width:210px;height:210px;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.28))}
-.rpl-card-name{text-align:center;font-size:25px;font-weight:950;letter-spacing:.4px;position:relative}
-.rpl-card-nick{text-align:center;font-size:11px;font-weight:900;letter-spacing:2px;margin-top:3px;position:relative}
-.rpl-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:11px 25px;margin:17px 8px 0;padding:13px 0 12px;border-top:1px solid rgba(0,0,0,.3);border-bottom:1px solid rgba(0,0,0,.25);position:relative}
-.rpl-stat{display:flex;align-items:center;gap:9px}
-.rpl-stat b{font-size:25px;line-height:1;min-width:36px}
-.rpl-stat span{font-size:9px;font-weight:950;letter-spacing:.5px}
-.rpl-card-footer{display:flex;justify-content:space-between;gap:10px;margin:11px 7px 0;font-size:7px;font-weight:900;letter-spacing:1.1px;opacity:.85;position:relative}
-.rpl-player-logo-clickable{cursor:pointer!important}
-@media(max-width:430px){.rpl-player-card-modal{margin-top:2vh}.rpl-card-hero{height:215px}.rpl-card-hero img{width:185px;height:185px}.rpl-card-name{font-size:22px}}
-</style>
-
-<script id="rpl-player-card-script">
-(function(){
-  const overlay=document.getElementById("rplPlayerCardGianni");
-  const logo=document.getElementById("rplGianniLogo");
-  function gianniLogo(){
-    try{return typeof window.logoFile==="function" ? window.logoFile("Gianni Caruso") : "";}catch(e){return "";}
-  }
-  function openGianniCard(){
-    const src=gianniLogo();
-    if(src) logo.src=src;
-    overlay.classList.add("open");
-    overlay.setAttribute("aria-hidden","false");
-    document.body.style.overflow="hidden";
-  }
-  function closeCard(){
-    overlay.classList.remove("open");
-    overlay.setAttribute("aria-hidden","true");
-    document.body.style.overflow="";
-  }
-  window.openGianniCard=openGianniCard;
-  window.closeGianniCard=closeCard;
-
-  document.addEventListener("click",function(e){
-    const close=e.target.closest("[data-close-player-card]");
-    if(close){closeCard();return;}
-    const img=e.target.closest("img");
-    if(!img)return;
-    const player=(img.getAttribute("data-player-name")||img.alt||"").trim();
-    const src=gianniLogo();
-    if(player==="Gianni Caruso" || (src && img.currentSrc===src)){
-      img.classList.add("rpl-player-logo-clickable");
-      openGianniCard();
-    }
-  },true);
-
-  document.addEventListener("touchend",function(e){
-    const img=e.target.closest && e.target.closest("img[data-player-name='Gianni Caruso']");
-    if(img){
-      e.preventDefault();
-      openGianniCard();
-    }
-  },{passive:false});
-
-  document.addEventListener("keydown",function(e){
-    if(e.key==="Escape" && overlay.classList.contains("open")) closeCard();
-  });
-})();
-</script>
-
-<style id="rpl-score-select-style">
-.rpl-score-selects{display:flex;align-items:center;justify-content:center;gap:7px}
-.rpl-score-selects select{width:62px;min-width:62px;padding:9px 8px;border:1px solid #ccc;border-radius:10px;font-size:17px;font-weight:800;text-align:center;background:#fff}
-.rpl-score-dash{font-weight:900;font-size:18px}
-</style>
-<script id="rpl-score-select-fix">/* Score controls are native selects in V6.5.24; no DOM observer needed. */</script>
-
-
-<script id="rpl-nav-controller-v6533">
-(function(){
-  function navButtons(){
-    return {
-      home:document.getElementById("publicBtn"),
-      partial:document.getElementById("partialBtn"),
-      history:document.getElementById("historyBtn"),
-      admin:document.getElementById("adminBtn")
-    };
-  }
-  function active(key){
-    const b=navButtons();
-    Object.keys(b).forEach(k=>b[k]?.classList.toggle("primary",k===key));
-  }
-  function showHomeNow(){
-    const b=navButtons();
-    location.hash="";
-    document.getElementById("partialPage")?.classList.add("hidden");
-    document.getElementById("historyView")?.style.setProperty("display","none");
-    document.getElementById("publicPage")?.classList.remove("hidden");
-    document.getElementById("adminPage")?.classList.add("hidden");
-    active("home");
-    if(typeof loadRanking==="function") loadRanking();
-    window.scrollTo(0,0);
-  }
-  function showPartialNow(){
-    const b=navButtons();
-    location.hash="partial";
-    document.getElementById("publicPage")?.classList.add("hidden");
-    document.getElementById("adminPage")?.classList.add("hidden");
-    document.getElementById("historyView")?.style.setProperty("display","none");
-    document.getElementById("partialPage")?.classList.remove("hidden");
-    active("partial");
-    if(typeof window.showPartial==="function") window.showPartial();
-    window.scrollTo(0,0);
-  }
-  function showHistoryNow(){
-    const b=navButtons();
-    location.hash="history";
-    document.getElementById("publicPage")?.classList.add("hidden");
-    document.getElementById("adminPage")?.classList.add("hidden");
-    document.getElementById("partialPage")?.classList.add("hidden");
-    active("history");
-    if(typeof window.showHistory==="function") window.showHistory();
-    window.scrollTo(0,0);
-  }
-  async function showAdminNow(){
-    const b=navButtons();
-    location.hash="";
-    document.getElementById("partialPage")?.classList.add("hidden");
-    document.getElementById("historyView")?.style.setProperty("display","none");
-    document.getElementById("publicPage")?.classList.add("hidden");
-    document.getElementById("adminPage")?.classList.remove("hidden");
-    active("admin");
-    // Reuse the existing auth/operator handler, but only after the view is visible.
-    if(b.admin && typeof b.admin.onclick==="function"){
-      // Existing handler also changes the view; call it only for auth/data loading.
-      try{ await b.admin.onclick(); }catch(e){ console.error(e); }
-      active("admin");
-    }
-    window.scrollTo(0,0);
-  }
-
-  function install(){
-    const b=navButtons();
-    if(!b.home||!b.partial||!b.history||!b.admin)return;
-
-    // Replace navigation listeners with a single deterministic capture handler.
-    b.home.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showHomeNow();},true);
-    b.partial.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showPartialNow();},true);
-    b.history.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showHistoryNow();},true);
-    b.admin.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showAdminNow();},true);
-
-    active(location.hash==="#history"?"history":location.hash==="#partial"?"partial":"home");
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);
-  else install();
-})();
-</script>
-
-
-</body></html>
