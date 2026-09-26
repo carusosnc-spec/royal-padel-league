@@ -1135,7 +1135,7 @@ async function updateMatch(){
   if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){$("editMsg").className="msg err";$("editMsg").textContent=ae.message;return}}
   closeEdit();await loadRanking();await loadOperatorHistory();
 }
-$("publicBtn").onclick=()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");$("partialBtn")?.classList.remove("primary");loadRanking()};
+$("publicBtn").onclick=()=>{location.hash="";$("publicCalendarPage")?.classList.add("hidden");$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("adminPage").classList.add("hidden");$("calendarPublicBtn")?.classList.remove("primary");$("partialBtn")?.classList.remove("primary");$("historyBtn")?.classList.remove("primary");$("adminBtn")?.classList.remove("primary");$("publicBtn")?.classList.add("primary");loadRanking()};
 $("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){
   $("loginBox").classList.add("hidden");
   $("operatorBox").classList.remove("hidden");
@@ -1291,7 +1291,25 @@ $("date").value=new Date().toISOString().slice(0,16);
   window.showPartial=showPartial;
   window.calculatePartial=calculatePartial;
 
-  document.addEventListener("DOMContentLoaded",()=>{
+  function rplNormalizePublicNav(){
+  const h=location.hash;
+  if(h==="#calendar"){
+    $("publicCalendarPage")?.classList.remove("hidden");
+    $("publicPage")?.classList.add("hidden");
+    $("partialPage")?.classList.add("hidden");
+    $("historyView")?.style.setProperty("display","none");
+    $("adminPage")?.classList.add("hidden");
+    ["publicBtn","partialBtn","historyBtn","adminBtn"].forEach(id=>$(id)?.classList.remove("primary"));
+    $("calendarPublicBtn")?.classList.add("primary");
+  }else if(h!=="#calendar"){
+    $("publicCalendarPage")?.classList.add("hidden");
+    if(h===""||h==="#"){
+      ["calendarPublicBtn","partialBtn","historyBtn","adminBtn"].forEach(id=>$(id)?.classList.remove("primary"));
+      $("publicBtn")?.classList.add("primary");
+    }
+  }
+}
+document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
     $("partialBtn")?.addEventListener("click",()=>{location.hash="partial";});
     $("partialCalculate")?.addEventListener("click",calculatePartial);
     $("partialReset")?.addEventListener("click",()=>{
@@ -1780,7 +1798,7 @@ $("date").value=new Date().toISOString().slice(0,16);
   });
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.48</div>
+<div id="rplVersionBadge">RPL v6.5.49</div>
 <script id="rpl-v6545-calendar-visibility-script">
 (function(){
   function rplHideCalendar(){
@@ -1818,4 +1836,4 @@ $("date").value=new Date().toISOString().slice(0,16);
   },true);
 })();
 </script>
-</body></html>
+<script>window.addEventListener('hashchange',rplNormalizePublicNav);</script></body></html>
