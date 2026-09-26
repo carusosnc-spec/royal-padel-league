@@ -227,6 +227,12 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 #operatorCalendarSection select#calCourt{width:100%;min-height:42px}
 @media(max-width:600px){#operatorSubmenu > div{grid-template-columns:1fr}}
 </style>
+<style id="rpl-v6539-week-calendar">
+.calendar-row{background:#081827;border:1px solid #34495c;border-radius:14px;padding:13px}
+.calendar-player-meta{font-size:11px;color:#ffd86a}
+.rpl-cal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:700px){.rpl-cal-grid{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -308,37 +314,34 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 
 <div id="operatorCalendarSection" class="hidden">
 <div class="card">
-<h2>📅 Calendario partite</h2>
-<div class="muted">Inserisci le partite della settimana. Data, ora, campo e 4 giocatori vengono memorizzati. Le modifiche al calendario, compresi i cambi di campo, restano nello storico.</div>
-<div class="players" style="margin-top:12px">
-<div><label>Data e ora</label><input id="calDate" type="datetime-local"></div>
-<div><label>Campo di gioco</label>
-<select id="calCourt">
-<option value="">Seleziona campo</option>
-<option value="Sporting Club Perillo">Sporting Club Perillo</option>
-<option value="Sporting Village Tirrito Coperto">Sporting Village Tirrito Coperto</option>
-<option value="Sporting Village Tirrito Scoperto">Sporting Village Tirrito Scoperto</option>
-<option value="Padel Club Calascibetta">Padel Club Calascibetta</option>
-</select>
+<h2>📅 Calendario settimanale RPL</h2>
+<div class="muted">Inserisci tutte le partite della settimana, salvale insieme e riaprile in qualsiasi momento per modificarle.</div>
+
+<div class="rpl-cal-toolbar" style="margin-top:12px">
+<label>Settimana dal<input id="calWeekStart" type="date"></label>
+<label>Settimana al<input id="calWeekEnd" type="date"></label>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button type="button" class="primary" onclick="addCalendarRow()">➕ AGGIUNGI PARTITA</button>
+<button type="button" onclick="loadCalendarWeek()">🔄 CARICA SETTIMANA</button>
 </div>
-<div><label>Giocatore 1</label><select id="calP1"></select></div>
-<div><label>Giocatore 2</label><select id="calP2"></select></div>
-<div><label>Giocatore 3</label><select id="calP3"></select></div>
-<div><label>Giocatore 4</label><select id="calP4"></select></div>
 </div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-<button type="button" class="primary" id="calSaveBtn" onclick="saveCalendarMatch()">💾 SALVA PARTITA A CALENDARIO</button>
-<button type="button" id="calCancelBtn" class="hidden" onclick="cancelCalendarEdit()">ANNULLA MODIFICA</button>
-</div>
-<div id="calMsg" class="msg"></div>
-<input type="hidden" id="calEditId">
-</div>
-<div class="card">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">📅 Partite in calendario</h2><button type="button" class="smallbtn" onclick="loadCalendar()">🔄 Aggiorna</button></div>
-<div id="calendarList" class="muted">Caricamento…</div>
+<div id="calWeekMsg" class="msg"></div>
+
+<div id="calendarWeekRows" class="rpl-cal-list"></div>
+
+<div class="rpl-cal-actions">
+<button type="button" class="rpl-cal-save" onclick="saveCalendarWeek()">💾 SALVA SETTIMANA</button>
+<button type="button" onclick="copyCalendarWeek()">📋 COPIA SETTIMANA PER POSTER</button>
+<button type="button" onclick="downloadCalendarWeekTxt()">📄 SCARICA TXT</button>
 </div>
 </div>
 
+<div class="card">
+<h2>📚 Storico settimane</h2>
+<div class="muted">Ogni settimana salvata rimane qui e può essere riaperta e modificata.</div>
+<div id="calendarWeeksHistory" class="rpl-cal-week-list muted">Caricamento…</div>
+</div>
+</div>
 <div class="card"><h2>📋 Storico partite</h2><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Storico partite</b><button type="button" class="smallbtn" onclick="loadOperatorHistory()">🔄 Aggiorna</button></div><div id="history" class="muted">Caricamento…</div></div>
 </div></section>
 <div class="card" style="text-align:center;margin-top:18px;padding:18px">
@@ -654,108 +657,226 @@ async function calculateStandingsBefore(timestamp){
   return s.map(z=>{let base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;return {...z,base,total:base+z.mvp*1.5+z.imb}}).sort((a,b)=>b.total-a.total||b.base-a.base||a.id-b.id);
 }
 
+
 function showOperatorSection(which){
   const m=$("operatorMatchSection"), c=$("operatorCalendarSection");
   const mt=$("opMatchTab"), ct=$("opCalendarTab");
   if(which==="calendar"){
     m?.classList.add("hidden"); c?.classList.remove("hidden");
     mt?.classList.remove("primary"); ct?.classList.add("primary");
-    fillCalendarPlayers(); loadCalendar();
+    fillCalendarPlayers(); renderCalendarWeek(); loadCalendarWeeks();
   }else{
     c?.classList.add("hidden"); m?.classList.remove("hidden");
     ct?.classList.remove("primary"); mt?.classList.add("primary");
   }
 }
 function fillCalendarPlayers(){
-  ["calP1","calP2","calP3","calP4"].forEach(id=>{
-    const s=$(id); if(!s)return;
-    const old=s.value;
-    s.innerHTML='<option value="">Giocatore</option>'+opts();
-    if(old)s.value=old;
+  // Used by the weekly calendar rows. Player options come from the same DB-backed list used for match entry.
+}
+function calendarPlayerOptions(selected=""){
+  return '<option value="">Seleziona giocatore</option>'+dbPlayers.map(p=>{
+    const label=`${p.name}${p.nickname?" — "+p.nickname:""} — Fascia ${p.fascia??"—"} · ${p.fascia_value??"—"} punti`;
+    return `<option value="${p.id}" ${String(p.id)===String(selected)?"selected":""}>${escOperator(label)}</option>`;
+  }).join("");
+}
+function calendarCourtOptions(selected=""){
+  const courts=["Sporting Club Perillo","Sporting Village Tirrito Coperto","Sporting Village Tirrito Scoperto","Padel Club Calascibetta"];
+  return '<option value="">Seleziona campo</option>'+courts.map(c=>`<option value="${escOperator(c)}" ${c===selected?"selected":""}>${escOperator(c)}</option>`).join("");
+}
+function calendarPlayerMeta(id){
+  const p=dbPlayers.find(x=>String(x.id)===String(id));
+  return p?`Fascia ${p.fascia??"—"} · ${p.fascia_value??"—"} punti`:"";
+}
+function addCalendarRow(data={}){
+  const host=$("calendarWeekRows"); if(!host)return;
+  const row=document.createElement("div");
+  row.className="rpl-cal-card calendar-row";
+  row.dataset.id=data.id||"";
+  row.innerHTML=`<div class="rpl-cal-grid">
+    <div class="rpl-cal-field"><label>Data</label><input class="cal-row-date" type="date" value="${escOperator(data.date||"")}"></div>
+    <div class="rpl-cal-field"><label>Ora</label><input class="cal-row-time" type="time" value="${escOperator(data.time||"")}"></div>
+    <div class="rpl-cal-field" style="grid-column:1/-1"><label>Campo di gioco</label><select class="cal-row-court">${calendarCourtOptions(data.court||"")}</select></div>
+    ${[1,2,3,4].map(i=>`<div class="rpl-cal-field"><label>Giocatore ${i}</label><select class="cal-row-p${i}">${calendarPlayerOptions(data["player_"+i]||"")}</select><span class="calendar-player-meta cal-meta-p${i}" style="font-size:11px;color:#b88700">${calendarPlayerMeta(data["player_"+i]||"")}</span></div>`).join("")}
+  </div>
+  <div class="rpl-cal-actions"><button type="button" onclick="removeCalendarRow(this)">🗑️ Rimuovi partita</button></div>`;
+  host.appendChild(row);
+  [1,2,3,4].forEach(i=>{
+    row.querySelector(".cal-row-p"+i).addEventListener("change",e=>{
+      row.querySelector(".cal-meta-p"+i).textContent=calendarPlayerMeta(e.target.value);
+    });
   });
+}
+function removeCalendarRow(btn){btn.closest(".calendar-row")?.remove();}
+function calendarRowData(row){
+  return {
+    id:row.dataset.id||null,
+    date:row.querySelector(".cal-row-date").value,
+    time:row.querySelector(".cal-row-time").value,
+    court:row.querySelector(".cal-row-court").value,
+    players:[1,2,3,4].map(i=>+row.querySelector(".cal-row-p"+i).value)
+  };
+}
+function validateCalendarRows(){
+  const rows=[...document.querySelectorAll("#calendarWeekRows .calendar-row")];
+  if(!rows.length){alert("Aggiungi almeno una partita.");return false;}
+  for(let i=0;i<rows.length;i++){
+    const d=calendarRowData(rows[i]);
+    if(!d.date||!d.time||!d.court||d.players.some(x=>!x)){
+      alert(`Completa tutti i dati della partita ${i+1}.`);return false;
+    }
+    if(new Set(d.players).size!==4){
+      alert(`La partita ${i+1} deve avere quattro giocatori diversi.`);return false;
+    }
+  }
+  return true;
+}
+function renderCalendarWeek(){
+  if($("calendarWeekRows")&&!$("calendarWeekRows").children.length)addCalendarRow();
+}
+function playerSnapshot(id){
+  const p=dbPlayers.find(x=>String(x.id)===String(id));
+  return {name:p?.name||"",nickname:p?.nickname||"",fascia:p?.fascia??null,points:p?.fascia_value??null};
+}
+async function saveCalendarWeek(){
+  const msg=$("calWeekMsg");
+  if(!validateCalendarRows())return;
+  const start=$("calWeekStart").value,end=$("calWeekEnd").value;
+  if(!start||!end){msg.className="msg err";msg.textContent="Inserisci le date della settimana.";return;}
+  if(start>end){msg.className="msg err";msg.textContent="La data iniziale non può essere successiva alla finale.";return;}
+  msg.className="msg";msg.textContent="Salvataggio settimana…";
+
+  // The existing calendar_matches table is extended with week_start/week_end.
+  // No login/authentication code is touched here.
+  const oldR=await sb.from("calendar_matches").select("id").eq("week_start",start).eq("week_end",end);
+  if(oldR.error){msg.className="msg err";msg.textContent="Errore lettura settimana: "+oldR.error.message;return;}
+
+  const keep=[];
+  for(const row of [...document.querySelectorAll("#calendarWeekRows .calendar-row")]){
+    const d=calendarRowData(row), s=d.players.map(playerSnapshot);
+    const courtMap={"Sporting Club Perillo":1,"Sporting Village Tirrito Coperto":2,"Sporting Village Tirrito Scoperto":3,"Padel Club Calascibetta":4};
+    const payload={
+      scheduled_at:new Date(`${d.date}T${d.time}:00`).toISOString(),
+      court:d.court,court_id:courtMap[d.court]||null,
+      player_1:d.players[0],player_2:d.players[1],player_3:d.players[2],player_4:d.players[3],
+      week_start:start,week_end:end,
+      player_1_name:s[0].name,player_1_nickname:s[0].nickname,player_1_fascia:s[0].fascia,player_1_fascia_points:s[0].points,
+      player_2_name:s[1].name,player_2_nickname:s[1].nickname,player_2_fascia:s[1].fascia,player_2_fascia_points:s[1].points,
+      player_3_name:s[2].name,player_3_nickname:s[2].nickname,player_3_fascia:s[2].fascia,player_3_fascia_points:s[2].points,
+      player_4_name:s[3].name,player_4_nickname:s[3].nickname,player_4_fascia:s[3].fascia,player_4_fascia_points:s[3].points
+    };
+    let r=row.dataset.id
+      ? await sb.from("calendar_matches").update(payload).eq("id",row.dataset.id).select().single()
+      : await sb.from("calendar_matches").insert(payload).select().single();
+    if(r.error){msg.className="msg err";msg.textContent="Errore salvataggio: "+r.error.message;return;}
+    row.dataset.id=r.data.id;keep.push(r.data.id);
+  }
+
+  const remove=(oldR.data||[]).map(x=>x.id).filter(id=>!keep.includes(id));
+  if(remove.length){
+    const dr=await sb.from("calendar_matches").delete().in("id",remove);
+    if(dr.error){msg.className="msg err";msg.textContent="Errore aggiornamento settimana: "+dr.error.message;return;}
+  }
+  msg.className="msg ok";msg.textContent=`✅ Settimana salvata: ${keep.length} partite.`;
+  await loadCalendarWeeks();
+}
+async function loadCalendarWeek(){
+  const start=$("calWeekStart").value,end=$("calWeekEnd").value;
+  if(!start||!end){alert("Inserisci prima le date della settimana.");return;}
+  const r=await sb.from("calendar_matches").select("*").eq("week_start",start).eq("week_end",end).order("scheduled_at",{ascending:true});
+  if(r.error){alert("Errore caricamento settimana: "+r.error.message);return;}
+  $("calendarWeekRows").innerHTML="";
+  (r.data||[]).forEach(m=>{
+    const d=new Date(m.scheduled_at);
+    addCalendarRow({
+      id:m.id,date:d.toISOString().slice(0,10),time:d.toTimeString().slice(0,5),
+      court:m.court,player_1:m.player_1,player_2:m.player_2,player_3:m.player_3,player_4:m.player_4
+    });
+  });
+  if(!r.data?.length)addCalendarRow();
+  $("calWeekMsg").className="msg ok";$("calWeekMsg").textContent=r.data?.length?`Settimana caricata: ${r.data.length} partite.`:"Nessuna partita salvata per questa settimana.";
+}
+async function loadCalendarWeeks(){
+  const box=$("calendarWeeksHistory");if(!box)return;
+  box.innerHTML="Caricamento…";
+  const r=await sb.from("calendar_matches").select("id,week_start,week_end").not("week_start","is",null).order("week_start",{ascending:false});
+  if(r.error){box.innerHTML=`<div class="msg err">Errore storico settimane: ${escOperator(r.error.message)}</div>`;return;}
+  const groups={};
+  (r.data||[]).forEach(x=>{
+    const k=`${x.week_start}|${x.week_end}`;
+    if(!groups[k])groups[k]={start:x.week_start,end:x.week_end,count:0};
+    groups[k].count++;
+  });
+  const weeks=Object.values(groups).sort((a,b)=>b.start.localeCompare(a.start));
+  if(!weeks.length){box.innerHTML='<div class="muted">Nessuna settimana salvata.</div>';return;}
+  box.innerHTML=weeks.map(w=>`<div class="rpl-cal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div><b>📅 ${escOperator(w.start)} → ${escOperator(w.end)}</b><div class="muted">${w.count} partite</div></div>
+      <div class="rpl-cal-actions">
+        <button type="button" onclick="openCalendarWeek('${w.start}','${w.end}')">✏️ Modifica</button>
+        <button type="button" onclick="copySavedCalendarWeek('${w.start}','${w.end}')">📋 Copia poster</button>
+      </div>
+    </div>
+  </div>`).join("");
+}
+async function openCalendarWeek(start,end){
+  $("calWeekStart").value=start;$("calWeekEnd").value=end;
+  await loadCalendarWeek();
+  window.scrollTo({top:$("operatorCalendarSection").offsetTop-10,behavior:"smooth"});
+}
+function buildCalendarText(matches,start,end){
+  const a=new Date(start+"T12:00:00"),b=new Date(end+"T12:00:00");
+  const out=["ROYAL PADEL LEAGUE","CALENDARIO SETTIMANALE","",
+    `SETTIMANA: ${a.toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"}).toUpperCase()} – ${b.toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"}).toUpperCase()}`,""];
+  matches.forEach((m,i)=>{
+    const d=new Date(m.scheduled_at);
+    out.push("━━━━━━━━━━━━━━━━━━",`PARTITA ${String(i+1).padStart(2,"0")}`,"━━━━━━━━━━━━━━━━━━","",
+      `📅 ${d.toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}).toUpperCase()}`,
+      `🕘 ORE ${d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}`,
+      `📍 ${m.court}`,"");
+    for(let j=1;j<=4;j++){
+      const p=m[`player_${j}_name`]||calendarPlayerName(m[`player_${j}`]);
+      const nick=m[`player_${j}_nickname`]||"";
+      out.push(`👤 ${p}${nick?` "${nick}"`:""}`,
+        `   FASCIA ${m[`player_${j}_fascia`]??"—"} — ${m[`player_${j}_fascia_points`]??"—"} PUNTI`,"");
+    }
+  });
+  out.push("━━━━━━━━━━━━━━━━━━","","ROYAL PADEL LEAGUE","WHERE LEGENDS PLAY");
+  return out.join("\n");
 }
 function calendarPlayerName(id){
   const p=dbPlayers.find(x=>String(x.id)===String(id));
   return p ? `${p.name}${p.nickname?" — "+p.nickname:""}` : "Giocatore";
 }
-function resetCalendarForm(){
-  $("calEditId").value="";
-  $("calCourt").value="";
-  $("calDate").value="";
-  ["calP1","calP2","calP3","calP4"].forEach(id=>{if($(id))$(id).value=""});
-  $("calSaveBtn").textContent="💾 SALVA PARTITA A CALENDARIO";
-  $("calCancelBtn").classList.add("hidden");
+async function getWeekMatches(){
+  const start=$("calWeekStart").value,end=$("calWeekEnd").value;
+  if(!start||!end){alert("Seleziona una settimana.");return null;}
+  const r=await sb.from("calendar_matches").select("*").eq("week_start",start).eq("week_end",end).order("scheduled_at",{ascending:true});
+  if(r.error){alert("Errore caricamento settimana: "+r.error.message);return null;}
+  if(!r.data?.length){alert("Nessuna partita salvata per questa settimana.");return null;}
+  return {matches:r.data,start,end};
 }
-function cancelCalendarEdit(){resetCalendarForm();$("calMsg").textContent=""}
-async function saveCalendarMatch(){
-  const msg=$("calMsg"); msg.className="msg"; msg.textContent="Salvataggio…";
-  const id=$("calEditId").value;
-  const at=$("calDate").value, court=$("calCourt").value.trim();
-  const pids=["calP1","calP2","calP3","calP4"].map(x=>+$(x).value);
-  if(!at||!court||pids.some(x=>!x)){msg.className="msg err";msg.textContent="Completa data, ora, campo e tutti e 4 i giocatori.";return}
-  if(new Set(pids).size<4){msg.className="msg err";msg.textContent="Scegli quattro giocatori diversi.";return}
-  const courtMap={
-  "Sporting Club Perillo":1,
-  "Sporting Village Tirrito Coperto":2,
-  "Sporting Village Tirrito Scoperto":3,
-  "Padel Club Calascibetta":4
-};
-const payload={scheduled_at:new Date(at).toISOString(),court,court_id:courtMap[court]||null,player_1:pids[0],player_2:pids[1],player_3:pids[2],player_4:pids[3]};
-  let r;
-  if(id) r=await sb.from("calendar_matches").update(payload).eq("id",id).select().single();
-  else r=await sb.from("calendar_matches").insert(payload).select().single();
-  if(r.error){msg.className="msg err";msg.textContent="Errore calendario: "+r.error.message;return}
-  msg.className="msg ok";msg.textContent=id?"✅ Partita modificata. Il cambio è stato memorizzato.":"✅ Partita aggiunta al calendario.";
-  resetCalendarForm(); await loadCalendar();
+async function copyCalendarWeek(){
+  const x=await getWeekMatches();if(!x)return;
+  const t=buildCalendarText(x.matches,x.start,x.end);
+  try{
+    await navigator.clipboard.writeText(t);
+    $("calWeekMsg").className="msg ok";$("calWeekMsg").textContent="✅ Settimana copiata. Ora puoi incollarla qui in ChatGPT per creare il poster.";
+  }catch(e){prompt("Copia questo testo:",t);}
 }
-function editCalendarMatch(m){
-  $("calEditId").value=m.id;
-  $("calDate").value=new Date(m.scheduled_at).toISOString().slice(0,16);
-  $("calCourt").value=m.court||"";
-  ["calP1","calP2","calP3","calP4"].forEach((id,i)=>$(id).value=m["player_"+(i+1)]);
-  $("calSaveBtn").textContent="💾 SALVA MODIFICHE";
-  $("calCancelBtn").classList.remove("hidden");
-  window.scrollTo({top:document.getElementById("operatorCalendarSection").offsetTop-10,behavior:"smooth"});
+async function copySavedCalendarWeek(start,end){
+  const r=await sb.from("calendar_matches").select("*").eq("week_start",start).eq("week_end",end).order("scheduled_at",{ascending:true});
+  if(r.error){alert("Errore caricamento settimana: "+r.error.message);return;}
+  const t=buildCalendarText(r.data||[],start,end);
+  try{await navigator.clipboard.writeText(t);alert("Calendario copiato negli appunti.");}
+  catch(e){prompt("Copia questo testo:",t);}
 }
-async function deleteCalendarMatch(id){
-  if(!confirm("Eliminare questa partita dal calendario?"))return;
-  const r=await sb.from("calendar_matches").delete().eq("id",id);
-  if(r.error){alert("Errore: "+r.error.message);return}
-  await loadCalendar();
+async function downloadCalendarWeekTxt(){
+  const x=await getWeekMatches();if(!x)return;
+  const t=buildCalendarText(x.matches,x.start,x.end);
+  const b=new Blob([t],{type:"text/plain;charset=utf-8"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download=`RPL_Calendario_${x.start}_${x.end}.txt`;a.click();URL.revokeObjectURL(a.href);
 }
-async function showCalendarChanges(id){
-  const r=await sb.from("calendar_match_changes").select("*").eq("calendar_match_id",id).order("changed_at",{ascending:false});
-  if(r.error){alert("Errore storico cambi: "+r.error.message);return}
-  if(!r.data?.length){alert("Nessun cambio registrato per questa partita.");return}
-  alert(r.data.map(x=>{
-    const d=new Date(x.changed_at).toLocaleString("it-IT");
-    const when=x.old_scheduled_at&&x.new_scheduled_at?`${new Date(x.old_scheduled_at).toLocaleString("it-IT")} → ${new Date(x.new_scheduled_at).toLocaleString("it-IT")}`:"";
-    const court=x.old_court!==x.new_court?`${x.old_court||"—"} → ${x.new_court||"—"}`:"";
-    return `${d}\n${when}\nCampo: ${court}`;
-  }).join("\n\n"));
-}
-async function loadCalendar(){
-  const box=$("calendarList"); if(!box)return;
-  box.innerHTML='<div class="muted">Caricamento…</div>';
-  const r=await sb.from("calendar_matches").select("*").order("scheduled_at",{ascending:true});
-  if(r.error){box.innerHTML=`<div class="msg err">Errore calendario: ${escOperator(r.error.message)}</div>`;return}
-  if(!r.data?.length){box.innerHTML='<div class="muted">Nessuna partita programmata.</div>';return}
-  box.innerHTML=r.data.map(m=>{
-    const players=[m.player_1,m.player_2,m.player_3,m.player_4].map(calendarPlayerName);
-    const dt=new Date(m.scheduled_at).toLocaleString("it-IT",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
-    return `<div style="border-top:1px solid #e5e7eb;padding:12px 0">
-      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
-        <div><b>📅 ${escOperator(dt)}</b><br><span class="badge">📍 ${escOperator(m.court)}</span>
-        <div class="muted" style="margin-top:7px">👤 ${players.map(escOperator).join(" · ")}</div></div>
-        <div class="actions">
-          <button type="button" class="smallbtn edit" onclick='editCalendarMatch(${JSON.stringify(m)})'>✏️ Modifica</button>
-          <button type="button" class="smallbtn" onclick="showCalendarChanges(${m.id})">🔄 Cambi</button>
-          <button type="button" class="smallbtn danger" onclick="deleteCalendarMatch(${m.id})">🗑️ Elimina</button>
-        </div>
-      </div>
-    </div>`;
-  }).join("");
-}
+
 async function loadOperatorHistory(){
   const box=$("history");
   if(!box)return;
