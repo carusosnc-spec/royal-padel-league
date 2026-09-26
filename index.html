@@ -1843,7 +1843,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.56</div>
+<div id="rplVersionBadge">RPL v6.5.55</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2032,58 +2032,100 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
 })();
 </script>
 
-
-
-<script id="rpl-v6556-bonus-preview-js">
+<script id="rpl-v6557-bonus-preview-js">
 (function(){
-  const $=id=>document.getElementById(id);
+  function q(id){return document.getElementById(id)}
   async function runBonusPreview(){
-    const panel=$("bonusPreviewPanel"), content=$("bonusPreviewContent");
-    if(!panel||!content)return;
-    panel.style.display="block";
-    content.innerHTML="<div>Calcolo anteprima con la stessa logica della Classifica Parziale…</div>";
+    const panel=q('bonusPreviewPanel'), content=q('bonusPreviewContent');
+    if(!panel||!content) return;
+    panel.style.display='block';
+    content.innerHTML='<div>Calcolo anteprima con la stessa logica della Classifica Parziale…</div>';
     try{
-      const players=(Array.isArray(window.dbPlayers)?window.dbPlayers:[]).filter(p=>!p.is_guest);
-      const stats=players.map(p=>({id:p.id,name:p.name,nick:p.nickname||"",fascia:p.fascia,value:+p.fascia_value,sets:0,setWins:0,pt:0,games:0,mvp:0,imb:0}));
-      const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at").gte("played_at","2026-09-15T00:00:00").lt("played_at","2026-10-01T00:00:00").order("played_at",{ascending:true});
-      if(me)throw me;
-      if(!matches?.length){content.innerHTML="<div>Nessuna partita nel periodo 15–30 settembre 2026.</div>";return;}
-      const ids=matches.map(m=>m.id);
-      const [{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
-        window.sb.from("match_players").select("*").in("match_id",ids),
-        window.sb.from("sets").select("*").in("match_id",ids).order("set_number"),
-        window.sb.from("match_awards").select("*").in("match_id",ids)
+      const start='2026-09-15T00:00:00', end='2026-10-01T00:00:00';
+      const {data:matches,error:me}=await sb.from('matches').select('id,played_at').gte('played_at',start).lt('played_at',end).order('played_at',{ascending:true});
+      if(me) throw me;
+      const matchIds=(matches||[]).map(x=>x.id);
+      if(!matchIds.length){content.innerHTML='<div>Nessuna partita nel periodo 15–30 settembre.</div>';return;}
+
+      const [{data:players,error:pe},{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
+        sb.from('players').select('*').eq('active',true).order('id'),
+        sb.from('match_players').select('*').in('match_id',matchIds),
+        sb.from('sets').select('*').in('match_id',matchIds).order('set_number'),
+        sb.from('match_awards').select('*').in('match_id',matchIds)
       ]);
-      if(mpe||se||ae)throw (mpe||se||ae);
-      const snap={}; (mp||[]).forEach(x=>snap[x.match_id+"_"+x.player_id]=x);
-      (sets||[]).forEach(x=>{
-        const A=[x.pair_a_player_1,x.pair_a_player_2], B=[x.pair_b_player_1,x.pair_b_player_2];
-        const ga=+x.games_a, gb=+x.games_b;
-        if(!Number.isFinite(ga)||!Number.isFinite(gb)||ga===gb)return;
-        const win=ga>gb?A:B, lose=ga>gb?B:A, wg=Math.max(ga,gb), lg=Math.min(ga,gb);
-        win.forEach(pid=>{const s=stats.find(z=>z.id===pid);if(!s)return;s.sets++;s.setWins++;s.games+=wg;s.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0);});
-        lose.forEach(pid=>{const s=stats.find(z=>z.id===pid);if(s){s.sets++;s.games+=lg;}});
+      if(pe||mpe||se||ae) throw (pe||mpe||se||ae);
+
+      const eligiblePlayers=(players||[]).filter(p=>!p.is_guest);
+      const stats={};
+      eligiblePlayers.forEach(p=>stats[p.id]={player:p,sets:0,won:0,pt:0,games:0,mvp:0,imb:0});
+      const snap={};
+      (mp||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
+
+      // Identica logica della Classifica Parziale:
+      // ogni set giocato conta; chi vince prende la somma delle fascia_value dei 2 avversari;
+      // i game vinti entrano nel +0,30; ogni presenza/set vale +0,10 nel punteggio base.
+      (sets||[]).forEach(s=>{
+        const A=[s.pair_a_player_1,s.pair_a_player_2].filter(Boolean);
+        const B=[s.pair_b_player_1,s.pair_b_player_2].filter(Boolean);
+        const ga=Number(s.games_a), gb=Number(s.games_b);
+        if(!Number.isFinite(ga)||!Number.isFinite(gb)||ga===gb) return;
+        const winners=ga>gb?A:B, losers=ga>gb?B:A;
+        const wg=Math.max(ga,gb), lg=Math.min(ga,gb);
+        winners.forEach(pid=>{
+          const x=stats[pid]; if(!x)return;
+          x.sets++; x.won++; x.games+=wg;
+          x.pt += (snap[s.match_id+'_'+losers[0]]?.fascia_value||0)+(snap[s.match_id+'_'+losers[1]]?.fascia_value||0);
+        });
+        losers.forEach(pid=>{
+          const x=stats[pid]; if(!x)return;
+          x.sets++; x.games+=lg;
+        });
       });
-      (aw||[]).forEach(x=>{const s=stats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++;});
-      stats.forEach(s=>{s.base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;s.total=s.base+s.mvp*1.5+s.imb;});
-      const eligible=stats.filter(s=>s.sets>=5);
-      eligible.sort((a,b)=>b.total-a.total||b.setWins-a.setWins||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||(Number(a.fascia)||99)-(Number(b.fascia)||99)||a.name.localeCompare(b.name,"it"));
+
+      (aw||[]).forEach(x=>{
+        const st=stats[x.player_id]; if(!st)return;
+        const t=String(x.award_type||x.type||'').toUpperCase();
+        if(t.includes('MVP')) st.mvp++;
+        if(t.includes('IMB')) st.imb++;
+      });
+
+      Object.values(stats).forEach(x=>{
+        x.base=x.sets?((x.pt+x.games*.30+x.sets*.10)/x.sets)*10:0;
+        x.total=x.base+x.mvp*1.5+x.imb;
+        x.fascia=Number(x.player.fascia||4);
+      });
+
+      const eligible=Object.values(stats).filter(x=>x.sets>=5);
+      eligible.sort((a,b)=>
+        (b.total-a.total)||
+        (b.won-a.won)||
+        (b.sets-a.sets)||
+        (b.mvp-a.mvp)||
+        (b.imb-a.imb)||
+        (b.games-a.games)||
+        (a.fascia-b.fascia)||
+        String(a.player.name||'').localeCompare(String(b.player.name||''),'it')
+      );
+
       const bonus=[100,72,60,48,40,32,24,16,8,4], top=eligible.slice(0,10);
       let h='<div class="bonus-preview-note"><b>Anteprima provvisoria — 15/09/2026 → 30/09/2026</b><br>Minimo richiesto: 5 set. Calcolo identico alla Classifica Parziale. Nessun dato viene salvato.</div>';
-      h+='<div class="scroll"><table><thead><tr><th>POS</th><th>GIOCATORE</th><th>SET</th><th>SET VINTI</th><th>PT SET</th><th>GAME</th><th>BASE</th><th>MVP</th><th>IMB</th><th>FASCIA</th><th>BONUS</th></tr></thead><tbody>';
-      top.forEach((s,i)=>{h+=`<tr><td><b>${i+1}</b></td><td>${s.name}${s.nick?` <span style="color:#ffd86a;font-size:11px">“${s.nick}”</span>`:""}</td><td>${s.sets}</td><td>${s.setWins}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td><td>${s.base.toFixed(2)}</td><td>${s.mvp}</td><td>${s.imb}</td><td>F${s.fascia}</td><td><b style="color:var(--gold)">${bonus[i]}</b></td></tr>`;});
-      h+="</tbody></table></div>";
+      h+='<div style="overflow-x:auto"><table><thead><tr><th>POS</th><th>GIOCATORE</th><th>SET</th><th>SET VINTI</th><th>PT SET</th><th>GAME</th><th>BASE</th><th>MVP</th><th>IMB</th><th>FASCIA</th><th>BONUS</th></tr></thead><tbody>';
+      top.forEach((x,i)=>{
+        h+=`<tr><td><b>${i+1}</b></td><td>${x.player.name||''} ${x.player.nickname?`<span style="color:#ffd86a;font-size:11px">“${x.player.nickname}”</span>`:''}</td><td>${x.sets}</td><td>${x.won}</td><td>${x.pt.toFixed(1)}</td><td>${x.games}</td><td>${x.base.toFixed(2)}</td><td>${x.mvp}</td><td>${x.imb}</td><td>F${x.fascia}</td><td><b style="color:var(--gold)">${bonus[i]||0}</b></td></tr>`;
+      });
+      h+='</tbody></table></div>';
       h+=`<div class="bonus-preview-note" style="margin-top:10px">Giocatori idonei: ${eligible.length} · Primi 10: ${top.length}. I punti Bonus sono simulati e non sono stati registrati.</div>`;
       content.innerHTML=h;
-    }catch(e){console.error(e);content.innerHTML='<div style="color:#ff8d8d">Errore nel calcolo dell’anteprima: '+String(e.message||e)+'</div>';}
+    }catch(err){
+      console.error(err);
+      content.innerHTML='<div style="color:#ff8d8d">Errore nel calcolo dell’anteprima: '+String(err.message||err)+'</div>';
+    }
   }
   function install(){
-    const admin=$("bonusPreviewAdmin"), btn=$("bonusPreviewBtn"); if(!admin||!btn)return;
-    btn.addEventListener("click",runBonusPreview);
-    function sync(){const op=$("adminPage");admin.style.display=(op&&!op.classList.contains("hidden"))?"block":"none";}
-    sync(); if($("adminPage"))new MutationObserver(sync).observe($("adminPage"),{attributes:true,attributeFilter:["class"]});
+    const btn=q('bonusPreviewBtn'); if(!btn)return;
+    btn.addEventListener('click',runBonusPreview);
   }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);else install();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
 </body></html>
