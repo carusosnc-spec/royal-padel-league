@@ -183,6 +183,20 @@ nav a[data-nav="riservata"] > span:first-child{color:#7c3aed !important}
 <style id="rpl-nav-order-v6534">
 nav[style*="justify-content:center"]{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;flex-wrap:wrap!important}
 #publicBtn,#partialBtn,#historyBtn,#adminBtn{order:initial!important}
+
+#bonusBtn{order:5!important;box-sizing:border-box!important;min-height:42px!important;height:42px!important;padding:0 15px!important;border:1px solid rgba(31,41,55,.18)!important;border-radius:10px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;font-weight:700!important;line-height:1!important;text-decoration:none!important;cursor:pointer!important}
+#bonusBtn.primary{background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;color:#171717!important;border-color:#c59a27!important;box-shadow:0 2px 7px rgba(0,0,0,.14)!important}
+#bonusTable th:nth-child(3),#bonusTable td:nth-child(3){position:sticky;left:0;background:#07121e;z-index:2}
+#bonusTable th:nth-child(2),#bonusTable td:nth-child(2){position:sticky;left:42px;background:#07121e;z-index:2}
+#bonusTable td:nth-child(3) b{color:var(--gold);font-size:16px}
+.bonus-provisional{font-size:10px;color:#9aa9b8;margin-left:4px}
+
+#calendarPublicBtn{order:1!important}
+#partialBtn{order:2!important}
+#publicBtn{order:3!important}
+#historyBtn{order:4!important}
+#bonusBtn{order:5!important}
+#adminBtn{order:6!important}
 </style>
 <style id="rpl-v6536-submenu">
 .rpl-admin-submenu{
@@ -361,6 +375,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <button id="publicBtn" class="primary">🏆 Classifica</button>
 <button id="partialBtn">📊 Classifica parziale</button>
 <a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
+<button id="bonusBtn">🏅 Classifica Bonus</button>
 <button id="adminBtn">🔐 Area riservata</button>
 
 </nav>
@@ -408,6 +423,23 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
       <tbody id="partialRanking"></tbody>
     </table>
   </div>
+</div>
+</section>
+
+
+<section id="bonusPage" class="hidden">
+<div class="card">
+  <div style="text-align:center;margin-bottom:14px">
+    <div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">🏅 CLASSIFICA BONUS</div>
+    <div style="font-size:11px;color:#9aa9b8;letter-spacing:.16em;margin-top:8px">BONUS MENSILE • STAGIONE 2026/27</div>
+  </div>
+  <div id="bonusSummary" class="muted" style="margin-bottom:10px">Calcolo Classifica Bonus…</div>
+  <div class="scroll" style="margin-top:10px">
+    <table id="bonusTable"><thead><tr>
+      <th>#</th><th>Giocatore</th><th>TOTALE</th><th>SET</th><th>OTT</th><th>NOV</th><th>DIC</th><th>GEN</th><th>FEB</th><th>MAR</th>
+    </tr></thead><tbody id="bonusRanking"></tbody></table>
+  </div>
+  <div class="muted" style="margin-top:10px;font-size:11px">I primi 10 del mese ricevono 100, 72, 60, 48, 40, 32, 24, 16, 8 e 4 punti. Prima della chiusura mensile il mese corrente è indicato come provvisorio.</div>
 </div>
 </section>
 
@@ -1792,7 +1824,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.53</div>
+<div id="rplVersionBadge">RPL v6.5.54</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -1805,8 +1837,8 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
 </style>
 <script id="rpl-v6552-final-navigation">
 (function(){
-  const NAV=['calendarPublicBtn','partialBtn','publicBtn','historyBtn','adminBtn'];
-  const SEC=['publicCalendarPage','publicPage','partialPage','historyView','adminPage'];
+  const NAV=['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn'];
+  const SEC=['publicCalendarPage','publicPage','partialPage','historyView','bonusPage','adminPage'];
 
   function el(id){return document.getElementById(id);}
   function hideAll(){
@@ -1870,6 +1902,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
     if(location.hash==='#calendar') calendar();
     else if(location.hash==='#partial') partial();
     else if(location.hash==='#history') history();
+    else if(location.hash==='#bonus') window.showBonus?.();
     else ranking();
   }
 
@@ -1882,6 +1915,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
       publicBtn:ranking,
       partialBtn:partial,
       historyBtn:history,
+      bonusBtn:()=>window.showBonus?.(),
       adminBtn:admin
     };
     NAV.forEach(id=>{
@@ -1893,12 +1927,89 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
     });
     window.addEventListener('hashchange',function(){
       // Only route hash changes that represent public navigation.
-      if(['#calendar','#partial','#history',''].includes(location.hash)) route();
+      if(['#calendar','#partial','#history','#bonus',''].includes(location.hash)) route();
     });
     route();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install);
   else install();
+})();
+</script>
+
+<script id="bonus-ranking-v6554">
+(function(){
+ const $=id=>document.getElementById(id);
+ const POINTS=[100,72,60,48,40,32,24,16,8,4];
+ const MONTHS=[
+  {key:'09',label:'SET',start:'2026-09-01',end:'2026-09-30',threshold:5},
+  {key:'10',label:'OTT',start:'2026-10-01',end:'2026-10-31',threshold:15},
+  {key:'11',label:'NOV',start:'2026-11-01',end:'2026-11-30',threshold:25},
+  {key:'12',label:'DIC',start:'2026-12-01',end:'2026-12-31',threshold:35},
+  {key:'01',label:'GEN',start:'2027-01-01',end:'2027-01-31',threshold:45},
+  {key:'02',label:'FEB',start:'2027-02-01',end:'2027-02-28',threshold:55},
+  {key:'03',label:'MAR',start:'2027-03-01',end:'2027-03-31',threshold:65}
+ ];
+ function empty(){return (window.dbPlayers||[]).filter(p=>!p.is_guest).map(p=>({id:p.id,name:p.name,nick:p.nickname||'',fascia:+p.fascia||4,sets:0,won:0,games:0,pt:0,mvp:0,imb:0,bonus:0,months:{}}));}
+ function monthClosed(m){return new Date()>=new Date(m.end+'T23:59:59');}
+ function logo(name){try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}}
+ async function calcMonth(m, allMatches, mp, sets, awards, cumulativeSets){
+   const ids=allMatches.filter(x=>String(x.played_at).slice(0,10)>=m.start && String(x.played_at).slice(0,10)<=m.end).map(x=>x.id);
+   const stats=empty(); const snap={}; (mp||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
+   const byId=new Map(stats.map(s=>[s.id,s]));
+   const cumulative={}; Object.keys(cumulativeSets).forEach(k=>cumulative[k]=cumulativeSets[k]);
+   (sets||[]).filter(x=>ids.includes(x.match_id)).forEach(x=>{
+     const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
+     const ga=+x.games_a,gb=+x.games_b, win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
+     win.forEach(pid=>{const s=byId.get(pid);if(!s)return;s.sets++;s.won++;s.games+=wg;s.pt+=(snap[x.match_id+'_'+lose[0]]?.fascia_value||0)+(snap[x.match_id+'_'+lose[1]]?.fascia_value||0)});
+     lose.forEach(pid=>{const s=byId.get(pid);if(s){s.sets++;s.games+=lg}});
+   });
+   (awards||[]).filter(x=>ids.includes(x.match_id)).forEach(x=>{const s=byId.get(x.player_id);if(!s)return;if(x.award_type==='MVP')s.mvp++;if(x.award_type==='IMBATTUTO')s.imb++});
+   stats.forEach(s=>{const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;s.base=base;s.total=base+s.mvp*1.5+s.imb;s.cumSets=(cumulativeSets[s.id]||0)+s.sets;s.fascia=+((window.dbPlayers||[]).find(p=>p.id===s.id)?.fascia||4)});
+   const eligible=stats.filter(s=>s.cumSets>=m.threshold && s.sets>0);
+   eligible.sort((a,b)=>b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it'));
+   eligible.forEach((s,i)=>{if(i<10)s.bonus=POINTS[i];s.months[m.key]=s.bonus});
+   return {stats,eligible};
+ }
+ async function loadBonus(){
+   const summary=$('bonusSummary'), body=$('bonusRanking'); if(!summary||!body)return;
+   summary.textContent='Calcolo Classifica Bonus…';
+   try{
+     const [mr,mpr,sr,ar]=await Promise.all([
+       window.sb.from('matches').select('id,played_at').order('played_at',{ascending:true}),
+       window.sb.from('match_players').select('*'),
+       window.sb.from('sets').select('*').order('set_number'),
+       window.sb.from('match_awards').select('*')
+     ]);
+     if(mr.error||mpr.error||sr.error||ar.error)throw(mr.error||mpr.error||sr.error||ar.error);
+     const matches=mr.data||[], mp=mpr.data||[], sets=sr.data||[], awards=ar.data||[];
+     const global=empty(); const cumulativeSets={}; global.forEach(s=>cumulativeSets[s.id]=0);
+     const monthRows={}; let lastClosed='';
+     for(const m of MONTHS){
+       if(new Date()<new Date(m.start+'T00:00:00'))continue;
+       const result=await calcMonth(m,matches,mp,sets,awards,cumulativeSets);
+       result.stats.forEach(s=>{cumulativeSets[s.id]=(cumulativeSets[s.id]||0)+s.sets;});
+       monthRows[m.key]=result;
+       if(monthClosed(m))lastClosed=m.label;
+     }
+     const final=empty(); const byId=new Map(final.map(s=>[s.id,s]));
+     Object.entries(monthRows).forEach(([key,r])=>r.stats.forEach(s=>{const f=byId.get(s.id);if(!f)return;f.months[key]=s.bonus||0;f.bonus+=(s.bonus||0)}));
+     final.sort((a,b)=>b.bonus-a.bonus||a.name.localeCompare(b.name,'it'));
+     body.innerHTML=final.map((s,i)=>{
+       const months=MONTHS.map(m=>`<td>${s.months[m.key]||'—'}${(!monthClosed(m)&&s.months[m.key])?'<span class="bonus-provisional">*</span>':''}</td>`).join('');
+       return `<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b>${s.bonus}</b></td>${months}</tr>`;
+     }).join('');
+     summary.textContent=`Bonus mensile: primi 10 classificati dopo il controllo dei set minimi. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'.':'Nessun mese ancora chiuso: SET è provvisorio.'}`;
+   }catch(e){console.error(e);summary.textContent='Errore nel calcolo della Classifica Bonus: '+(e.message||e);body.innerHTML='';}
+ }
+ function showBonus(){
+   ['publicPage','partialPage','adminPage'].forEach(id=>$(id)?.classList.add('hidden')); $('historyView')?.style.setProperty('display','none'); $('publicCalendarPage')?.classList.add('hidden'); $('bonusPage')?.classList.remove('hidden');
+   ['publicBtn','partialBtn','historyBtn','adminBtn','calendarPublicBtn'].forEach(id=>$(id)?.classList.remove('primary')); $('bonusBtn')?.classList.add('primary'); location.hash='bonus'; loadBonus(); window.scrollTo(0,0);
+ }
+ window.showBonus=showBonus; window.loadBonus=loadBonus;
+ document.addEventListener('DOMContentLoaded',()=>{
+   $('bonusBtn')?.addEventListener('click',()=>showBonus());
+   if(location.hash==='#bonus')showBonus();
+ });
 })();
 </script>
 </body></html>
