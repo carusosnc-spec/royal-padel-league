@@ -263,6 +263,40 @@ select option:checked {
   letter-spacing:.3px;
 }
 </style>
+
+<style id="rpl-v6541-form-readability">
+/* V6.5.41 - campi data/ora e calendario leggibili */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"]{
+  color:#111 !important;
+  background:#fff !important;
+  -webkit-text-fill-color:#111 !important;
+  color-scheme:light !important;
+  caret-color:#111 !important;
+}
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit{
+  color:#111 !important;
+}
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="time"]::-webkit-datetime-edit-hour-field,
+input[type="time"]::-webkit-datetime-edit-minute-field,
+input[type="time"]::-webkit-datetime-edit-ampm-field{
+  color:#111 !important;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator{
+  opacity:1 !important;
+  filter:none !important;
+  cursor:pointer;
+}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1583,4 +1617,4 @@ $("date").value=new Date().toISOString().slice(0,16);
 </script>
 
 
-<div id="rplVersionBadge">RPL v6.5.40</div></body></html>
+<div id="rplVersionBadge">RPL v6.5.41</div></body></html>
