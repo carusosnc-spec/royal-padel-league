@@ -332,6 +332,11 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:700px){
   .rpl-public-cal-hero{padding:15px 10px}.rpl-public-cal-title{font-size:22px}.rpl-public-cal-main{padding:14px 8px}.rpl-public-cal-players{grid-template-columns:1fr 24px 1fr;gap:2px}.rpl-cal-side{gap:3px}.rpl-cal-player{width:105px}.rpl-cal-logo{width:68px;height:68px}.rpl-cal-name{font-size:10px}.rpl-cal-nick{font-size:9px}.rpl-public-cal-item{grid-template-columns:78px 1fr;gap:8px}.rpl-public-cal-item .mini-court{font-size:9px}.rpl-public-cal-mini-players{grid-column:1/-1;justify-content:center}.rpl-public-cal-mini-logo{width:30px;height:30px}}
 </style>
+
+<style id="rpl-v6545-calendar-visibility">
+/* V6.5.45 - il calendario pubblico compare esclusivamente nella sezione Calendario */
+#publicCalendarSection.rpl-calendar-hidden { display:none !important; }
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1751,4 +1756,42 @@ $("date").value=new Date().toISOString().slice(0,16);
   });
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.44</div></body></html>
+<div id="rplVersionBadge">RPL v6.5.45</div>
+<script id="rpl-v6545-calendar-visibility-script">
+(function(){
+  function rplHideCalendar(){
+    const el=document.getElementById("publicCalendarSection");
+    if(el) el.classList.add("rpl-calendar-hidden");
+  }
+  function rplShowCalendar(){
+    const el=document.getElementById("publicCalendarSection");
+    if(el) el.classList.remove("rpl-calendar-hidden");
+  }
+  window.rplSetCalendarPublicVisibility=function(show){
+    if(show) rplShowCalendar(); else rplHideCalendar();
+  };
+  document.addEventListener("DOMContentLoaded", rplHideCalendar);
+})();
+</script>
+
+<script id="rpl-v6545-calendar-nav-fallback">
+(function(){
+  function sync(){
+    const cal=document.getElementById("publicCalendarSection");
+    if(!cal) return;
+    const active=document.querySelector('[data-section="calendar"].active,[data-page="calendar"].active,#navCalendar.active,.nav-calendar.active');
+    if(active) cal.classList.remove("rpl-calendar-hidden");
+  }
+  document.addEventListener("click",function(e){
+    const t=e.target.closest("button,a");
+    if(!t) return;
+    const s=((t.getAttribute("data-section")||"")+" "+(t.getAttribute("data-page")||"")+" "+(t.id||"")+" "+(t.textContent||"")).toLowerCase();
+    if(s.includes("calendar")||s.includes("calendario")){
+      setTimeout(function(){ if(window.rplSetCalendarPublicVisibility) rplSetCalendarPublicVisibility(true); },0);
+    }else if(s.includes("classifica")||s.includes("storico")||s.includes("area riservata")||s.includes("riservata")||s.includes("parziale")){
+      setTimeout(function(){ if(window.rplSetCalendarPublicVisibility) rplSetCalendarPublicVisibility(false); },0);
+    }
+  },true);
+})();
+</script>
+</body></html>
