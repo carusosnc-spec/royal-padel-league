@@ -360,7 +360,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 #historyBtn{order:4 !important;}
 #adminBtn{order:5 !important;}
 </style>
-<meta id="rpl-v6553-ranking-race-fix" name="rpl-fix" content="Prevent concurrent ranking recalculation from double-counting sets"></head>
+<meta id="rpl-v6553-ranking-race-fix" name="rpl-fix" content="Prevent concurrent ranking recalculation from double-counting sets">
+<style id="rpl-v6555-bonus-preview">
+#bonusPreviewBtn{display:none;margin:10px 0;padding:9px 14px;border:1px solid #d9ad2b;border-radius:10px;background:#111b24;color:#f5d46a;font-weight:700;cursor:pointer}
+#bonusPreviewPanel{display:none;margin-top:12px;padding:14px;border:1px solid #d9ad2b;border-radius:12px;background:#0b1620}
+#bonusPreviewPanel table{width:100%;border-collapse:collapse}
+#bonusPreviewPanel th,#bonusPreviewPanel td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+#bonusPreviewPanel .bonus-preview-note{font-size:12px;opacity:.75;margin-bottom:10px}
+</style>
+</head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
 <div style="display:flex;justify-content:center">
@@ -376,6 +384,17 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <button id="partialBtn">📊 Classifica parziale</button>
 <a id="historyBtn" href="#history" role="button" style="text-decoration:none">📚 Storico partite</a>
 <button id="bonusBtn">🏅 Classifica Bonus</button>
+<div id="bonusPreviewAdmin" style="display:none">
+  <button id="bonusPreviewBtn" type="button">🔎 Anteprima Bonus Settembre</button>
+  <div id="bonusPreviewPanel">
+    <div class="bonus-preview-note">
+      Anteprima provvisoria: risultati del 15–30 settembre 2026, minimo 5 set.
+      Nessun dato viene salvato e nessun Bonus viene assegnato.
+    </div>
+    <div id="bonusPreviewContent"></div>
+  </div>
+</div>
+
 <button id="adminBtn">🔐 Area riservata</button>
 
 </nav>
@@ -1824,7 +1843,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.54</div>
+<div id="rplVersionBadge">RPL v6.5.55</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2010,6 +2029,154 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
    $('bonusBtn')?.addEventListener('click',()=>showBonus());
    if(location.hash==='#bonus')showBonus();
  });
+})();
+</script>
+
+<script id="rpl-v6555-bonus-preview-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  async function runBonusPreview(){
+    const panel=q('bonusPreviewPanel'), content=q('bonusPreviewContent');
+    if(!panel||!content) return;
+    panel.style.display='block';
+    content.innerHTML='<div>Calcolo anteprima in corso…</div>';
+
+    try{
+      const start='2026-09-15T00:00:00';
+      const end='2026-10-01T00:00:00';
+
+      const {data:matches,error:me}=await sb.from('matches')
+        .select('id,played_at')
+        .gte('played_at',start).lt('played_at',end)
+        .order('played_at',{ascending:true});
+      if(me) throw me;
+
+      const ids=(matches||[]).map(x=>x.id);
+      if(!ids.length){
+        content.innerHTML='<div>Nessuna partita nel periodo 15–30 settembre.</div>';
+        return;
+      }
+
+      const {data:sets,error:se}=await sb.from('sets')
+        .select('*').in('match_id',ids).order('match_id',{ascending:true});
+      if(se) throw se;
+
+      const {data:players,error:pe}=await sb.from('players')
+        .select('*').eq('is_guest',false);
+      if(pe) throw pe;
+
+      const byId={};
+      (players||[]).forEach(p=>byId[p.id]=p);
+
+      const stats={};
+      (players||[]).forEach(p=>{
+        stats[p.id]={
+          player:p, sets:0, won:0, games:0, mvp:0, imb:0, fascia:Number(p.fascia||p.band||4)||4
+        };
+      });
+
+      function playerIds(s){
+        return [
+          s.pair_a_player_1,s.pair_a_player_2,
+          s.pair_b_player_1,s.pair_b_player_2
+        ].filter(Boolean);
+      }
+
+      (sets||[]).forEach(s=>{
+        const ids4=playerIds(s);
+        const a=[s.pair_a_player_1,s.pair_a_player_2].filter(Boolean);
+        const b=[s.pair_b_player_1,s.pair_b_player_2].filter(Boolean);
+        const ag=Number(s.pair_a_score ?? s.score_a ?? s.a_score ?? 0);
+        const bg=Number(s.pair_b_score ?? s.score_b ?? s.b_score ?? 0);
+        ids4.forEach(pid=>{
+          if(!stats[pid]) return;
+          stats[pid].sets++;
+          stats[pid].games += (a.includes(pid)?ag:bg);
+          if(ag>bg && a.includes(pid)) stats[pid].won++;
+          if(bg>ag && b.includes(pid)) stats[pid].won++;
+        });
+      });
+
+      // MVP / unbeaten are read from existing awards when available.
+      const {data:aw,error:ae}=await sb.from('match_awards')
+        .select('*').in('match_id',ids);
+      if(!ae && aw){
+        aw.forEach(x=>{
+          const pid=x.player_id;
+          if(!stats[pid]) return;
+          const t=String(x.award_type||x.type||'').toLowerCase();
+          if(t.includes('mvp')) stats[pid].mvp++;
+          if(t.includes('imb')) stats[pid].imb++;
+        });
+      }
+
+      // Reproduce the current base score: set points by opponent fascia,
+      // +0.30 per game, normalized by sets, *10.
+      // We calculate it from set rows and current player fascia.
+      (sets||[]).forEach(s=>{
+        const a=[s.pair_a_player_1,s.pair_a_player_2].filter(Boolean);
+        const b=[s.pair_b_player_1,s.pair_b_player_2].filter(Boolean);
+        const ag=Number(s.pair_a_score ?? s.score_a ?? s.a_score ?? 0);
+        const bg=Number(s.pair_b_score ?? s.score_b ?? s.b_score ?? 0);
+        if(ag===bg) return;
+        const winA=ag>bg;
+        const winners=winA?a:b, losers=winA?b:a;
+        winners.forEach(pid=>{
+          if(!stats[pid]) return;
+          const oppF=losers.map(x=>stats[x]?.fascia||4);
+          const best=Math.min(...oppF);
+          const setPts=best===1?5:best===2?4:best===3?3:2;
+          stats[pid].setPoints=(stats[pid].setPoints||0)+setPts;
+        });
+      });
+
+      Object.values(stats).forEach(x=>{
+        x.base=x.sets?((x.setPoints||0)+(x.games*.30))/x.sets*10:0;
+        x.total=x.base+(x.mvp*1.5)+(x.imb*1);
+      });
+
+      const eligible=Object.values(stats).filter(x=>x.sets>=5);
+      eligible.sort((a,b)=>
+        (b.total-a.total) ||
+        (b.won-a.won) ||
+        (b.sets-a.sets) ||
+        (b.mvp-a.mvp) ||
+        (b.imb-a.imb) ||
+        (b.games-a.games) ||
+        (a.fascia-b.fascia)
+      );
+
+      const bonus=[100,72,60,48,40,32,24,16,8,4];
+      const top=eligible.slice(0,10);
+
+      let h='<table><thead><tr><th>POS</th><th>GIOCATORE</th><th>SET</th><th>SET VINTI</th><th>PUNTEGGIO</th><th>MVP</th><th>IMB</th><th>GAME</th><th>FASCIA</th><th>BONUS</th></tr></thead><tbody>';
+      top.forEach((x,i)=>{
+        h+=`<tr><td>${i+1}</td><td>${x.player.name||''} ${x.player.nickname?`“${x.player.nickname}”`:''}</td><td>${x.sets}</td><td>${x.won}</td><td>${x.total.toFixed(2)}</td><td>${x.mvp}</td><td>${x.imb}</td><td>${x.games}</td><td>${x.fascia}</td><td><b>${bonus[i]||0}</b></td></tr>`;
+      });
+      h+='</tbody></table>';
+      h+=`<div class="bonus-preview-note" style="margin-top:10px">Idonei: ${eligible.length}. Primi 10: ${top.length}. Anteprima NON salvata nel database.</div>`;
+      content.innerHTML=h;
+    }catch(err){
+      console.error(err);
+      content.innerHTML='<div style="color:#ff8d8d">Errore nel calcolo dell’anteprima. Controlla la console.</div>';
+    }
+  }
+
+  function install(){
+    const admin=q('bonusPreviewAdmin'), btn=q('bonusPreviewBtn');
+    if(!admin||!btn) return;
+    // Show only while Area Riservata is active.
+    function sync(){
+      const ap=q('adminPage');
+      admin.style.display=(ap && !ap.classList.contains('hidden'))?'block':'none';
+    }
+    btn.addEventListener('click',runBonusPreview);
+    sync();
+    const obs=new MutationObserver(sync);
+    if(q('adminPage')) obs.observe(q('adminPage'),{attributes:true,attributeFilter:['class']});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install);
+  else install();
 })();
 </script>
 </body></html>
