@@ -1798,7 +1798,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   });
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.49</div>
+<div id="rplVersionBadge">RPL v6.5.50</div>
 <script id="rpl-v6545-calendar-visibility-script">
 (function(){
   function rplHideCalendar(){
@@ -1836,4 +1836,100 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   },true);
 })();
 </script>
-<script>window.addEventListener('hashchange',rplNormalizePublicNav);</script></body></html>
+<script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
+<style id="rpl-v6550-nav-final">
+/* V6.5.50 - one active section at a time */
+#calendarPublicBtn.primary,
+#publicBtn.primary,
+#partialBtn.primary,
+#historyBtn.primary,
+#adminBtn.primary{
+  background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;
+  color:#171717!important;
+  border-color:#c59a27!important;
+  box-shadow:0 2px 7px rgba(0,0,0,.14)!important;
+}
+</style>
+<script id="rpl-v6550-final-navigation">
+(function(){
+  const navIds=['calendarPublicBtn','partialBtn','publicBtn','historyBtn','adminBtn'];
+  const sectionIds=['publicCalendarPage','publicPage','partialPage','historyView','adminPage'];
+
+  function reset(){
+    navIds.forEach(id=>document.getElementById(id)?.classList.remove('primary'));
+    sectionIds.forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      if(id==='historyView') el.style.display='none';
+      else el.classList.add('hidden');
+    });
+  }
+  function activate(id){
+    document.getElementById(id)?.classList.add('primary');
+  }
+
+  document.addEventListener('click',function(e){
+    const el=e.target.closest('#calendarPublicBtn,#partialBtn,#publicBtn,#historyBtn,#adminBtn');
+    if(!el)return;
+
+    // Take exclusive control of the event so older listeners cannot reopen
+    // another section after this one.
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    reset();
+
+    if(el.id==='calendarPublicBtn'){
+      activate('calendarPublicBtn');
+      if(typeof window.showPublicCalendar==='function'){
+        window.showPublicCalendar();
+      }else{
+        document.getElementById('publicCalendarPage')?.classList.remove('hidden');
+      }
+    }else if(el.id==='publicBtn'){
+      activate('publicBtn');
+      location.hash='';
+      document.getElementById('publicPage')?.classList.remove('hidden');
+      if(typeof window.loadRanking==='function') window.loadRanking();
+    }else if(el.id==='partialBtn'){
+      activate('partialBtn');
+      location.hash='partial';
+      if(typeof window.showPartial==='function') window.showPartial();
+      else document.getElementById('partialPage')?.classList.remove('hidden');
+    }else if(el.id==='historyBtn'){
+      activate('historyBtn');
+      location.hash='history';
+      if(typeof window.showHistoryNow==='function') window.showHistoryNow();
+      else document.getElementById('historyView')?.style.setProperty('display','block');
+    }else if(el.id==='adminBtn'){
+      activate('adminBtn');
+      location.hash='';
+      if(typeof window.showAdminNow==='function') window.showAdminNow();
+      else document.getElementById('adminPage')?.classList.remove('hidden');
+    }
+  },true);
+
+  function normalize(){
+    const h=location.hash;
+    if(h==='#calendar'){
+      reset(); activate('calendarPublicBtn');
+      document.getElementById('publicCalendarPage')?.classList.remove('hidden');
+    }else if(h==='#partial'){
+      reset(); activate('partialBtn');
+      document.getElementById('partialPage')?.classList.remove('hidden');
+    }else if(h==='#history'){
+      reset(); activate('historyBtn');
+      document.getElementById('historyView')?.style.setProperty('display','block');
+    }else if(h===''||h==='#'){
+      reset(); activate('publicBtn');
+      document.getElementById('publicPage')?.classList.remove('hidden');
+    }
+  }
+  window.addEventListener('hashchange',normalize);
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(normalize,0);
+  });
+})();
+</script>
+</body></html>
