@@ -395,6 +395,39 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   justify-content:center;
 }
 </style>
+
+<style id="rpl-v660-calendar-cards">
+/* V6.5.60 - Calendario: schede successive più grandi, loghi visibili e clic per espandere */
+.calendar-list .calendar-card:not(.featured),
+#calendarPublic .calendar-card:not(.featured),
+.calendar-card.secondary{
+  min-height:170px !important;
+  padding:16px !important;
+  cursor:pointer;
+}
+.calendar-list .calendar-card:not(.featured) .player-logo,
+#calendarPublic .calendar-card:not(.featured) .player-logo{
+  width:46px !important;
+  height:46px !important;
+  object-fit:contain;
+  display:block !important;
+}
+.calendar-list .calendar-card:not(.featured) .players,
+#calendarPublic .calendar-card:not(.featured) .players{
+  gap:10px !important;
+}
+.calendar-card.calendar-expanded{
+  min-height:unset !important;
+  transform:none !important;
+}
+.calendar-card .calendar-expand-hint{
+  display:block;
+  margin-top:8px;
+  font-size:11px;
+  opacity:.65;
+  text-align:center;
+}
+</style>
 </head>
 <body><main>
 <header class="top" style="background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1878,7 +1911,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.59</div>
+<div id="rplVersionBadge">RPL v6.5.60</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2162,6 +2195,35 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
   setTimeout(install,500); setTimeout(install,1500);
+})();
+</script>
+
+<script id="rpl-v660-calendar-expand">
+(function(){
+  function installCalendarExpand(){
+    const root=document;
+    root.addEventListener("click",function(e){
+      const card=e.target.closest(".calendar-card:not(.featured)");
+      if(!card) return;
+      card.classList.toggle("calendar-expanded");
+      const hint=card.querySelector(".calendar-expand-hint");
+      if(hint) hint.textContent=card.classList.contains("calendar-expanded")?"Clicca per ridurre":"Clicca per vedere tutti i dettagli";
+    });
+    function decorate(){
+      document.querySelectorAll(".calendar-card:not(.featured)").forEach(card=>{
+        if(!card.querySelector(".calendar-expand-hint")){
+          const hint=document.createElement("div");
+          hint.className="calendar-expand-hint";
+          hint.textContent="Clicca per vedere tutti i dettagli";
+          card.appendChild(hint);
+        }
+      });
+    }
+    decorate();
+    new MutationObserver(decorate).observe(document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",installCalendarExpand);
+  else installCalendarExpand();
 })();
 </script>
 </body></html>
