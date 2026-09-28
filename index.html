@@ -2028,19 +2028,39 @@ function rplDistintaPlayers(m){
       id:m["player_"+i],
       name:p?.name||m["player_"+i+"_name"]||"Giocatore",
       nickname:p?.nickname||m["player_"+i+"_nickname"]||"",
+      // Per la distinta il livello viene determinato prima dalla FASCIA e poi,
+      // a parità di fascia, dalla posizione in classifica salvata nella partita.
+      fascia:Number(m["player_"+i+"_fascia"] ?? p?.fascia ?? 999),
+      fasciaPoints:Number(m["player_"+i+"_fascia_points"] ?? p?.fascia_value ?? 0),
       rank:Number(m["player_"+i+"_rank"]||999)
     };
   });
 }
 function rplSortPlayers(players){
-  return [...players].sort((a,b)=>a.rank-b.rank||a.name.localeCompare(b.name));
+  return [...players].sort((a,b)=>{
+    // Fascia 1 è più forte di Fascia 2, ecc.
+    const fa=Number.isFinite(a.fascia)?a.fascia:999;
+    const fb=Number.isFinite(b.fascia)?b.fascia:999;
+    if(fa!==fb)return fa-fb;
+    // Se sono nella stessa fascia, decide la classifica.
+    const ra=Number.isFinite(a.rank)&&a.rank>0?a.rank:999;
+    const rb=Number.isFinite(b.rank)&&b.rank>0?b.rank:999;
+    if(ra!==rb)return ra-rb;
+    // Ultimo criterio solo per avere un ordinamento stabile.
+    return String(a.name||"").localeCompare(String(b.name||""));
+  });
 }
 function rplSetPairs(players,type){
   const p=rplSortPlayers(players);
   const A=p[0],B=p[1],C=p[2],D=p[3];
   if(type==="ONE_VS_ONE"){
+    // I due più forti (fascia più alta; poi miglior posizione) sono SEMPRE avversari.
+    // I due restanti ruotano come compagni, uno alla volta.
     return [
-      [A,C,B,D],[A,D,B,C],[A,C,B,D],[A,D,B,C]
+      [A,C,B,D],
+      [A,D,B,C],
+      [A,C,B,D],
+      [A,D,B,C]
     ];
   }
   const three=[
@@ -2165,7 +2185,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.64</div>
+<div id="rplVersionBadge">RPL v6.5.65</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
