@@ -396,36 +396,43 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 }
 </style>
 
-<style id="rpl-v660-calendar-cards">
-/* V6.5.60 - Calendario: schede successive più grandi, loghi visibili e clic per espandere */
-.calendar-list .calendar-card:not(.featured),
-#calendarPublic .calendar-card:not(.featured),
-.calendar-card.secondary{
-  min-height:170px !important;
-  padding:16px !important;
-  cursor:pointer;
+
+
+<style id="rpl-v661-calendar-cards">
+/* V6.5.61 - cards calendario secondarie realmente interattive */
+.calendar-card.secondary-card,
+.calendar-card:not(.featured):not(.main-card){
+  min-height:220px !important;
+  padding:18px !important;
+  cursor:pointer !important;
+  transition:all .25s ease !important;
+  position:relative !important;
 }
-.calendar-list .calendar-card:not(.featured) .player-logo,
-#calendarPublic .calendar-card:not(.featured) .player-logo{
-  width:46px !important;
-  height:46px !important;
-  object-fit:contain;
+.calendar-card.secondary-card:hover,
+.calendar-card:not(.featured):not(.main-card):hover{
+  transform:translateY(-3px) !important;
+  box-shadow:0 8px 24px rgba(0,0,0,.28) !important;
+}
+.calendar-card.secondary-card.calendar-expanded,
+.calendar-card:not(.featured):not(.main-card).calendar-expanded{
+  min-height:420px !important;
+  transform:scale(1.015) !important;
+  z-index:20 !important;
+}
+.calendar-card.secondary-card .player-logo,
+.calendar-card:not(.featured):not(.main-card) .player-logo{
+  width:58px !important;
+  height:58px !important;
+  object-fit:contain !important;
   display:block !important;
 }
-.calendar-list .calendar-card:not(.featured) .players,
-#calendarPublic .calendar-card:not(.featured) .players{
-  gap:10px !important;
-}
-.calendar-card.calendar-expanded{
-  min-height:unset !important;
-  transform:none !important;
-}
-.calendar-card .calendar-expand-hint{
-  display:block;
-  margin-top:8px;
-  font-size:11px;
-  opacity:.65;
-  text-align:center;
+.calendar-card.secondary-card .calendar-expand-hint,
+.calendar-card:not(.featured):not(.main-card) .calendar-expand-hint{
+  display:block !important;
+  margin-top:12px !important;
+  font-size:11px !important;
+  opacity:.7 !important;
+  text-align:center !important;
 }
 </style>
 </head>
@@ -1911,7 +1918,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.60</div>
+<div id="rplVersionBadge">RPL v6.5.61</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2198,32 +2205,42 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
 })();
 </script>
 
-<script id="rpl-v660-calendar-expand">
+
+
+<script id="rpl-v661-calendar-expand">
 (function(){
-  function installCalendarExpand(){
-    const root=document;
-    root.addEventListener("click",function(e){
-      const card=e.target.closest(".calendar-card:not(.featured)");
-      if(!card) return;
-      card.classList.toggle("calendar-expanded");
-      const hint=card.querySelector(".calendar-expand-hint");
-      if(hint) hint.textContent=card.classList.contains("calendar-expanded")?"Clicca per ridurre":"Clicca per vedere tutti i dettagli";
-    });
-    function decorate(){
-      document.querySelectorAll(".calendar-card:not(.featured)").forEach(card=>{
-        if(!card.querySelector(".calendar-expand-hint")){
-          const hint=document.createElement("div");
-          hint.className="calendar-expand-hint";
-          hint.textContent="Clicca per vedere tutti i dettagli";
-          card.appendChild(hint);
-        }
-      });
-    }
-    decorate();
-    new MutationObserver(decorate).observe(document.body,{childList:true,subtree:true});
+  function cardIsCalendar(el){
+    return el && el.classList && el.classList.contains("calendar-card") &&
+      !el.classList.contains("featured") && !el.classList.contains("main-card");
   }
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",installCalendarExpand);
-  else installCalendarExpand();
+  function decorate(){
+    document.querySelectorAll(".calendar-card").forEach(card=>{
+      if(card.classList.contains("featured") || card.classList.contains("main-card")) return;
+      card.classList.add("secondary-card");
+      if(!card.querySelector(".calendar-expand-hint")){
+        const h=document.createElement("div");
+        h.className="calendar-expand-hint";
+        h.textContent="👆 Tocca / clicca per ingrandire";
+        card.appendChild(h);
+      }
+    });
+  }
+  function install(){
+    decorate();
+    document.addEventListener("click",function(e){
+      const card=e.target.closest(".calendar-card");
+      if(!cardIsCalendar(card)) return;
+      document.querySelectorAll(".calendar-card.calendar-expanded").forEach(c=>{
+        if(c!==card)c.classList.remove("calendar-expanded");
+      });
+      card.classList.toggle("calendar-expanded");
+      const h=card.querySelector(".calendar-expand-hint");
+      if(h) h.textContent=card.classList.contains("calendar-expanded")?"👆 Tocca / clicca per ridurre":"👆 Tocca / clicca per ingrandire";
+    },true);
+    const obs=new MutationObserver(decorate);
+    obs.observe(document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);else install();
 })();
 </script>
 </body></html>
