@@ -603,9 +603,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   #rplRegolamentoModal{width:98vw;max-height:97vh;padding:7px;border-radius:11px}
 }
 </style>
-<style id="rpl-v667-suggested-match">
-.rpl-suggested-match{margin-bottom:12px;padding:13px 15px;border:1px solid rgba(255,216,106,.55);border-radius:14px;background:linear-gradient(135deg,rgba(255,216,106,.10),rgba(255,255,255,.025));color:#fff}.rpl-suggested-match .rpl-sug-title{color:#ffd86a;font-weight:900;font-size:14px;margin-bottom:5px}.rpl-suggested-match .rpl-sug-meta{font-size:12px;color:#c6d0da;line-height:1.5}.rpl-suggested-match .rpl-sug-action{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap}.rpl-suggested-match button{font-size:12px;padding:8px 12px}
-</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -697,7 +694,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <button class="primary" id="login">ACCEDI</button><div id="loginMsg" class="msg"></div></div>
 
 <div id="operatorBox" class="hidden">
-<div id="operatorMatchSection" class="hidden"><div id="suggestedMatchBox" class="rpl-suggested-match hidden"></div><div class="card"><h2>➕ Inserisci partita</h2>
+<div id="operatorMatchSection" class="hidden"><div class="card"><h2>➕ Inserisci partita</h2>
 <label>Data e ora di inizio partita</label><input id="date" type="datetime-local">
 <div class="muted" style="margin-top:6px">Dal 1° novembre il sistema userà la classifica precedente alla partita per congelare le fasce del match.</div>
 <div id="guestLegend" class="muted" style="margin:6px 0 10px">⭐ = Ospite · gioca la partita ma non entra in classifica e non riceve punti.</div><div class="players">
@@ -974,7 +971,7 @@ async function isOperator(){
   const {data,error}=await sb.from("operators").select("user_id").eq("user_id",currentUser.id).maybeSingle();
   return !error && !!data;
 }
-function localDateTimeValue(iso){const d=new Date(iso);if(Number.isNaN(d.getTime()))return "";const pad=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}\nfunction suggestedPlayersFromCalendar(m){return [1,2,3,4].map(i=>{const p=dbPlayers.find(x=>String(x.id)===String(m[`player_${i}`]));return {id:Number(m[`player_${i}`]),name:p?.name||m[`player_${i}_name`]||"Giocatore",nickname:p?.nickname||m[`player_${i}_nickname`]||"",fascia:Number(m[`player_${i}_fascia`]??p?.fascia??999),fasciaPoints:Number(m[`player_${i}_fascia_points`]??p?.fascia_value??0),rank:Number(m[`player_${i}_rank`]||999)};});}\nasync function calendarMatchAlreadyRecorded(m){const t=new Date(m.scheduled_at).getTime();if(!Number.isFinite(t))return false;const from=new Date(t-10*60*1000).toISOString(),to=new Date(t+10*60*1000).toISOString();const mr=await sb.from("matches").select("id,played_at").gte("played_at",from).lte("played_at",to);if(mr.error||!(mr.data||[]).length)return false;const ids=[1,2,3,4].map(i=>String(m[`player_${i}`]));const mids=mr.data.map(x=>x.id);const mp=await sb.from("match_players").select("match_id,player_id").in("match_id",mids);if(mp.error)return false;return (mr.data||[]).some(x=>{const set=new Set((mp.data||[]).filter(y=>String(y.match_id)===String(x.id)).map(y=>String(y.player_id)));return ids.filter(id=>set.has(id)).length>=3;});}\nasync function findSuggestedCalendarMatch(){try{const r=await sb.from("calendar_matches").select("*").lte("scheduled_at",new Date().toISOString()).order("scheduled_at",{ascending:false}).limit(30);if(r.error||!r.data?.length)return null;for(const m of r.data){if(await calendarMatchAlreadyRecorded(m))continue;return m;}}catch(e){console.warn("Suggerimento partita non disponibile",e)}return null;}\nfunction renderSuggestedMatch(m){const box=$("suggestedMatchBox");if(!box)return;if(!m){box.classList.add("hidden");box.innerHTML="";return;}const d=new Date(m.scheduled_at),date=d.toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"}),time=d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});const ps=[1,2,3,4].map(i=>m[`player_${i}_name`]||playerName(m[`player_${i}`)]);const type=m.match_type==="ONE_VS_ONE"?"1 vs 1 · 4 set":"Tutti contro tutti · 6 set";box.innerHTML=`<div class="rpl-sug-title">🎾 PARTITA DA INSERIRE</div><div class="rpl-sug-meta"><b>${escOperator(date)} · ore ${escOperator(time)}</b> · ${escOperator(m.court||"Campo non indicato")}<br>${ps.map(escOperator).join(" · ")}<br><span style="color:#ffd86a">${type}</span> · distinta già pronta</div><div class="rpl-sug-action"><button type="button" class="primary" onclick="loadSuggestedCalendarMatch()">📋 CARICA DISTINTA</button><button type="button" onclick="dismissSuggestedMatch()">Nascondi</button></div>`;box.classList.remove("hidden");window._suggestedCalendarMatch=m;}\nfunction dismissSuggestedMatch(){const b=$("suggestedMatchBox");if(b)b.classList.add("hidden");}\nfunction loadSuggestedCalendarMatch(){const m=window._suggestedCalendarMatch;if(!m)return;loadCalendarMatchIntoForm(m);dismissSuggestedMatch();}\nfunction loadCalendarMatchIntoForm(m){$("date").value=localDateTimeValue(m.scheduled_at);[1,2,3,4].forEach(i=>$("p"+i).value=m[`player_${i}`]);refreshSets();const players=suggestedPlayersFromCalendar(m),pairs=rplSetPairs(players,m.match_type||"ALL_VS_ALL"),container=$("sets");container.innerHTML="";pairs.forEach((_,i)=>container.insertAdjacentHTML("beforeend",setCard(i+1,false)));refreshSets();pairs.forEach((pair,i)=>{const r=container.querySelectorAll(".set")[i];if(!r)return;["a1","a2","b1","b2"].forEach((c,j)=>{const el=r.querySelector("."+c);if(el)el.value=pair[j].id;});});document.querySelectorAll("#sets .scoreA,#sets .scoreB").forEach(x=>x.value="");document.querySelectorAll("#mvp input,#imb input").forEach(x=>x.checked=false);const msg=$("msg");if(msg){msg.className="msg ok";msg.textContent=`📋 Distinta caricata: ${pairs.length} set già predisposti. Devi inserire solo i punteggi (puoi modificare giocatori e coppie).`;}}\nasync function suggestLatestCalendarMatch(){const m=await findSuggestedCalendarMatch();window._suggestedCalendarMatch=m||null;renderSuggestedMatch(m);if(m)loadCalendarMatchIntoForm(m);}\nasync function login(){
+async function login(){
   $("loginMsg").textContent="";
   const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
   if(error){$("loginMsg").className="msg err";$("loginMsg").textContent="Accesso non riuscito: "+error.message;return}
@@ -988,9 +985,8 @@ function localDateTimeValue(iso){const d=new Date(iso);if(Number.isNaN(d.getTime
   $("opMatchTab")?.classList.remove("primary");
   $("opCalendarTab")?.classList.remove("primary");
   await loadOperatorHistory();
-  await suggestLatestCalendarMatch();
 }
-async function logout(){await sb.auth.signOut();currentUser=null;window._suggestedCalendarMatch=null;
+async function logout(){await sb.auth.signOut();currentUser=null;
 $("operatorBox").classList.add("hidden");$("loginBox").classList.remove("hidden");
 $("operatorMatchSection")?.classList.add("hidden");$("operatorCalendarSection")?.classList.add("hidden");
 }
@@ -2262,7 +2258,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.67</div>
+<div id="rplVersionBadge">RPL v6.5.66</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
