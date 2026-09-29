@@ -695,6 +695,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 
 <div id="operatorBox" class="hidden">
 <div id="operatorMatchSection" class="hidden"><div class="card"><h2>➕ Inserisci partita</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px">
+<button type="button" id="loadLastMatchBtn" class="primary">📋 CARICA ULTIMA PARTITA</button>
+</div>
+<div id="loadLastMatchMsg" class="msg"></div>
 <label>Data e ora di inizio partita</label><input id="date" type="datetime-local">
 <div class="muted" style="margin-top:6px">Dal 1° novembre il sistema userà la classifica precedente alla partita per congelare le fasce del match.</div>
 <div id="guestLegend" class="muted" style="margin:6px 0 10px">⭐ = Ospite · gioca la partita ma non entra in classifica e non riceve punti.</div><div class="players">
@@ -990,6 +994,89 @@ async function logout(){await sb.auth.signOut();currentUser=null;
 $("operatorBox").classList.add("hidden");$("loginBox").classList.remove("hidden");
 $("operatorMatchSection")?.classList.add("hidden");$("operatorCalendarSection")?.classList.add("hidden");
 }
+
+function setDateInputFromISO(iso){
+  const d=new Date(iso);
+  if(Number.isNaN(d.getTime()))return;
+  const pad=n=>String(n).padStart(2,"0");
+  const local=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  $("date").value=local;
+}
+function clearMatchFormForLoad(){
+  $("sets").innerHTML="";
+  $("mvp").querySelectorAll("input").forEach(x=>x.checked=false);
+  $("imb").querySelectorAll("input").forEach(x=>x.checked=false);
+}
+function loadSetsForCalendarMatch(m){
+  const players=rplDistintaPlayers(m);
+  const type=m.match_type==="ONE_VS_ONE"?"ONE_VS_ONE":"ALL_VS_ALL";
+  const pairs=rplSetPairs(players,type);
+  $("sets").innerHTML="";
+  pairs.forEach((pair,i)=>{
+    addSet(false);
+    const row=document.querySelectorAll("#sets .set")[i];
+    if(!row)return;
+    ["a1","a2","b1","b2"].forEach((cls,j)=>{
+      const el=row.querySelector("."+cls);
+      if(el)el.value=pair[j].id;
+    });
+    // Punteggi volutamente vuoti: l'operatore deve inserirli.
+  });
+  refreshSets();
+  pairs.forEach((pair,i)=>{
+    const row=document.querySelectorAll("#sets .set")[i];
+    if(!row)return;
+    ["a1","a2","b1","b2"].forEach((cls,j)=>{
+      const el=row.querySelector("."+cls); if(el)el.value=pair[j].id;
+    });
+  });
+}
+async function calendarMatchAlreadyRecorded(cm){
+  const ids=[cm.player_1,cm.player_2,cm.player_3,cm.player_4].map(Number).sort((a,b)=>a-b);
+  if(ids.some(Number.isNaN))return false;
+  const scheduled=new Date(cm.scheduled_at).getTime();
+  // Cerca le partite registrate in una finestra prudente attorno all'orario del calendario.
+  const from=new Date(scheduled-6*60*60*1000).toISOString();
+  const to=new Date(scheduled+24*60*60*1000).toISOString();
+  const {data:matches,error}=await sb.from("matches").select("id,played_at").gte("played_at",from).lte("played_at",to).order("played_at",{ascending:true});
+  if(error)throw error;
+  if(!matches?.length)return false;
+  const mids=matches.map(x=>x.id);
+  const {data:mp,error:me}=await sb.from("match_players").select("match_id,player_id").in("match_id",mids);
+  if(me)throw me;
+  const by={};
+  (mp||[]).forEach(x=>(by[x.match_id]??=[]).push(Number(x.player_id)));
+  return Object.values(by).some(arr=>arr.length===4 && arr.sort((a,b)=>a-b).join(",")===ids.join(","));
+}
+async function loadLastCalendarMatch(){
+  const msg=$("loadLastMatchMsg");
+  if(!msg)return;
+  msg.className="msg";msg.textContent="Cerco l'ultima partita programmata non ancora registrata…";
+  const {data,error}=await sb.from("calendar_matches").select("*").lte("scheduled_at",new Date().toISOString()).order("scheduled_at",{ascending:false}).limit(12);
+  if(error){msg.className="msg err";msg.textContent="Errore calendario: "+error.message;return;}
+  if(!data?.length){msg.className="msg err";msg.textContent="Non ci sono partite già disputate nel calendario.";return;}
+  let selected=null;
+  for(const cm of data){
+    try{
+      if(!(await calendarMatchAlreadyRecorded(cm))){selected=cm;break;}
+    }catch(e){msg.className="msg err";msg.textContent="Non riesco a verificare le partite già registrate: "+(e.message||e);return;}
+  }
+  if(!selected){msg.className="msg";msg.textContent="Tutte le partite già disputate del calendario risultano già registrate.";return;}
+  const ids=[selected.player_1,selected.player_2,selected.player_3,selected.player_4].map(Number);
+  if(ids.some(Number.isNaN)){msg.className="msg err";msg.textContent="La partita del calendario non ha quattro giocatori validi.";return;}
+  setDateInputFromISO(selected.scheduled_at);
+  ["p1","p2","p3","p4"].forEach((id,i)=>$(id).value=ids[i]);
+  refreshSets();
+  clearMatchFormForLoad();
+  ["p1","p2","p3","p4"].forEach((id,i)=>$(id).value=ids[i]);
+  refreshSets();
+  loadSetsForCalendarMatch(selected);
+  const dt=new Date(selected.scheduled_at);
+  const type=selected.match_type==="ONE_VS_ONE"?"1 vs 1":"Tutti contro tutti";
+  msg.className="msg ok";
+  msg.textContent=`✅ Caricata: ${dt.toLocaleDateString("it-IT")} alle ${dt.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})} · ${selected.court||"Campo non indicato"} · ${type}. Ora inserisci solo i punteggi e gli eventuali premi.`;
+}
+
 async function saveMatch(){
   $("msg").className="msg";$("msg").textContent="Salvataggio…";
   const ids=["p1","p2","p3","p4"].map(id=>+$(id).value);
@@ -1445,6 +1532,7 @@ async function updateMatch(){
   if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){$("editMsg").className="msg err";$("editMsg").textContent=ae.message;return}}
   closeEdit();await loadRanking();await loadOperatorHistory();
 }
+$("loadLastMatchBtn")?.addEventListener("click",loadLastCalendarMatch);
 $("publicBtn").onclick=()=>{location.hash="";const cal=$("publicCalendarPage");if(cal){cal.classList.add("hidden");cal.style.display="none";}$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("publicPage").style.display="";$("adminPage").classList.add("hidden");$("calendarPublicBtn")?.classList.remove("primary");$("partialBtn")?.classList.remove("primary");$("historyBtn")?.classList.remove("primary");$("adminBtn")?.classList.remove("primary");$("publicBtn")?.classList.add("primary");loadRanking()};
 $("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){
   $("loginBox").classList.add("hidden");
@@ -2258,7 +2346,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.66</div>
+<div id="rplVersionBadge">RPL v6.5.69</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
