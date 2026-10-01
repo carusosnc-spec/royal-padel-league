@@ -2299,6 +2299,7 @@ function rplDistintaPlayers(m){
     };
   });
 }
+window.rplDistintaPlayers = rplDistintaPlayers;
 function rplSortPlayers(players){
   return [...players].sort((a,b)=>{
     // Fascia 1 è più forte di Fascia 2, ecc.
@@ -2448,7 +2449,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.78</div>
+<div id="rplVersionBadge">RPL v6.5.80</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
