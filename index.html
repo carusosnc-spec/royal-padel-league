@@ -195,8 +195,8 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 
 #bonusBtn{order:5!important;box-sizing:border-box!important;min-height:42px!important;height:42px!important;padding:0 15px!important;border:1px solid rgba(31,41,55,.18)!important;border-radius:10px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;font-weight:700!important;line-height:1!important;text-decoration:none!important;cursor:pointer!important}
 #bonusBtn.primary{background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;color:#171717!important;border-color:#c59a27!important;box-shadow:0 2px 7px rgba(0,0,0,.14)!important}
-#bonusTable th:nth-child(3),#bonusTable td:nth-child(3){position:sticky;left:0;background:#07121e;z-index:2}
-#bonusTable th:nth-child(2),#bonusTable td:nth-child(2){position:sticky;left:42px;background:#07121e;z-index:2}
+#bonusTable th:nth-child(1),#bonusTable td:nth-child(1){position:sticky;left:0;background:#07121e;z-index:3;min-width:42px}
+#bonusTable th:nth-child(2),#bonusTable td:nth-child(2){position:sticky;left:42px;background:#07121e;z-index:3;box-shadow:6px 0 8px rgba(0,0,0,.18)}
 #bonusTable td:nth-child(3) b{color:var(--gold);font-size:16px}
 .bonus-provisional{font-size:10px;color:#9aa9b8;margin-left:4px}
 
@@ -2363,7 +2363,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.70</div>
+<div id="rplVersionBadge">RPL v6.5.72</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
