@@ -612,21 +612,17 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 }
 </style>
 
-<style id="rpl-v6575-player-area-css">
-#playerAreaPage{max-width:980px;margin:0 auto}
-.rpl-player-hero{background:linear-gradient(145deg,rgba(8,28,45,.98),rgba(2,10,18,.98));border:1px solid rgba(231,185,78,.42);border-radius:22px;padding:20px;box-shadow:0 16px 50px rgba(0,0,0,.35)}
-.rpl-player-login{max-width:460px;margin:20px auto}.rpl-player-login h2{margin-top:0;color:#ffd86a}
-.rpl-player-profile{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center}
-.rpl-player-photo{width:132px;height:132px;border-radius:50%;object-fit:cover;background:#07121e;border:2px solid #e7b94e;box-shadow:0 0 0 5px rgba(231,185,78,.08)}
-.rpl-player-name{font-size:27px;font-weight:900}.rpl-player-nick{color:#ffd86a;font-weight:800;margin-top:3px}.rpl-player-meta{color:#b9c6d4;margin-top:8px}
-.rpl-player-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.rpl-player-card{background:rgba(3,15,26,.88);border:1px solid rgba(231,185,78,.25);border-radius:16px;padding:16px}.rpl-player-card h3{margin:0 0 12px;color:#ffd86a}
-.rpl-responsible-card{border-color:rgba(231,185,78,.55);box-shadow:0 8px 28px rgba(231,185,78,.08)}
-.rpl-match-mini{border:1px solid rgba(255,255,255,.10);border-radius:13px;padding:12px;margin:9px 0;background:rgba(255,255,255,.025)}
-.rpl-match-mini .date{font-weight:900;color:#fff}.rpl-match-mini .muted{margin-top:3px}.rpl-score-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.rpl-score-grid label{font-size:11px;color:#b9c6d4}.rpl-score-grid input{font-size:20px;text-align:center;font-weight:900;min-height:44px}
-.rpl-pair-line{font-size:12px;color:#d8e0e8;margin:6px 0}.rpl-pair-line b{color:#fff}.rpl-player-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.rpl-stat{background:#071521;border:1px solid rgba(231,185,78,.18);border-radius:12px;padding:10px;text-align:center}.rpl-stat strong{display:block;font-size:18px;color:#ffd86a}.rpl-stat span{font-size:10px;color:#9fb0c0;text-transform:uppercase}
-.rpl-player-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.rpl-photo-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}.rpl-photo-row input{max-width:100%}
-#playerAreaBtn{order:6!important}
-@media(max-width:700px){.rpl-player-profile{grid-template-columns:1fr;text-align:center}.rpl-player-photo{margin:auto}.rpl-player-grid{grid-template-columns:1fr}.rpl-player-stats{grid-template-columns:repeat(2,1fr)}.rpl-player-name{font-size:23px}}
+<style id="rpl-player-area-style">
+#playerAreaBtn{order:7!important}
+.rpl-player-hero{text-align:center;font-size:24px;font-weight:900;letter-spacing:.08em;color:var(--gold2);margin-bottom:6px}
+.rpl-player-login-card{max-width:480px;margin:0 auto 16px}
+.rpl-player-login-btn{width:100%;min-height:52px;margin-top:10px;font-size:15px}
+.rpl-player-profile-head{display:flex;align-items:center;gap:16px}
+.rpl-avatar-box{width:92px;height:92px;flex:0 0 92px;border-radius:50%;overflow:hidden;border:2px solid var(--gold);background:#07121e;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.32)}
+.rpl-avatar-box img{width:100%;height:100%;object-fit:cover;display:none}.rpl-avatar-box.has-image img{display:block}.rpl-avatar-box.has-image #playerAvatarFallback{display:none}
+.rpl-player-kicker{font-size:10px;color:#9da8b4;letter-spacing:.18em}.rpl-player-name-title{font-size:25px;font-weight:900;line-height:1.1}.rpl-player-nick-title{color:var(--gold2);font-weight:800;margin-top:4px}.rpl-photo-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.rpl-photo-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:10px 12px;border:1px solid #7f6a32;border-radius:10px;background:#0b1825;color:#fff;cursor:pointer;font-size:12px;font-weight:800}.rpl-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.rpl-stat{border:1px solid rgba(231,185,78,.25);border-radius:12px;padding:12px;background:rgba(255,255,255,.025);text-align:center}.rpl-stat b{display:block;font-size:21px;color:#fff}.rpl-stat span{display:block;font-size:10px;color:#9da8b4;margin-top:3px}.rpl-responsible-hero{border:1px solid #e7b94e;background:linear-gradient(135deg,rgba(231,185,78,.18),rgba(0,0,0,.15));box-shadow:0 12px 30px rgba(0,0,0,.28)}
+.rpl-responsible-button{width:100%;min-height:64px;font-size:17px;margin-top:12px;background:linear-gradient(135deg,#8e681d,#f2ca63);color:#080d12;border-color:#f2ca63}.rpl-result-set{border-top:1px solid rgba(255,255,255,.1);padding:13px 0}.rpl-result-score{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}.rpl-result-score select{width:68px;text-align:center;font-size:20px;font-weight:900}.rpl-team-mini{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;font-size:12px;color:#dce3eb}.rpl-alert-title{font-size:18px;font-weight:900;color:var(--gold2);margin-bottom:6px}.rpl-match-card{border:1px solid rgba(231,185,78,.2);border-radius:12px;padding:12px;margin-bottom:9px;background:rgba(255,255,255,.02)}.rpl-match-card:last-child{margin-bottom:0}.rpl-match-card b{color:#fff}.rpl-match-meta{font-size:11px;color:#9da8b4;margin-top:4px}.rpl-closed{color:#39d98a;font-weight:800}.rpl-no-match{text-align:center;padding:18px;color:#9da8b4}
+@media(max-width:700px){.rpl-stat-grid{grid-template-columns:repeat(2,1fr)}.rpl-player-profile-head{align-items:flex-start}.rpl-avatar-box{width:78px;height:78px;flex-basis:78px}.rpl-player-name-title{font-size:21px}.rpl-photo-btn{flex:1}.rpl-result-score select{width:62px}}
 </style>
 </head>
 <body><main>
@@ -658,6 +654,64 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 
 </nav>
 
+
+
+<section id="playerAreaPage" class="hidden">
+  <div class="card rpl-player-login-card" id="playerLoginCard">
+    <div class="rpl-player-hero">👤 AREA GIOCATORI</div>
+    <div class="muted" style="text-align:center;margin-bottom:12px">Accedi con il tuo numero di telefono e la tua password personale.</div>
+    <label>Numero di telefono</label>
+    <input id="playerPhone" type="tel" inputmode="tel" autocomplete="username" placeholder="329 779 4259">
+    <label>Password</label>
+    <input id="playerPassword" type="password" autocomplete="current-password" placeholder="Password">
+    <button id="playerLoginBtn" type="button" class="primary rpl-player-login-btn">ACCEDI ALL'AREA GIOCATORI</button>
+    <div id="playerLoginMsg" class="msg"></div>
+  </div>
+
+  <div id="playerDashboard" class="hidden">
+    <div id="playerPasswordPanel" class="card hidden">
+      <div class="rpl-alert-title">🔐 PRIMO ACCESSO</div>
+      <div class="muted" style="margin-bottom:10px">Per sicurezza devi sostituire la password iniziale prima di continuare.</div>
+      <label>Nuova password</label><input id="playerNewPassword" type="password" minlength="8" autocomplete="new-password">
+      <label>Conferma nuova password</label><input id="playerNewPassword2" type="password" minlength="8" autocomplete="new-password">
+      <button id="playerChangePasswordBtn" type="button" class="primary">CAMBIA PASSWORD</button>
+      <div id="playerPasswordMsg" class="msg"></div>
+    </div>
+
+    <div id="playerResponsibleHero" class="card hidden"></div>
+
+    <div class="card">
+      <div class="rpl-player-profile-head">
+        <div class="rpl-avatar-box"><img id="playerAvatar" alt="Foto profilo"><div id="playerAvatarFallback">👤</div></div>
+        <div style="flex:1;min-width:0">
+          <div class="rpl-player-kicker">PROFILO RPL</div>
+          <div id="playerNameTitle" class="rpl-player-name-title"></div>
+          <div id="playerNickTitle" class="rpl-player-nick-title"></div>
+          <div id="playerFasciaTitle" class="muted"></div>
+        </div>
+      </div>
+      <div class="rpl-photo-actions">
+        <label class="rpl-photo-btn">📷 SCATTA FOTO<input id="playerCameraInput" type="file" accept="image/*" capture="environment" hidden></label>
+        <label class="rpl-photo-btn">🖼️ SCEGLI DALLA GALLERIA<input id="playerGalleryInput" type="file" accept="image/*" hidden></label>
+      </div>
+      <div id="playerPhotoMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>📊 Le mie statistiche</h2>
+      <div id="playerStatsGrid" class="rpl-stat-grid"></div>
+    </div>
+
+    <div class="card">
+      <h2>🎾 Le mie partite</h2>
+      <div id="playerMatchesList"></div>
+    </div>
+
+    <div style="text-align:center;margin:8px 0 20px"><button id="playerLogoutBtn" type="button">ESCI AREA GIOCATORI</button></div>
+  </div>
+
+  <div id="playerResultPanel" class="card hidden"></div>
+</section>
 
 <section id="publicCalendarPage" class="hidden">
   <div class="rpl-public-cal-hero">
@@ -1209,12 +1263,6 @@ function calendarPlayerOptions(selected=""){
     return `<option value="${p.id}" ${String(p.id)===String(selected)?"selected":""}>${escOperator(label)}</option>`;
   }).join("");
 }
-function calendarResponsibleOptions(selected=""){
-  return '<option value="">Nessun responsabile</option>'+dbPlayers.filter(p=>!p.is_guest).map(p=>{
-    const label=`${p.name}${p.nickname?" — "+p.nickname:""}`;
-    return `<option value="${p.id}" ${String(p.id)===String(selected)?"selected":""}>${escOperator(label)}</option>`;
-  }).join("");
-}
 function calendarCourtOptions(selected=""){
   const courts=["Sporting Club Perillo","Sporting Village Tirrito Coperto","Sporting Village Tirrito Scoperto","Padel Club Calascibetta"];
   return '<option value="">Seleziona campo</option>'+courts.map(c=>`<option value="${escOperator(c)}" ${c===selected?"selected":""}>${escOperator(c)}</option>`).join("");
@@ -1222,6 +1270,10 @@ function calendarCourtOptions(selected=""){
 function calendarPlayerMeta(id){
   const p=dbPlayers.find(x=>String(x.id)===String(id));
   return p?`Fascia ${p.fascia??"—"} · ${p.fascia_value??"—"} punti`:"";
+}
+function calendarResponsibleOptions(selected="", players=[1,2,3,4].map(i=>"")){
+  const ids=new Set(players.map(Number).filter(Boolean));
+  return '<option value="">Nessun responsabile</option>'+dbPlayers.filter(p=>ids.has(Number(p.id))).map(p=>`<option value="${p.id}" ${String(p.id)===String(selected)?"selected":""}>${escOperator(p.name)}${p.nickname?` — ${escOperator(p.nickname)}`:""}</option>`).join("");
 }
 function addCalendarRow(data={}){
   const host=$("calendarWeekRows"); if(!host)return;
@@ -1243,13 +1295,17 @@ function addCalendarRow(data={}){
       <div class="muted rpl-type-help">Tutti contro tutti = 6 set. 1 vs 1 = 4 set, con i due giocatori più alti in classifica sempre avversari.</div>
     </div>
     ${[1,2,3,4].map(i=>`<div class="rpl-cal-field"><label>Giocatore ${i}</label><select class="cal-row-p${i}">${calendarPlayerOptions(data["player_"+i]||"")}</select><span class="calendar-player-meta cal-meta-p${i}" style="font-size:11px;color:#b88700">${calendarPlayerMeta(data["player_"+i]||"")}</span></div>`).join("")}
-    <div class="rpl-cal-field" style="grid-column:1/-1"><label>👑 Responsabile Partita</label><select class="cal-row-responsible">${calendarResponsibleOptions(data.responsible_player_id||"")}</select><div class="muted">Questo giocatore potrà inserire esclusivamente il risultato di questa partita dalla sua Area Giocatori.</div></div>
+    <div class="rpl-cal-field" style="grid-column:1/-1"><label>🔴 Responsabile Partita</label><select class="cal-row-responsible">${calendarResponsibleOptions(data.responsible_player_id||"",[data.player_1,data.player_2,data.player_3,data.player_4])}</select><div class="muted">Il responsabile vedrà subito il tasto per inserire il risultato nella propria Area Giocatori.</div></div>
   </div>
   <div class="rpl-cal-actions"><button type="button" onclick="removeCalendarRow(this)">🗑️ Rimuovi partita</button></div>`;
   host.appendChild(row);
   [1,2,3,4].forEach(i=>{
     row.querySelector(".cal-row-p"+i).addEventListener("change",e=>{
       row.querySelector(".cal-meta-p"+i).textContent=calendarPlayerMeta(e.target.value);
+      const selected=row.querySelector(".cal-row-responsible")?.value||"";
+      const ids=[1,2,3,4].map(n=>row.querySelector(".cal-row-p"+n)?.value||"");
+      const sel=row.querySelector(".cal-row-responsible");
+      if(sel){sel.innerHTML=calendarResponsibleOptions(ids.includes(selected)?selected:"",ids);}
     });
   });
 }
@@ -1261,8 +1317,8 @@ function calendarRowData(row){
     time:row.querySelector(".cal-row-time").value,
     court:row.querySelector(".cal-row-court").value,
     match_type:row.querySelector(".rpl-type-option input:checked")?.value||"ALL_VS_ALL",
-    players:[1,2,3,4].map(i=>+row.querySelector(".cal-row-p"+i).value),
-    responsible_player_id:+(row.querySelector(".cal-row-responsible")?.value||0)||null
+    responsible_player_id:row.querySelector(".cal-row-responsible")?.value?+row.querySelector(".cal-row-responsible").value:null,
+    players:[1,2,3,4].map(i=>+row.querySelector(".cal-row-p"+i).value)
   };
 }
 function validateCalendarRows(){
@@ -1319,14 +1375,14 @@ async function saveCalendarWeek(){
       scheduled_at:new Date(`${d.date}T${d.time}:00`).toISOString(),
       court:d.court,court_id:courtMap[d.court]||null,
       player_1:d.players[0],player_2:d.players[1],player_3:d.players[2],player_4:d.players[3],
+      responsible_player_id:d.responsible_player_id,
       match_type:d.match_type,
       player_1_rank:ranks[0],player_2_rank:ranks[1],player_3_rank:ranks[2],player_4_rank:ranks[3],
       week_start:start,week_end:end,
       player_1_name:s[0].name,player_1_nickname:s[0].nickname,player_1_fascia:s[0].fascia,player_1_fascia_points:s[0].points,
       player_2_name:s[1].name,player_2_nickname:s[1].nickname,player_2_fascia:s[1].fascia,player_2_fascia_points:s[1].points,
       player_3_name:s[2].name,player_3_nickname:s[2].nickname,player_3_fascia:s[2].fascia,player_3_fascia_points:s[2].points,
-      player_4_name:s[3].name,player_4_nickname:s[3].nickname,player_4_fascia:s[3].fascia,player_4_fascia_points:s[3].points,
-      responsible_player_id:d.responsible_player_id
+      player_4_name:s[3].name,player_4_nickname:s[3].nickname,player_4_fascia:s[3].fascia,player_4_fascia_points:s[3].points
     };
     let r=row.dataset.id
       ? await sb.from("calendar_matches").update(payload).eq("id",row.dataset.id).select().single()
@@ -1355,7 +1411,7 @@ async function loadCalendarWeek(){
       id:m.id,date:d.toISOString().slice(0,10),time:d.toTimeString().slice(0,5),
       court:m.court,match_type:m.match_type||"ALL_VS_ALL",
       player_1:m.player_1,player_2:m.player_2,player_3:m.player_3,player_4:m.player_4,
-      responsible_player_id:m.responsible_player_id
+      responsible_player_id:m.responsible_player_id||""
     });
   });
   if(!r.data?.length)addCalendarRow();
@@ -1593,41 +1649,6 @@ $("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
 (async()=>{await loadPlayers();buildSets();await loadRanking()})();
 </script>
-
-<section id="playerAreaPage" class="hidden">
-  <div class="rpl-player-hero">
-    <div id="playerLoginPanel" class="rpl-player-login">
-      <h2>👤 AREA GIOCATORI</h2>
-      <div class="muted">Accedi con il numero di telefono associato alla tua scheda RPL.</div>
-      <label>Numero di telefono</label><input id="playerPhone" type="tel" autocomplete="username" placeholder="es. 3331234567">
-      <label>Password</label><input id="playerPassword" type="password" autocomplete="current-password" placeholder="Password">
-      <button id="playerLoginBtn" class="primary" type="button" style="width:100%;margin-top:8px">ACCEDI ALL'AREA GIOCATORE</button>
-      <div id="playerLoginMsg" class="msg"></div>
-    </div>
-    <div id="playerDashboard" class="hidden">
-      <div class="rpl-player-profile">
-        <img id="playerPhoto" class="rpl-player-photo" alt="Foto profilo">
-        <div><div id="playerName" class="rpl-player-name"></div><div id="playerNick" class="rpl-player-nick"></div><div id="playerMeta" class="rpl-player-meta"></div></div>
-      </div>
-      <div class="rpl-photo-row">
-        <input id="playerPhotoFile" type="file" accept="image/*">
-        <button id="playerPhotoBtn" type="button">📷 Aggiorna foto</button>
-        <button id="playerLogoutBtn" type="button">ESCI</button>
-      </div>
-      <div id="playerPasswordBox" class="card hidden" style="margin-top:14px">
-        <h3>🔑 Primo accesso</h3><div class="muted">Per sicurezza cambia la password iniziale prima di continuare.</div>
-        <input id="playerNewPassword" type="password" placeholder="Nuova password (almeno 8 caratteri)">
-        <button id="playerChangePasswordBtn" class="primary" type="button">CAMBIA PASSWORD</button><div id="playerPasswordMsg" class="msg"></div>
-      </div>
-      <div class="rpl-player-grid">
-        <div class="rpl-player-card"><h3>📊 Le tue statistiche</h3><div id="playerStats" class="rpl-player-stats"></div><div id="playerStatsDetail" class="muted" style="margin-top:10px"></div></div>
-        <div class="rpl-player-card rpl-responsible-card"><h3>🎾 Responsabile Partita</h3><div class="muted">Qui compariranno le partite per le quali sei stato designato responsabile.</div><div id="playerResponsibleMatches" style="margin-top:8px"></div></div>
-      </div>
-      <div id="playerResultPanel" class="rpl-player-card hidden" style="margin-top:14px"><h3>📝 Inserimento risultato</h3><div id="playerResultInfo"></div><div id="playerResultSets"></div><button id="playerSubmitResultBtn" class="primary" type="button" style="width:100%;margin-top:12px">CONFERMA E REGISTRA RISULTATO</button><div id="playerResultMsg" class="msg"></div></div>
-    </div>
-  </div>
-</section>
-
 <div id="editModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);padding:18px;z-index:20;overflow:auto">
 <div class="card" style="max-width:850px;margin:30px auto">
 <div style="display:flex;justify-content:space-between;align-items:center"><h2>✏️ Modifica partita</h2><button onclick="closeEdit()">✕</button></div>
@@ -2426,7 +2447,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.75</div>
+<div id="rplVersionBadge">RPL v6.5.77</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2436,12 +2457,11 @@ async function loadPublicCalendar(){
 #publicBtn{order:3!important}
 #historyBtn{order:4!important}
 #adminBtn{order:5!important}
-#playerAreaBtn{order:6!important}
 </style>
 <script id="rpl-v6552-final-navigation">
 (function(){
-  const NAV=['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn','playerAreaBtn'];
-  const SEC=['publicCalendarPage','publicPage','partialPage','historyView','bonusPage','adminPage','playerAreaPage'];
+  const NAV=['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn'];
+  const SEC=['publicCalendarPage','publicPage','partialPage','historyView','bonusPage','adminPage'];
 
   function el(id){return document.getElementById(id);}
   function hideAll(){
@@ -2500,20 +2520,12 @@ async function loadPublicCalendar(){
     el('adminPage')?.classList.remove('hidden');
     if(typeof window.showAdminNow==='function') window.showAdminNow();
   }
-  function players(){
-    hideAll();
-    active('playerAreaBtn');
-    location.hash='players';
-    el('playerAreaPage')?.classList.remove('hidden');
-    if(typeof window.showPlayerArea==='function') window.showPlayerArea();
-  }
 
   function route(){
     if(location.hash==='#calendar') calendar();
     else if(location.hash==='#partial') partial();
     else if(location.hash==='#history') history();
     else if(location.hash==='#bonus') window.showBonus?.();
-    else if(location.hash==='#players') players();
     else ranking();
   }
 
@@ -2527,8 +2539,7 @@ async function loadPublicCalendar(){
       partialBtn:partial,
       historyBtn:history,
       bonusBtn:()=>window.showBonus?.(),
-      adminBtn:admin,
-      playerAreaBtn:players
+      adminBtn:admin
     };
     NAV.forEach(id=>{
       const b=el(id); if(!b)return;
@@ -2539,7 +2550,7 @@ async function loadPublicCalendar(){
     });
     window.addEventListener('hashchange',function(){
       // Only route hash changes that represent public navigation.
-      if(['#calendar','#partial','#history','#bonus','#players',''].includes(location.hash)) route();
+      if(['#calendar','#partial','#history','#bonus',''].includes(location.hash)) route();
     });
     route();
   }
@@ -2727,129 +2738,6 @@ async function loadPublicCalendar(){
 
 
 
-
-<script id="rpl-v6575-player-area-js">
-(function(){
-  const $=id=>document.getElementById(id);
-  let playerAuth=null, playerAccount=null, playerData=null, currentResponsible=null;
-  const FALLBACK_PHOTO='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240"><rect width="240" height="240" fill="#071521"/><text x="120" y="132" text-anchor="middle" font-size="92">👤</text></svg>');
-  function normPhone(v){return String(v||'').replace(/\D/g,'');}
-  function msg(id,text,kind=''){const e=$(id);if(!e)return;e.className='msg '+kind;e.textContent=text||'';}
-  function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-  function playerLogo(p){try{return typeof window.logoFile==='function'?window.logoFile(p?.name||''):''}catch(e){return ''}}
-  function playerSortForMatch(m){
-    const ps=[1,2,3,4].map(i=>({id:m['player_'+i],name:m['player_'+i+'_name']||'',nick:m['player_'+i+'_nickname']||'',fascia:+(m['player_'+i+'_fascia']??999),rank:+(m['player_'+i+'_rank']||999)}));
-    return ps.sort((a,b)=>a.fascia-b.fascia||a.rank-b.rank||a.id-b.id);
-  }
-  function matchPairs(m){
-    const p=playerSortForMatch(m),[A,B,C,D]=p;
-    if(m.match_type==='ONE_VS_ONE') return [[A,C,B,D],[A,D,B,C],[A,C,B,D],[A,D,B,C]];
-    return [[A,D,B,C],[A,C,B,D],[A,B,C,D],[A,D,B,C],[A,C,B,D],[A,B,C,D]];
-  }
-  function pairText(pair){return `${pair[0].name}${pair[0].nick?' “'+pair[0].nick+'”':''} / ${pair[1].name}${pair[1].nick?' “'+pair[1].nick+'”':''}`}
-
-  async function showPlayerArea(){
-    const {data}=await window.sb.auth.getUser();
-    if(data?.user){
-      playerAuth=data.user;
-      const {data:a}=await window.sb.from('player_accounts').select('*').eq('user_id',data.user.id).maybeSingle();
-      if(a){playerAccount=a; await loadPlayerDashboard();return;}
-    }
-    $('playerLoginPanel')?.classList.remove('hidden');$('playerDashboard')?.classList.add('hidden');
-  }
-  async function playerLogin(){
-    msg('playerLoginMsg','Accesso…');
-    const phone=normPhone($('playerPhone')?.value), password=$('playerPassword')?.value||'';
-    if(!phone||!password){msg('playerLoginMsg','Inserisci telefono e password.','err');return;}
-    const {data:email,error:lookupError}=await window.sb.rpc('get_player_auth_email',{p_phone:phone});
-    if(lookupError||!email){msg('playerLoginMsg','Numero non associato a un account RPL.','err');return;}
-    const {data,error}=await window.sb.auth.signInWithPassword({email,password});
-    if(error){msg('playerLoginMsg','Accesso non riuscito: '+error.message,'err');return;}
-    playerAuth=data.user;
-    const {data:a,error:ae}=await window.sb.from('player_accounts').select('*').eq('user_id',playerAuth.id).maybeSingle();
-    if(ae||!a){await window.sb.auth.signOut();msg('playerLoginMsg','Account giocatore non configurato.','err');return;}
-    playerAccount=a;
-    await loadPlayerDashboard();
-  }
-  async function loadPlayerDashboard(){
-    const {data:p}=await window.sb.from('players').select('*').eq('id',playerAccount.player_id).single();
-    if(!p){msg('playerLoginMsg','Giocatore non trovato.','err');return;}
-    playerData=p;
-    $('playerLoginPanel')?.classList.add('hidden');$('playerDashboard')?.classList.remove('hidden');
-    $('playerName').textContent=p.name||'';$('playerNick').textContent=p.nickname?'“'+p.nickname+'”':'';
-    $('playerMeta').textContent=`Fascia ${p.fascia??'—'} · ${p.fascia_value??'—'} punti per avversario`;
-    $('playerPhoto').src=playerAccount.photo_url||playerLogo(p)||FALLBACK_PHOTO;
-    if(!playerAccount.password_changed)$('playerPasswordBox')?.classList.remove('hidden');else $('playerPasswordBox')?.classList.add('hidden');
-    await Promise.all([loadPlayerStats(),loadResponsibleMatches()]);
-  }
-  async function loadPlayerStats(){
-    try{
-      const {data:mp}=await window.sb.from('match_players').select('match_id,player_id,fascia_value').eq('player_id',playerData.id);
-      const ids=(mp||[]).map(x=>x.match_id);if(!ids.length){renderStats({sets:0,won:0,games:0,pt:0,mvp:0,imb:0,total:0});return;}
-      const [{data:sets},{data:aw}]=await Promise.all([window.sb.from('sets').select('*').in('match_id',ids),window.sb.from('match_awards').select('*').in('match_id',ids).eq('player_id',playerData.id)]);
-      const snap={};(mp||[]).forEach(x=>snap[x.match_id]=x);
-      const st={sets:0,won:0,games:0,pt:0,mvp:0,imb:0};
-      (sets||[]).forEach(x=>{
-        const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
-        if(!A.includes(playerData.id)&&!B.includes(playerData.id))return;
-        const ga=+x.games_a,gb=+x.games_b;const win=ga>gb?A:B,lose=ga>gb?B:A;st.sets++;st.games+=win.includes(playerData.id)?ga:gb;
-        if(win.includes(playerData.id)){st.won++;const vals=lose.map(pid=>mp.find(q=>q.match_id===x.match_id&&q.player_id===pid)?.fascia_value||0);st.pt+=vals[0]+vals[1];}
-      });
-      (aw||[]).forEach(x=>{if(x.award_type==='MVP')st.mvp++;if(x.award_type==='IMBATTUTO')st.imb++;});
-      st.base=st.sets?((st.pt+st.games*.30+st.sets*.10)/st.sets)*10:0;st.total=st.base+st.mvp*1.5+st.imb;renderStats(st);
-    }catch(e){$('playerStatsDetail').textContent='Errore statistiche: '+e.message;}
-  }
-  function renderStats(s){
-    $('playerStats').innerHTML=[['SET',s.sets],['VINTI',s.won],['GAME',s.games],['MVP',s.mvp],['IMB',s.imb]].map(x=>`<div class="rpl-stat"><strong>${x[1]}</strong><span>${x[0]}</span></div>`).join('');
-    $('playerStatsDetail').textContent=`PT.SET ${Number(s.pt||0).toFixed(1)} · Punteggio Base ${Number(s.base||0).toFixed(2)} · Totale ${Number(s.total||0).toFixed(2)}`;
-  }
-  async function loadResponsibleMatches(){
-    const box=$('playerResponsibleMatches');if(!box)return;
-    const {data,error}=await window.sb.from('calendar_matches').select('*').eq('responsible_player_id',playerData.id).is('result_submitted_at',null).order('scheduled_at',{ascending:true});
-    if(error){box.innerHTML='<div class="msg err">'+esc(error.message)+'</div>';return;}
-    if(!data?.length){box.innerHTML='<div class="muted" style="margin-top:10px">Nessuna partita da registrare.</div>';return;}
-    box.innerHTML=data.map(m=>{const d=new Date(m.scheduled_at);return `<div class="rpl-match-mini"><div class="date">${d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'})} · ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div><div class="muted">📍 ${esc(m.court||'')} · ${m.match_type==='ONE_VS_ONE'?'1 vs 1 · 4 set':'Tutti contro tutti · 6 set'}</div><div class="muted">${[1,2,3,4].map(i=>esc(m['player_'+i+'_name']||'')).join(' · ')}</div><button class="primary" type="button" style="margin-top:8px;width:100%" onclick="window.openPlayerResult(${m.id})">📝 INSERISCI RISULTATO</button></div>`}).join('');
-  }
-  window.openPlayerResult=async function(id){
-    const {data:m,error}=await window.sb.from('calendar_matches').select('*').eq('id',id).single();
-    if(error||!m){msg('playerResultMsg','Partita non trovata.','err');return;}
-    if(+m.responsible_player_id!==+playerData.id||m.result_submitted_at){msg('playerResultMsg','Questa partita non è più disponibile.','err');await loadResponsibleMatches();return;}
-    currentResponsible=m;const pairs=matchPairs(m);$('playerResultPanel').classList.remove('hidden');
-    const d=new Date(m.scheduled_at);$('playerResultInfo').innerHTML=`<div><b>${d.toLocaleDateString('it-IT')} · ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</b> · ${esc(m.court||'')}</div><div class="muted" style="margin-top:4px">Le coppie sono precompilate secondo la Distinta Ufficiale. Tu inserisci soltanto i punteggi.</div>`;
-    $('playerResultSets').innerHTML=pairs.map((p,i)=>`<div class="rpl-match-mini"><b>SET ${i+1}</b><div class="rpl-pair-line"><b>A:</b> ${esc(pairText(p.slice(0,2)))}</div><div class="rpl-pair-line"><b>B:</b> ${esc(pairText(p.slice(2,4)))}</div><div class="rpl-score-grid"><div><label>COPPIA A — GAME</label><input class="player-score-a" type="number" min="0" max="20" inputmode="numeric" placeholder="0"></div><div><label>COPPIA B — GAME</label><input class="player-score-b" type="number" min="0" max="20" inputmode="numeric" placeholder="0"></div></div></div>`).join('');
-    window.scrollTo({top:$('playerResultPanel').offsetTop-15,behavior:'smooth'});
-  };
-  async function submitPlayerResult(){
-    if(!currentResponsible)return;
-    msg('playerResultMsg','Controllo punteggi…');
-    const aa=[...document.querySelectorAll('.player-score-a')],bb=[...document.querySelectorAll('.player-score-b')];
-    const scores=[];
-    for(let i=0;i<aa.length;i++){const a=Number(aa[i].value),b=Number(bb[i].value);if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a===b||a>20||b>20){msg('playerResultMsg',`Controlla il punteggio del Set ${i+1}: le due coppie devono avere un numero diverso di game.`,'err');return;}scores.push({a,b});}
-    const {data,error}=await window.sb.rpc('submit_responsible_match',{p_calendar_match_id:currentResponsible.id,p_scores:scores});
-    if(error){msg('playerResultMsg',error.message,'err');return;}
-    msg('playerResultMsg','✅ Risultato registrato. MVP e Imbattuti calcolati automaticamente.','ok');
-    $('playerResultPanel').classList.add('hidden');currentResponsible=null;await Promise.all([loadResponsibleMatches(),loadPlayerStats()]);
-  }
-  async function changePassword(){
-    const np=$('playerNewPassword').value||'';if(np.length<8){msg('playerPasswordMsg','La nuova password deve avere almeno 8 caratteri.','err');return;}
-    const {error}=await window.sb.auth.updateUser({password:np});if(error){msg('playerPasswordMsg',error.message,'err');return;}
-    const {error:ue}=await window.sb.from('player_accounts').update({password_changed:true,updated_at:new Date().toISOString()}).eq('user_id',playerAuth.id);if(ue){msg('playerPasswordMsg','Password cambiata, ma non ho aggiornato lo stato: '+ue.message,'err');return;}
-    playerAccount.password_changed=true;$('playerPasswordBox').classList.add('hidden');msg('playerPasswordMsg','Password aggiornata.','ok');
-  }
-  async function updatePhoto(){
-    const f=$('playerPhotoFile')?.files?.[0];if(!f){msg('playerPasswordMsg','Seleziona prima una foto.','err');return;}
-    if(f.size>1500000){alert('La foto deve essere inferiore a 1,5 MB.');return;}
-    const reader=new FileReader();reader.onload=async()=>{const url=reader.result;const {error}=await window.sb.from('player_accounts').update({photo_url:url,updated_at:new Date().toISOString()}).eq('user_id',playerAuth.id);if(error){alert('Errore salvataggio foto: '+error.message);return;}playerAccount.photo_url=url;$('playerPhoto').src=url;alert('Foto aggiornata.');};reader.readAsDataURL(f);
-  }
-  async function playerLogout(){await window.sb.auth.signOut();playerAuth=null;playerAccount=null;playerData=null;currentResponsible=null;$('playerResultPanel')?.classList.add('hidden');$('playerDashboard')?.classList.add('hidden');$('playerLoginPanel')?.classList.remove('hidden');}
-  function install(){
-    $('playerLoginBtn')?.addEventListener('click',playerLogin);$('playerLogoutBtn')?.addEventListener('click',playerLogout);$('playerSubmitResultBtn')?.addEventListener('click',submitPlayerResult);$('playerChangePasswordBtn')?.addEventListener('click',changePassword);$('playerPhotoBtn')?.addEventListener('click',updatePhoto);
-  }
-  window.showPlayerArea=showPlayerArea;
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
-})();
-</script>
-
 <div id="rplRegolamentoOverlay" aria-hidden="true">
   <div id="rplRegolamentoModal" role="dialog" aria-modal="true" aria-label="Regolamento ufficiale">
     <button id="rplRegolamentoClose" type="button" aria-label="Chiudi regolamento">×</button>
@@ -2874,5 +2762,164 @@ async function loadPublicCalendar(){
   else initRplRegolamento();
 })();
 </script>
-<!-- RPL V6.5.75 - Area Giocatori + Responsabile Partita -->
+
+<script id="rpl-v6576-player-area">
+(function(){
+  const q=id=>document.getElementById(id);
+  const escP=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let playerUser=null, playerAccount=null, playerRow=null, assignedMatch=null;
+  const normalizePhone=v=>{let x=String(v||'').replace(/[^\d+]/g,'');if(x.startsWith('00'))x='+'+x.slice(2);if(x.startsWith('+'))return x;if(x.startsWith('39'))return '+'+x;return '+39'+x.replace(/^0/,'');};
+  const playerLogo=name=>{try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}};
+  function hidePublicSections(){['publicPage','partialPage','adminPage','publicCalendarPage','bonusPage'].forEach(id=>q(id)?.classList.add('hidden'));q('historyView')?.style.setProperty('display','none');}
+  function playerNavActive(){['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn','playerAreaBtn'].forEach(id=>q(id)?.classList.remove('primary'));q('playerAreaBtn')?.classList.add('primary');}
+  function showPlayerArea(){location.hash='player';hidePublicSections();q('playerAreaPage')?.classList.remove('hidden');playerNavActive();window.scrollTo(0,0);loadPlayerSession();}
+  window.showPlayerArea=showPlayerArea;
+  function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
+  function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+  function playerById(id){return (window.dbPlayers||[]).find(p=>String(p.id)===String(id))||null;}
+  function setScoreOptions(){return '<option value="">–</option>'+Array.from({length:8},(_,i)=>`<option value="${i}">${i}</option>`).join('');}
+  function renderResultSets(cm){
+    const players=rplDistintaPlayers(cm);
+    const pairs=rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
+    return pairs.map((pair,i)=>`<div class="rpl-result-set"><div style="text-align:center;color:var(--gold2);font-weight:900">SET ${i+1}</div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${i}">${setScoreOptions()}</select><b>–</b><select data-set-b="${i}">${setScoreOptions()}</select></div></div>`).join('');
+  }
+  function showResponsibleHero(cm){
+    const box=q('playerResponsibleHero'); if(!box)return;
+    box.classList.remove('hidden');
+    const type=cm.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti';
+    box.innerHTML=`<div class="rpl-responsible-hero card" style="margin:0"><div style="font-size:12px;color:var(--gold2);font-weight:900;letter-spacing:.15em">🔴 RESPONSABILE PARTITA</div><h2 style="margin:6px 0">DEVI INSERIRE IL RISULTATO</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo da definire')}</div><div class="muted" style="margin-top:4px">${type}</div><button type="button" class="rpl-responsible-button" id="openAssignedResultBtn">🎾 INSERISCI RISULTATO PARTITA</button></div>`;
+    q('openAssignedResultBtn').onclick=()=>openPlayerResult(cm);
+  }
+  function clearResponsible(){q('playerResponsibleHero')?.classList.add('hidden');q('playerResponsibleHero').innerHTML='';}
+  async function findAssignedMatch(){
+    if(!playerRow?.player_id)return null;
+    const {data,error}=await sb.from('calendar_matches').select('*').eq('responsible_player_id',playerRow.player_id).is('result_submitted_at',null).order('scheduled_at',{ascending:true}).limit(10);
+    if(error){console.error(error);return null;}
+    const now=Date.now();
+    return (data||[]).find(m=>new Date(m.scheduled_at).getTime()>=now-12*60*60*1000)||null;
+  }
+  async function loadPlayerSession(){
+    q('playerLoginCard')?.classList.add('hidden');
+    const {data}=await sb.auth.getUser();
+    if(!data.user){q('playerLoginCard')?.classList.remove('hidden');q('playerDashboard')?.classList.add('hidden');return;}
+    playerUser=data.user;
+    const r=await sb.from('player_accounts').select('*').eq('user_id',playerUser.id).maybeSingle();
+    if(r.error||!r.data){q('playerLoginCard')?.classList.remove('hidden');q('playerDashboard')?.classList.add('hidden');q('playerLoginMsg').textContent='Account non ancora collegato a un giocatore RPL.';return;}
+    playerAccount=r.data;playerRow=playerById(playerAccount.player_id);
+    if(!playerRow){q('playerLoginCard')?.classList.remove('hidden');q('playerDashboard')?.classList.add('hidden');q('playerLoginMsg').textContent='Giocatore non trovato.';return;}
+    q('playerDashboard')?.classList.remove('hidden');
+    renderPlayerProfile();
+    if(playerAccount.force_password_change){q('playerPasswordPanel')?.classList.remove('hidden');}else q('playerPasswordPanel')?.classList.add('hidden');
+    assignedMatch=await findAssignedMatch();
+    if(assignedMatch)showResponsibleHero(assignedMatch);else clearResponsible();
+    await Promise.all([loadPlayerStats(),loadPlayerMatches()]);
+  }
+  function renderPlayerProfile(){
+    q('playerNameTitle').textContent=playerRow.name||'';q('playerNickTitle').textContent=playerRow.nickname?`“${playerRow.nickname}”`:'';q('playerFasciaTitle').textContent=`Fascia ${playerRow.fascia||'—'} · ${playerRow.fascia_value||'—'} punti`;
+    const src=playerAccount.avatar_path?sb.storage.from('avatars').getPublicUrl(playerAccount.avatar_path).data.publicUrl:'';
+    const img=q('playerAvatar'), box=q('playerAvatar').parentElement;
+    if(src){img.src=src+'?v='+Date.now();box.classList.add('has-image')}else{img.removeAttribute('src');box.classList.remove('has-image')}
+  }
+  async function loadPlayerStats(){
+    const out=q('playerStatsGrid');if(!out)return;
+    const {data:matches,error:me}=await sb.from('matches').select('id,played_at').order('played_at',{ascending:true});if(me){out.innerHTML='<div class="msg err">Errore caricamento statistiche.</div>';return}
+    const ids=(matches||[]).map(x=>x.id);let mp=[],sets=[],aw=[];
+    if(ids.length){const r=await Promise.all([sb.from('match_players').select('*').in('match_id',ids),sb.from('sets').select('*').in('match_id',ids),sb.from('match_awards').select('*').in('match_id',ids)]);mp=r[0].data||[];sets=r[1].data||[];aw=r[2].data||[];}
+    const snap={};mp.forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
+    const st={sets:0,won:0,games:0,pt:0,mvp:0,imb:0};
+    sets.forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=Number(x.games_a),gb=Number(x.games_b);if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);if(W.includes(playerRow.id)){st.sets++;st.won++;st.games+=wg;st.pt+=(snap[x.match_id+'_'+L[0]]?.fascia_value||0)+(snap[x.match_id+'_'+L[1]]?.fascia_value||0)}else if(L.includes(playerRow.id)){st.sets++;st.games+=lg}});
+    aw.forEach(x=>{if(x.player_id===playerRow.id){if(x.award_type==='MVP')st.mvp++;if(x.award_type==='IMBATTUTO')st.imb++}});
+    const base=st.sets?((st.pt+st.games*.30+st.sets*.10)/st.sets)*10:0,total=base+st.mvp*1.5+st.imb;
+    const items=[['SET GIOCATI',st.sets],['SET VINTI',st.won],['GAME VINTI',st.games],['PT.SET',st.pt.toFixed(1)],['PUNTEGGIO BASE',base.toFixed(2)],['MVP',st.mvp],['IMBATTUTO',st.imb],['TOTALE',total.toFixed(2)]];
+    out.innerHTML=items.map(x=>`<div class="rpl-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+  }
+  async function loadPlayerMatches(){
+    const box=q('playerMatchesList');if(!box)return;
+    const {data:all}=await sb.from('calendar_matches').select('*').or(`player_1.eq.${playerRow.id},player_2.eq.${playerRow.id},player_3.eq.${playerRow.id},player_4.eq.${playerRow.id}`).order('scheduled_at',{ascending:true}).limit(20);
+    const rows=all||[];
+    if(!rows.length){box.innerHTML='<div class="rpl-no-match">Nessuna partita presente nel calendario.</div>';return;}
+    box.innerHTML=rows.map(m=>{const names=[1,2,3,4].map(i=>m['player_'+i+'_name']||playerById(m['player_'+i])?.name||'Giocatore');const resp=String(m.responsible_player_id)===String(playerRow.id);const done=!!m.result_submitted_at;return `<div class="rpl-match-card"><b>${escP(fmtDate(m.scheduled_at))} · ${escP(fmtTime(m.scheduled_at))}</b><div class="rpl-match-meta">📍 ${escP(m.court||'Campo')} · ${escP(m.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div><div class="rpl-match-meta">${names.map(escP).join(' · ')}</div>${done?'<div class="rpl-match-meta rpl-closed">✅ Risultato registrato</div>':resp?'<div class="rpl-match-meta" style="color:var(--gold2);font-weight:800">🔴 Sei il Responsabile Partita</div>':''}</div>`}).join('');
+  }
+  async function playerLogin(){
+    const msg=q('playerLoginMsg');msg.className='msg';msg.textContent='Accesso…';
+    const phone=normalizePhone(q('playerPhone').value),password=q('playerPassword').value;
+    if(!/^\+39\d{9,10}$/.test(phone)){msg.className='msg err';msg.textContent='Inserisci un numero italiano valido.';return}
+    // Hosted Supabase requires an SMS provider to use native Phone Auth.
+    // To keep RPL free of SMS costs, players enter their phone number here,
+    // while the app maps it to a hidden technical email identity.
+    const digits=phone.replace(/^\+39/,'');
+    const technicalEmail=`rpl.${digits}@royalpadelleague.it`;
+    const {data,error}=await sb.auth.signInWithPassword({email:technicalEmail,password});
+    if(error){msg.className='msg err';msg.textContent='Accesso non riuscito: numero o password non corretti.';return}
+    playerUser=data.user;await loadPlayerSession();window.scrollTo(0,0);
+  }
+  async function changePassword(){
+    const a=q('playerNewPassword').value,b=q('playerNewPassword2').value,msg=q('playerPasswordMsg');msg.className='msg';
+    if(a.length<8){msg.className='msg err';msg.textContent='La nuova password deve avere almeno 8 caratteri.';return}
+    if(a!==b){msg.className='msg err';msg.textContent='Le due password non coincidono.';return}
+    const {error}=await sb.auth.updateUser({password:a});if(error){msg.className='msg err';msg.textContent='Errore cambio password: '+error.message;return}
+    const {error:e}=await sb.from('player_accounts').update({force_password_change:false,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);if(e){msg.className='msg err';msg.textContent='Password cambiata, ma non riesco a chiudere il primo accesso: '+e.message;return}
+    q('playerPasswordPanel').classList.add('hidden');msg.className='msg ok';msg.textContent='Password aggiornata.';q('playerNewPassword').value='';q('playerNewPassword2').value='';playerAccount.force_password_change=false;
+  }
+  async function uploadAvatar(file){
+    if(!file||!playerUser)return;
+    const msg=q('playerPhotoMsg');msg.className='msg';msg.textContent='Caricamento foto…';
+    if(!file.type.startsWith('image/')){msg.className='msg err';msg.textContent='Seleziona un’immagine.';return}
+    if(file.size>5*1024*1024){msg.className='msg err';msg.textContent='La foto deve essere massimo 5 MB.';return}
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    const path=`${playerUser.id}/profile.${ext}`;
+    const {error}=await sb.storage.from('avatars').upload(path,file,{contentType:file.type,upsert:true,cacheControl:'3600'});
+    if(error){msg.className='msg err';msg.textContent='Errore foto: '+error.message;return}
+    const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
+    playerAccount.avatar_path=path;renderPlayerProfile();msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
+  }
+  function scoreRowsFromPanel(){return [...q('playerResultPanel').querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
+  async function openPlayerResult(cm){
+    const panel=q('playerResultPanel');if(!panel)return;
+    panel.classList.remove('hidden');
+    const players=rplDistintaPlayers(cm),type=cm.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti';
+    panel.innerHTML=`<h2>🎾 Inserisci risultato partita</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo')}</div><div class="muted" style="margin-top:5px">${type} · Le coppie sono già compilate secondo la distinta ufficiale.</div>${renderResultSets(cm)}<button id="submitPlayerResultBtn" class="primary" style="width:100%;min-height:54px;margin-top:14px;font-size:16px">✅ CONFERMA E REGISTRA RISULTATO</button><button id="cancelPlayerResultBtn" style="width:100%;margin-top:8px">ANNULLA</button><div id="playerResultMsg" class="msg"></div>`;
+    q('submitPlayerResultBtn').onclick=()=>submitPlayerResult(cm);
+    q('cancelPlayerResultBtn').onclick=()=>{panel.classList.add('hidden');panel.innerHTML='';};
+    panel.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  async function submitPlayerResult(cm){
+    const msg=q('playerResultMsg'),rows=scoreRowsFromPanel();msg.className='msg';msg.textContent='Controllo risultati…';
+    if(rows.some(x=>x.ga===null||x.gb===null)){msg.className='msg err';msg.textContent='Inserisci il punteggio di tutti i set.';return}
+    if(rows.some(x=>x.ga===x.gb)){msg.className='msg err';msg.textContent='Un set non può finire in parità.';return}
+    const ids=[1,2,3,4].map(i=>Number(cm['player_'+i]));
+    if(ids.some(Number.isNaN)||new Set(ids).size!==4){msg.className='msg err';msg.textContent='La partita del calendario non ha quattro giocatori validi.';return}
+    const players=rplDistintaPlayers(cm),pairs=rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
+    const {data:existing}=await sb.from('matches').select('id').eq('calendar_match_id',cm.id).maybeSingle();if(existing){msg.className='msg err';msg.textContent='Questa partita risulta già registrata.';await loadPlayerSession();return}
+    const snap={};[1,2,3,4].forEach(i=>{snap[Number(cm['player_'+i])]={fascia:Number(cm['player_'+i+'_fascia']||playerById(cm['player_'+i])?.fascia||4),fascia_value:Number(cm['player_'+i+'_fascia_points']||playerById(cm['player_'+i])?.fascia_value||2)}});
+    const {data:m,error:me}=await sb.from('matches').insert({played_at:cm.scheduled_at,calendar_match_id:cm.id}).select().single();
+    if(me){msg.className='msg err';msg.textContent='Errore apertura partita: '+me.message;return}
+    const matchId=m.id;
+    const mpRows=ids.map(pid=>({match_id:matchId,player_id:pid,fascia:snap[pid].fascia,fascia_value:snap[pid].fascia_value}));
+    let r=await sb.from('match_players').insert(mpRows);if(r.error){msg.className='msg err';msg.textContent='Errore giocatori: '+r.error.message;return}
+    const setRows=pairs.map((pair,i)=>({match_id:matchId,set_number:i+1,pair_a_player_1:pair[0].id,pair_a_player_2:pair[1].id,pair_b_player_1:pair[2].id,pair_b_player_2:pair[3].id,games_a:rows[i].ga,games_b:rows[i].gb}));
+    r=await sb.from('sets').insert(setRows);if(r.error){msg.className='msg err';msg.textContent='Errore set: '+r.error.message;return}
+    const tally={};ids.forEach(id=>tally[id]={wins:0,losses:0,games:0});
+    setRows.forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],win=x.games_a>x.games_b?A:B,lose=x.games_a>x.games_b?B:A;win.forEach(id=>{tally[id].wins++;tally[id].games+=Math.max(x.games_a,x.games_b)});lose.forEach(id=>{tally[id].losses++;tally[id].games+=Math.min(x.games_a,x.games_b)})});
+    const bestWins=Math.max(...ids.map(id=>tally[id].wins)),bestGames=Math.max(...ids.filter(id=>tally[id].wins===bestWins).map(id=>tally[id].games));
+    const mvps=ids.filter(id=>tally[id].wins===bestWins&&tally[id].games===bestGames);
+    const imbs=ids.filter(id=>tally[id].losses===0);
+    const awards=[...mvps.map(id=>({match_id:matchId,player_id:id,award_type:'MVP'})),...imbs.map(id=>({match_id:matchId,player_id:id,award_type:'IMBATTUTO'}))];
+    if(awards.length){r=await sb.from('match_awards').insert(awards);if(r.error){msg.className='msg err';msg.textContent='Errore premi automatici: '+r.error.message;return}}
+    r=await sb.from('calendar_matches').update({result_submitted_at:new Date().toISOString(),result_submitted_by:playerUser.id}).eq('id',cm.id).is('result_submitted_at',null);
+    if(r.error){msg.className='msg err';msg.textContent='Risultato salvato ma non riesco a chiudere l’assegnazione: '+r.error.message;return}
+    msg.className='msg ok';msg.textContent='✅ Risultato registrato. MVP e Imbattuto calcolati automaticamente.';
+    assignedMatch=null;clearResponsible();panel.classList.add('hidden');panel.innerHTML='';await Promise.all([loadPlayerStats(),loadPlayerMatches()]);
+  }
+  async function playerLogout(){await sb.auth.signOut();playerUser=null;playerAccount=null;playerRow=null;assignedMatch=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden');q('playerPassword').value='';}
+  function bind(){
+    q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
+    ['playerCameraInput','playerGalleryInput'].forEach(id=>q(id)?.addEventListener('change',e=>uploadAvatar(e.target.files?.[0])));
+    q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showPlayerArea()},true);
+    if(location.hash==='#player')showPlayerArea();
+  }
+  sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'&&location.hash==='#player'){playerUser=null;playerAccount=null;playerRow=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden')}});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+})();
+</script>
 </body></html>
