@@ -1024,29 +1024,43 @@ function clearMatchFormForLoad(){
   $("mvp").querySelectorAll("input").forEach(x=>x.checked=false);
   $("imb").querySelectorAll("input").forEach(x=>x.checked=false);
 }
-function loadSetsForCalendarMatch(m){
+async function loadSetsForCalendarMatch(m){
+  // Ricostruisce ESATTAMENTE la Distinta ufficiale associata alla partita di calendario.
+  // Tutti contro tutti = 6 set; 1 vs 1 = 4 set. I punteggi restano vuoti.
   const players=rplDistintaPlayers(m);
+  if(players.some(x=>!x.rank || x.rank===999)){
+    try{
+      const pre=await calculateStandingsBefore(m.scheduled_at);
+      const rankMap={};
+      (pre||[]).forEach((x,i)=>rankMap[String(x.id)]=i+1);
+      players.forEach(x=>x.rank=rankMap[String(x.id)]||999);
+    }catch(e){ console.warn("Rank pre-partita non disponibile per la Distinta:",e); }
+  }
   const type=m.match_type==="ONE_VS_ONE"?"ONE_VS_ONE":"ALL_VS_ALL";
   const pairs=rplSetPairs(players,type);
+  const expected=type==="ONE_VS_ONE"?4:6;
   $("sets").innerHTML="";
-  pairs.forEach((pair,i)=>{
+  for(let i=0;i<expected;i++){
+    const pair=pairs[i];
+    if(!pair || pair.length!==4) continue;
     addSet(false);
     const row=document.querySelectorAll("#sets .set")[i];
-    if(!row)return;
+    if(!row) continue;
     ["a1","a2","b1","b2"].forEach((cls,j)=>{
       const el=row.querySelector("."+cls);
-      if(el)el.value=pair[j].id;
+      if(el) el.value=String(pair[j].id);
     });
-    // Punteggi volutamente vuoti: l'operatore deve inserirli.
-  });
+  }
+  renumberSets($("sets"));
   refreshSets();
-  pairs.forEach((pair,i)=>{
-    const row=document.querySelectorAll("#sets .set")[i];
-    if(!row)return;
+  document.querySelectorAll("#sets .set").forEach((row,i)=>{
+    const pair=pairs[i]; if(!pair) return;
     ["a1","a2","b1","b2"].forEach((cls,j)=>{
-      const el=row.querySelector("."+cls); if(el)el.value=pair[j].id;
+      const el=row.querySelector("."+cls);
+      if(el) el.value=String(pair[j].id);
     });
   });
+  return {type,setsLoaded:document.querySelectorAll("#sets .set").length,expected};
 }
 async function calendarMatchAlreadyRecorded(cm){
   const ids=[cm.player_1,cm.player_2,cm.player_3,cm.player_4].map(Number).sort((a,b)=>a-b);
@@ -1087,7 +1101,18 @@ async function loadLastCalendarMatch(){
   clearMatchFormForLoad();
   ["p1","p2","p3","p4"].forEach((id,i)=>$(id).value=ids[i]);
   refreshSets();
-  loadSetsForCalendarMatch(selected);
+  try{
+    const loaded=await loadSetsForCalendarMatch(selected);
+    if(loaded.setsLoaded!==loaded.expected){
+      msg.className="msg err";
+      msg.textContent=`Partita caricata ma la Distinta non è stata ricostruita completamente (${loaded.setsLoaded}/${loaded.expected} set).`;
+      return;
+    }
+  }catch(e){
+    msg.className="msg err";
+    msg.textContent="Partita caricata, ma non riesco a generare la Distinta dei set: "+(e.message||e);
+    return;
+  }
   const dt=new Date(selected.scheduled_at);
   const type=selected.match_type==="ONE_VS_ONE"?"1 vs 1":"Tutti contro tutti";
   msg.className="msg ok";
@@ -2363,7 +2388,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.72</div>
+<div id="rplVersionBadge">RPL v6.5.73</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
