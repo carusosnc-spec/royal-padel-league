@@ -2332,6 +2332,7 @@ function rplSetPairs(players,type){
   ];
   return [...three,...three];
 }
+window.rplSetPairs = rplSetPairs;
 function rplPdfText(doc,text,x,y,maxWidth,fontSize=10){
   doc.setFontSize(fontSize);
   const lines=doc.splitTextToSize(String(text||""),maxWidth);
@@ -2781,8 +2782,8 @@ async function loadPublicCalendar(){
   function playerById(id){return (window.dbPlayers||[]).find(p=>String(p.id)===String(id))||null;}
   function setScoreOptions(){return '<option value="">–</option>'+Array.from({length:8},(_,i)=>`<option value="${i}">${i}</option>`).join('');}
   function renderResultSets(cm){
-    const players=rplDistintaPlayers(cm);
-    const pairs=rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
+    const players=window.rplDistintaPlayers(cm);
+    const pairs=window.rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
     return pairs.map((pair,i)=>`<div class="rpl-result-set"><div style="text-align:center;color:var(--gold2);font-weight:900">SET ${i+1}</div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${i}">${setScoreOptions()}</select><b>–</b><select data-set-b="${i}">${setScoreOptions()}</select></div></div>`).join('');
   }
   function showResponsibleHero(cm){
@@ -2900,7 +2901,7 @@ async function loadPublicCalendar(){
     if(rows.some(x=>x.ga===x.gb)){msg.className='msg err';msg.textContent='Un set non può finire in parità.';return}
     const ids=[1,2,3,4].map(i=>Number(cm['player_'+i]));
     if(ids.some(Number.isNaN)||new Set(ids).size!==4){msg.className='msg err';msg.textContent='La partita del calendario non ha quattro giocatori validi.';return}
-    const players=rplDistintaPlayers(cm),pairs=rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
+    const players=window.rplDistintaPlayers(cm),pairs=window.rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
     const {data:existing}=await sb.from('matches').select('id').eq('calendar_match_id',cm.id).maybeSingle();if(existing){msg.className='msg err';msg.textContent='Questa partita risulta già registrata.';await loadPlayerSession();return}
     const snap={};[1,2,3,4].forEach(i=>{snap[Number(cm['player_'+i])]={fascia:Number(cm['player_'+i+'_fascia']||playerById(cm['player_'+i])?.fascia||4),fascia_value:Number(cm['player_'+i+'_fascia_points']||playerById(cm['player_'+i])?.fascia_value||2)}});
     const {data:m,error:me}=await sb.from('matches').insert({played_at:cm.scheduled_at,calendar_match_id:cm.id}).select().single();
