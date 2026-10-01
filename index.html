@@ -712,7 +712,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
     <div style="text-align:center;margin:8px 0 20px"><button id="playerLogoutBtn" type="button">ESCI AREA GIOCATORI</button></div>
   </div>
 
-  <div id="playerResultPanel" class="card hidden"></div>
 </section>
 
 <section id="publicCalendarPage" class="hidden">
@@ -2772,9 +2771,9 @@ async function loadPublicCalendar(){
   let playerUser=null, playerAccount=null, playerRow=null, assignedMatch=null;
   const normalizePhone=v=>{let x=String(v||'').replace(/[^\d+]/g,'');if(x.startsWith('00'))x='+'+x.slice(2);if(x.startsWith('+'))return x;if(x.startsWith('39'))return '+'+x;return '+39'+x.replace(/^0/,'');};
   const playerLogo=name=>{try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}};
-  function hidePublicSections(){['publicPage','partialPage','adminPage','publicCalendarPage','bonusPage'].forEach(id=>q(id)?.classList.add('hidden'));q('historyView')?.style.setProperty('display','none');}
+  function hidePublicSections(){['publicPage','partialPage','adminPage','publicCalendarPage','bonusPage'].forEach(id=>{const el=q(id);if(el){el.classList.add('hidden');el.style.setProperty('display','none','important')}});const h=q('historyView');if(h)h.style.setProperty('display','none','important');}
   function playerNavActive(){['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn','playerAreaBtn'].forEach(id=>q(id)?.classList.remove('primary'));q('playerAreaBtn')?.classList.add('primary');}
-  function showPlayerArea(){location.hash='player';hidePublicSections();q('playerAreaPage')?.classList.remove('hidden');playerNavActive();window.scrollTo(0,0);loadPlayerSession();}
+  function showPlayerArea(){location.hash='player';hidePublicSections();const page=q('playerAreaPage');if(page){page.classList.remove('hidden');page.style.display='block';}playerNavActive();window.scrollTo(0,0);loadPlayerSession();}
   window.showPlayerArea=showPlayerArea;
   function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
   function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
@@ -2789,7 +2788,7 @@ async function loadPublicCalendar(){
     const box=q('playerResponsibleHero'); if(!box)return;
     box.classList.remove('hidden');
     const type=cm.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti';
-    box.innerHTML=`<div class="rpl-responsible-hero card" style="margin:0"><div style="font-size:12px;color:var(--gold2);font-weight:900;letter-spacing:.15em">🔴 RESPONSABILE PARTITA</div><h2 style="margin:6px 0">DEVI INSERIRE IL RISULTATO</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo da definire')}</div><div class="muted" style="margin-top:4px">${type}</div><button type="button" class="rpl-responsible-button" id="openAssignedResultBtn">🎾 INSERISCI RISULTATO PARTITA</button></div>`;
+    box.innerHTML=`<div class="rpl-responsible-hero card" style="margin:0"><div style="font-size:12px;color:var(--gold2);font-weight:900;letter-spacing:.15em">🔴 RESPONSABILE PARTITA</div><h2 style="margin:6px 0">DEVI INSERIRE IL RISULTATO</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo da definire')}</div><div class="muted" style="margin-top:4px">${type}</div><button type="button" class="rpl-responsible-button" id="openAssignedResultBtn">🎾 INSERISCI RISULTATO PARTITA</button><div id="inlinePlayerResultPanel" style="margin-top:12px"></div></div>`;
     q('openAssignedResultBtn').onclick=()=>openPlayerResult(cm);
   }
   function clearResponsible(){q('playerResponsibleHero')?.classList.add('hidden');q('playerResponsibleHero').innerHTML='';}
@@ -2883,13 +2882,16 @@ async function loadPublicCalendar(){
   }
   function scoreRowsFromPanel(){return [...q('playerResultPanel').querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
   async function openPlayerResult(cm){
-    const panel=q('playerResultPanel');if(!panel)return;
-    panel.classList.remove('hidden');
-    const players=rplDistintaPlayers(cm),type=cm.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti';
-    panel.innerHTML=`<h2>🎾 Inserisci risultato partita</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo')}</div><div class="muted" style="margin-top:5px">${type} · Le coppie sono già compilate secondo la distinta ufficiale.</div>${renderResultSets(cm)}<button id="submitPlayerResultBtn" class="primary" style="width:100%;min-height:54px;margin-top:14px;font-size:16px">✅ CONFERMA E REGISTRA RISULTATO</button><button id="cancelPlayerResultBtn" style="width:100%;margin-top:8px">ANNULLA</button><div id="playerResultMsg" class="msg"></div>`;
-    q('submitPlayerResultBtn').onclick=()=>submitPlayerResult(cm);
-    q('cancelPlayerResultBtn').onclick=()=>{panel.classList.add('hidden');panel.innerHTML='';};
-    panel.scrollIntoView({behavior:'smooth',block:'start'});
+    const panel=q('inlinePlayerResultPanel');if(!panel)return;
+    try{
+      const players=rplDistintaPlayers(cm);
+      if(!players||players.length!==4)throw new Error('Impossibile caricare i 4 giocatori della distinta.');
+      const type=cm.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti';
+      panel.innerHTML=`<div class="card" style="margin:0"><h2>🎾 Inserisci risultato partita</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo')}</div><div class="muted" style="margin-top:5px">${type} · Le coppie sono già compilate secondo la distinta ufficiale.</div>${renderResultSets(cm)}<button id="submitPlayerResultBtn" class="primary" style="width:100%;min-height:54px;margin-top:14px;font-size:16px">✅ CONFERMA E REGISTRA RISULTATO</button><button id="cancelPlayerResultBtn" style="width:100%;margin-top:8px">ANNULLA</button><div id="playerResultMsg" class="msg"></div></div>`;
+      q('submitPlayerResultBtn').onclick=()=>submitPlayerResult(cm);
+      q('cancelPlayerResultBtn').onclick=()=>{panel.innerHTML='';};
+      panel.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){console.error('RPL player result',e);panel.innerHTML=`<div class="msg err">Impossibile aprire la distinta: ${escP(e.message||e)}</div>`;}
   }
   async function submitPlayerResult(cm){
     const msg=q('playerResultMsg'),rows=scoreRowsFromPanel();msg.className='msg';msg.textContent='Controllo risultati…';
