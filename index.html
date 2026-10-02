@@ -2576,7 +2576,14 @@ async function loadPublicCalendar(){
   {key:'03',label:'MAR',start:'2027-03-01',end:'2027-03-31',threshold:65}
  ];
  function empty(){return (window.dbPlayers||[]).filter(p=>!p.is_guest).map(p=>({id:p.id,name:p.name,nick:p.nickname||'',fascia:+p.fascia||4,sets:0,won:0,games:0,pt:0,mvp:0,imb:0,bonus:0,months:{}}));}
- function monthClosed(m){return new Date()>=new Date(m.end+'T23:59:59');}
+ function monthRelease(m){
+   const d=new Date(m.end+'T23:59:59');
+   d.setSeconds(0); d.setMilliseconds(0);
+   d.setDate(d.getDate()+1);
+   d.setMinutes(1);
+   return d;
+ }
+ function monthClosed(m){return new Date()>=monthRelease(m);}
  function logo(name){try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}}
  async function calcMonth(m, allMatches, mp, sets, awards, cumulativeSets){
    const ids=allMatches.filter(x=>String(x.played_at).slice(0,10)>=m.start && String(x.played_at).slice(0,10)<=m.end).map(x=>x.id);
@@ -2593,7 +2600,11 @@ async function loadPublicCalendar(){
    stats.forEach(s=>{const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;s.base=base;s.total=base+s.mvp*1.5+s.imb;s.cumSets=(cumulativeSets[s.id]||0)+s.sets;s.fascia=+((window.dbPlayers||[]).find(p=>p.id===s.id)?.fascia||4)});
    const eligible=stats.filter(s=>s.cumSets>=m.threshold && s.sets>0);
    eligible.sort((a,b)=>b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it'));
-   eligible.forEach((s,i)=>{if(i<10)s.bonus=POINTS[i];s.months[m.key]=s.bonus});
+   const released=monthClosed(m);
+   eligible.forEach((s,i)=>{
+     s.bonus=released&&i<10?POINTS[i]:0;
+     s.months[m.key]=s.bonus;
+   });
    return {stats,eligible};
  }
  async function loadBonus(){
@@ -2621,7 +2632,7 @@ async function loadPublicCalendar(){
      Object.entries(monthRows).forEach(([key,r])=>r.stats.forEach(s=>{const f=byId.get(s.id);if(!f)return;f.months[key]=s.bonus||0;f.bonus+=(s.bonus||0)}));
      final.sort((a,b)=>b.bonus-a.bonus||a.name.localeCompare(b.name,'it'));
      body.innerHTML=final.map((s,i)=>{
-       const months=MONTHS.map(m=>`<td>${s.months[m.key]||'—'}${(!monthClosed(m)&&s.months[m.key])?'<span class="bonus-provisional">*</span>':''}</td>`).join('');
+       const months=MONTHS.map(m=>`<td>${monthClosed(m)?(s.months[m.key]||'—'):'—'}${(!monthClosed(m)&&s.sets!==undefined)?'<span class="bonus-provisional">prov.</span>':''}</td>`).join('');
        return `<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b>${s.bonus}</b></td>${months}</tr>`;
      }).join('');
      summary.textContent=`Bonus mensile: primi 10 classificati dopo il controllo dei set minimi. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'.':'Nessun mese ancora chiuso: SET è provvisorio.'}`;
