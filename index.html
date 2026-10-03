@@ -682,6 +682,23 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 
     <div id="playerResponsibleHero" class="card hidden"></div>
 
+    <div id="playerVotingCard" class="card hidden">
+      <div style="text-align:center">
+        <div style="color:var(--gold2);font-size:21px;font-weight:900;letter-spacing:.04em">🗳️ VOTA LA TUA SERATA</div>
+        <div id="playerVotingWindowMsg" class="muted" style="margin-top:6px"></div>
+      </div>
+      <div id="playerTwoNightsWrap" style="margin:14px 0;padding:12px;border:1px solid rgba(231,185,78,.35);border-radius:12px;background:rgba(231,185,78,.06)">
+        <label style="display:flex;align-items:center;gap:10px;margin:0;color:#fff;font-size:14px;font-weight:800;cursor:pointer">
+          <input id="playerTwoNights" type="checkbox" style="width:20px;height:20px;accent-color:#e7b94e">
+          <span>VOGLIO GIOCARE 2 SERE</span>
+        </label>
+        <div class="muted" style="margin-top:5px;margin-left:30px">Selezionando questa opzione puoi esprimere 2 voti, per 2 serate diverse.</div>
+      </div>
+      <div id="playerVotingSummary" class="muted" style="margin-bottom:10px"></div>
+      <div id="playerVotingOptions"></div>
+      <div id="playerVotingMsg" class="msg"></div>
+    </div>
+
     <div class="card">
       <div class="rpl-player-profile-head">
         <div class="rpl-avatar-box"><img id="playerAvatar" alt="Foto profilo"><div id="playerAvatarFallback">👤</div></div><div class="rpl-player-logo-box"><img id="playerLogo" alt="Logo giocatore"><div id="playerLogoFallback">🏆</div></div>
@@ -696,7 +713,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
         <label class="rpl-photo-btn">📷 SCATTA FOTO<input id="playerCameraInput" type="file" accept="image/*" capture="environment" hidden></label>
         <label class="rpl-photo-btn">🖼️ SCEGLI DALLA GALLERIA<input id="playerGalleryInput" type="file" accept="image/*" hidden></label>
       </div>
-      <div class="muted" style="font-size:11px;margin-top:8px;text-align:center">La foto viene automaticamente ridimensionata e ottimizzata per il profilo.</div>
       <div id="playerPhotoMsg" class="msg"></div>
     </div>
 
@@ -802,7 +818,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div class="card" id="operatorSubmenu">
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button type="button" id="opMatchTab" class="primary" onclick="showOperatorSection('match')">🎾 Inserisci partita</button>
-<button type="button" id="opPendingTab" onclick="showOperatorSection('pending')">⏳ Partite da confermare <span id="pendingMatchCount" style="display:inline-block;min-width:22px;padding:2px 6px;border-radius:10px;background:#d9ad2b;color:#171717;font-size:11px">0</span></button>
 <button type="button" id="opCalendarTab" onclick="showOperatorSection('calendar')">📅 Calendario</button>
 </div>
 </div>
@@ -814,13 +829,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   </div>
 </div>
 
-<div id="operatorPendingSection" class="hidden">
-<div class="card">
-<h2>⏳ Partite da confermare</h2>
-<div class="muted" style="margin-bottom:12px">Controlla qui i risultati inseriti dai giocatori responsabili. Solo dopo la conferma dell'operatore la partita diventa ufficiale e aggiorna Classifica e Storico.</div>
-<div id="pendingMatchesList"><div class="muted">Caricamento…</div></div>
-</div>
-</div>
 <div id="operatorCalendarSection" class="hidden">
 <div class="card">
 <h2>📅 Calendario settimanale RPL</h2>
@@ -1047,7 +1055,7 @@ function render(){
 
 async function loadRanking(){
   const calculationStats=emptyStats();
-  const {data:matches,error:me}=await sb.from("matches").select("id,played_at").eq("is_confirmed",true).order("played_at",{ascending:true});
+  const {data:matches,error:me}=await sb.from("matches").select("id,played_at").order("played_at",{ascending:true});
   if(me){$("status").textContent="Errore caricamento partite: "+me.message;return}
   if(!matches.length){stats=calculationStats;render();return}
   const ids=matches.map(m=>m.id);
@@ -1082,7 +1090,6 @@ async function login(){
   if(!(await isOperator())){await sb.auth.signOut();$("loginMsg").className="msg err";$("loginMsg").textContent="Account non autorizzato come operatore.";return}
   $("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");
   $("operatorMatchSection")?.classList.add("hidden");
-  $("operatorPendingSection")?.classList.add("hidden");
   $("operatorCalendarSection")?.classList.add("hidden");
   $("operatorSubmenu")?.classList.remove("hidden");
   $("loginMsg").className="msg";$("loginMsg").textContent="";
@@ -1234,7 +1241,7 @@ async function saveMatch(){
   resetForm();await loadRanking();await loadOperatorHistory();
 }
 async function calculateStandingsBefore(timestamp){
-  const {data:matches}=await sb.from("matches").select("id,played_at").eq("is_confirmed",true).lt("played_at",timestamp).order("played_at",{ascending:true});
+  const {data:matches}=await sb.from("matches").select("id,played_at").lt("played_at",timestamp).order("played_at",{ascending:true});
   if(!matches||!matches.length)return dbPlayers.filter(p=>!p.is_guest).map(p=>({id:p.id,base:0,total:0}));
   const ids=matches.map(m=>m.id);
   const [{data:mp},{data:sets},{data:aw}]=await Promise.all([
@@ -1254,17 +1261,15 @@ async function calculateStandingsBefore(timestamp){
 
 
 function showOperatorSection(which){
-  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), p=$("operatorPendingSection");
-  const mt=$("opMatchTab"), ct=$("opCalendarTab"), pt=$("opPendingTab");
-  m?.classList.add("hidden"); c?.classList.add("hidden"); p?.classList.add("hidden");
-  mt?.classList.remove("primary"); ct?.classList.remove("primary"); pt?.classList.remove("primary");
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection");
+  const mt=$("opMatchTab"), ct=$("opCalendarTab");
   if(which==="calendar"){
-    c?.classList.remove("hidden"); ct?.classList.add("primary");
+    m?.classList.add("hidden"); c?.classList.remove("hidden");
+    mt?.classList.remove("primary"); ct?.classList.add("primary");
     fillCalendarPlayers(); renderCalendarWeek(); loadCalendarWeeks();
-  }else if(which==="pending"){
-    p?.classList.remove("hidden"); pt?.classList.add("primary"); loadPendingMatches();
   }else{
-    m?.classList.remove("hidden"); mt?.classList.add("primary");
+    c?.classList.add("hidden"); m?.classList.remove("hidden");
+    ct?.classList.remove("primary"); mt?.classList.add("primary");
   }
 }
 function fillCalendarPlayers(){
@@ -1310,7 +1315,7 @@ function addCalendarRow(data={}){
     ${[1,2,3,4].map(i=>`<div class="rpl-cal-field"><label>Giocatore ${i}</label><select class="cal-row-p${i}">${calendarPlayerOptions(data["player_"+i]||"")}</select><span class="calendar-player-meta cal-meta-p${i}" style="font-size:11px;color:#b88700">${calendarPlayerMeta(data["player_"+i]||"")}</span></div>`).join("")}
     <div class="rpl-cal-field" style="grid-column:1/-1"><label>🔴 Responsabile Partita</label><select class="cal-row-responsible">${calendarResponsibleOptions(data.responsible_player_id||"",[data.player_1,data.player_2,data.player_3,data.player_4])}</select><div class="muted">Il responsabile vedrà subito il tasto per inserire il risultato nella propria Area Giocatori.</div></div>
   </div>
-  <div class="rpl-cal-actions"><button type="button" onclick="removeCalendarRow(this)">🗑️ CANCELLA PARTITA</button></div>`;
+  <div class="rpl-cal-actions"><button type="button" onclick="removeCalendarRow(this)">🗑️ Rimuovi partita</button></div>`;
   host.appendChild(row);
   [1,2,3,4].forEach(i=>{
     row.querySelector(".cal-row-p"+i).addEventListener("change",e=>{
@@ -1322,30 +1327,7 @@ function addCalendarRow(data={}){
     });
   });
 }
-async function removeCalendarRow(btn){
-  const row=btn.closest(".calendar-row");
-  if(!row)return;
-  const id=row.dataset.id||"";
-  const ok=confirm(id
-    ? "Sei sicuro di voler cancellare questa partita dal calendario? L'operazione non può essere annullata."
-    : "Sei sicuro di voler rimuovere questa partita?"
-  );
-  if(!ok)return;
-  if(!id){row.remove();return;}
-  btn.disabled=true;
-  btn.textContent="⏳ Cancellazione…";
-  const r=await sb.from("calendar_matches").delete().eq("id",id);
-  if(r.error){
-    btn.disabled=false;
-    btn.textContent="🗑️ CANCELLA PARTITA";
-    alert("Impossibile cancellare la partita: "+r.error.message);
-    return;
-  }
-  row.remove();
-  const msg=$("calWeekMsg");
-  if(msg){msg.className="msg ok";msg.textContent="✅ Partita cancellata dal calendario.";}
-  await loadCalendarWeeks();
-}
+function removeCalendarRow(btn){btn.closest(".calendar-row")?.remove();}
 function calendarRowData(row){
   return {
     id:row.dataset.id||null,
@@ -1535,54 +1517,6 @@ async function downloadCalendarWeekTxt(){
   a.href=URL.createObjectURL(b);a.download=`RPL_Calendario_${x.start}_${x.end}.txt`;a.click();URL.revokeObjectURL(a.href);
 }
 
-async function loadPendingMatches(){
-  const box=$("pendingMatchesList"),count=$("pendingMatchCount");
-  if(!box)return;
-  box.innerHTML='<div class="muted">Caricamento…</div>';
-  try{
-    const {data:matches,error}=await sb.from("matches").select("id,played_at,calendar_match_id").eq("is_confirmed",false).order("played_at",{ascending:false});
-    if(error)throw error;
-    if(count)count.textContent=String((matches||[]).length);
-    if(!matches?.length){box.innerHTML='<div class="msg ok">✅ Nessuna partita in attesa di conferma.</div>';return;}
-    const ids=matches.map(m=>m.id),calIds=matches.map(m=>m.calendar_match_id).filter(Boolean);
-    const [mpR,setsR,awR,plR,calR]=await Promise.all([
-      sb.from("match_players").select("match_id,player_id").in("match_id",ids),
-      sb.from("sets").select("*").in("match_id",ids).order("set_number"),
-      sb.from("match_awards").select("*").in("match_id",ids),
-      sb.from("players").select("id,name,nickname"),
-      calIds.length?sb.from("calendar_matches").select("id,court,match_type,responsible_player_id,result_submitted_by").in("id",calIds):Promise.resolve({data:[],error:null})
-    ]);
-    if(mpR.error||setsR.error||awR.error||plR.error||calR.error)throw(mpR.error||setsR.error||awR.error||plR.error||calR.error);
-    const names={};(plR.data||[]).forEach(p=>names[String(p.id)]=p.name+(p.nickname?` — ${p.nickname}`:""));
-    const playersBy={};(mpR.data||[]).forEach(x=>(playersBy[x.match_id]??=[]).push(x.player_id));
-    const setsBy={};(setsR.data||[]).forEach(x=>(setsBy[x.match_id]??=[]).push(x));
-    const calBy={};(calR.data||[]).forEach(x=>calBy[x.id]=x);
-    box.innerHTML=matches.map(m=>{
-      const ps=(playersBy[m.id]||[]).map(id=>names[String(id)]||"Giocatore");
-      const sets=setsBy[m.id]||[],cal=calBy[m.calendar_match_id]||{};
-      const scores=sets.map(x=>`${x.games_a}-${x.games_b}`).join(" · ");
-      const responsible=cal.responsible_player_id?names[String(cal.responsible_player_id)]||"":(cal.result_submitted_by?"Giocatore responsabile":"");
-      return `<div class="card" style="margin:10px 0;border:1px solid #d9ad2b;background:#0b1620">
-        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
-          <div><b>⏳ DA CONFERMARE</b><br><span class="muted">${escOperator(new Date(m.played_at).toLocaleString("it-IT"))}${cal.court?` · ${escOperator(cal.court)}`:""}</span><br><span>${ps.map(escOperator).join(" • ")}</span><br><span class="badge">${escOperator(scores||"—")}</span>${responsible?`<div class="muted" style="margin-top:5px">Responsabile: ${escOperator(responsible)}</div>`:""}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="smallbtn edit" type="button" onclick="openEdit(${JSON.stringify(m.id)})">✏️ Controlla / Modifica</button><button class="smallbtn" type="button" style="border-color:#5fd18a;color:#7ee2a8" onclick="confirmPendingMatch(${JSON.stringify(m.id)})">✅ CONFERMA PARTITA</button></div>
-        </div>
-        <div class="muted" style="margin-top:8px">${sets.length} set inseriti · verifica che punteggi e distinta siano corretti prima della conferma.</div>
-      </div>`;
-    }).join("");
-  }catch(e){console.error(e);box.innerHTML=`<div class="msg err">Errore: ${escOperator(e.message||e)}</div>`;}
-}
-async function confirmPendingMatch(id){
-  if(!confirm("Confermare questa partita? Dopo la conferma entrerà nello Storico Partite e aggiornerà la Classifica."))return;
-  const {data,error}=await sb.from("matches").update({is_confirmed:true,confirmed_at:new Date().toISOString(),confirmed_by:currentUser?.id||null}).eq("id",id).eq("is_confirmed",false).select("id").maybeSingle();
-  if(error){alert("Errore conferma: "+error.message);return}
-  if(!data){alert("La partita è già stata confermata o non è più disponibile.");await loadPendingMatches();return}
-  alert("✅ Partita confermata e resa ufficiale.");
-  await loadRanking();await loadOperatorHistory();await loadPendingMatches();
-}
-function refreshPendingBadge(){loadPendingMatches();}
-window.loadPendingMatches=loadPendingMatches;window.confirmPendingMatch=confirmPendingMatch;
-
 async function loadOperatorHistory(){
   const box=$("history");
   if(!box)return;
@@ -1590,7 +1524,7 @@ async function loadOperatorHistory(){
   try{
     // Keep the operator history completely independent from the public history.
     // Fetch only the match list first, then enrich it with the existing tables.
-    const query=sb.from("matches").select("id,played_at").eq("is_confirmed",true).order("played_at",{ascending:false});
+    const query=sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
     const mr=await Promise.race([
       query,
       new Promise((_,reject)=>setTimeout(()=>reject(new Error("Timeout caricamento storico")),10000))
@@ -1728,7 +1662,6 @@ $("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add
   $("opMatchTab")?.classList.remove("primary");
   $("opCalendarTab")?.classList.remove("primary");
   await loadOperatorHistory();
-  await loadPendingMatches();
 }}};
 $("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
@@ -1825,7 +1758,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     try{
       const start=from+"T00:00:00";
       const end=to+"T23:59:59";
-      const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at").eq("is_confirmed",true).gte("played_at",start).lte("played_at",end).order("played_at",{ascending:true});
+      const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at").gte("played_at",start).lte("played_at",end).order("played_at",{ascending:true});
       if(me)throw me;
       if(!matches?.length){renderPartial(stats,from,to);summary.textContent=`Periodo: ${from} → ${to} · Nessuna partita nel periodo.`;return;}
       const ids=matches.map(m=>m.id);
@@ -1975,7 +1908,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
       const to=$("historyTo")?.value||"";
       const player=$("historyPlayer")?.value||"";
 
-      let mq=window.sb.from("matches").select("id,played_at").eq("is_confirmed",true).order("played_at",{ascending:false});
+      let mq=window.sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
       if(from)mq=mq.gte("played_at",from+"T00:00:00");
       if(to)mq=mq.lte("played_at",to+"T23:59:59");
       let mr=await mq;
@@ -2534,7 +2467,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.85</div>
+<div id="rplVersionBadge">RPL v6.5.86</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2696,7 +2629,7 @@ async function loadPublicCalendar(){
    summary.textContent='Calcolo Classifica Bonus…';
    try{
      const [mr,mpr,sr,ar]=await Promise.all([
-       window.sb.from('matches').select('id,played_at').eq('is_confirmed',true).order('played_at',{ascending:true}),
+       window.sb.from('matches').select('id,played_at').order('played_at',{ascending:true}),
        window.sb.from('match_players').select('*'),
        window.sb.from('sets').select('*').order('set_number'),
        window.sb.from('match_awards').select('*')
@@ -2744,7 +2677,7 @@ async function loadPublicCalendar(){
     content.innerHTML='<div>Calcolo anteprima con la stessa logica della Classifica Parziale…</div>';
     try{
       const start='2026-09-15T00:00:00', end='2026-10-01T00:00:00';
-      const {data:matches,error:me}=await sb.from('matches').select('id,played_at').eq('is_confirmed',true).gte('played_at',start).lt('played_at',end).order('played_at',{ascending:true});
+      const {data:matches,error:me}=await sb.from('matches').select('id,played_at').gte('played_at',start).lt('played_at',end).order('played_at',{ascending:true});
       if(me) throw me;
       const matchIds=(matches||[]).map(x=>x.id);
       if(!matchIds.length){content.innerHTML='<div>Nessuna partita nel periodo 15–30 settembre.</div>';return;}
@@ -2861,6 +2794,12 @@ async function loadPublicCalendar(){
 })();
 </script>
 
+
+<style id="rpl-player-voting-style">
+.rpl-vote-option{border:1px solid rgba(231,185,78,.30);border-radius:14px;padding:13px;margin:10px 0;background:linear-gradient(180deg,rgba(8,25,40,.9),rgba(3,12,21,.92))}
+.rpl-vote-option.rpl-vote-full{opacity:.72;border-color:rgba(255,255,255,.15)}
+.rpl-vote-date{font-size:16px;font-weight:900;color:#fff}.rpl-vote-meta{font-size:12px;color:#aebccc;margin-top:4px}.rpl-vote-players{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.rpl-vote-player{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(231,185,78,.10);border:1px solid rgba(231,185,78,.24);color:#f7e3a0}.rpl-vote-btn{width:100%;margin-top:10px;min-height:44px}.rpl-vote-btn:disabled{opacity:.5;cursor:not-allowed}
+</style>
 <script id="rpl-v6576-player-area">
 (function(){
   const q=id=>document.getElementById(id);
@@ -2876,50 +2815,10 @@ async function loadPublicCalendar(){
   function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
   function playerById(id){return (window.dbPlayers||[]).find(p=>String(p.id)===String(id))||null;}
   function setScoreOptions(){return '<option value="">–</option>'+Array.from({length:8},(_,i)=>`<option value="${i}">${i}</option>`).join('');}
-  function rplBuildResultSet(pair,i){
-    return `<div class="rpl-result-set" data-p1="${pair[0].id}" data-p2="${pair[1].id}" data-p3="${pair[2].id}" data-p4="${pair[3].id}">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <div style="flex:1;text-align:center;color:var(--gold2);font-weight:900">SET ${i+1}</div>
-        <button type="button" class="rpl-player-remove-set" title="Elimina questo set" style="font-size:11px;padding:5px 8px;border:1px solid #7b8794;background:transparent;color:#b9c4d0;border-radius:7px">🗑️ Elimina</button>
-      </div>
-      <div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div>
-      <div class="rpl-result-score"><select data-set-a="${i}">${setScoreOptions()}</select><b>–</b><select data-set-b="${i}">${setScoreOptions()}</select></div>
-    </div>`;
-  }
-  function renumberPlayerResultSets(){
-    const panel=q('inlinePlayerResultPanel');if(!panel)return;
-    [...panel.querySelectorAll('.rpl-result-set')].forEach((row,i)=>{
-      const title=row.querySelector('div[style*="text-align:center"]');
-      if(title)title.textContent=`SET ${i+1}`;
-    });
-  }
-  function addPlayerResultSet(cm){
-    const panel=q('inlinePlayerResultPanel');if(!panel)return;
-    const players=window.rplDistintaPlayers(cm);
-    const type=cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL';
-    const pairs=window.rplSetPairs(players,type);
-    const existing=panel.querySelectorAll('.rpl-result-set').length;
-    const pair=pairs[existing % pairs.length];
-    if(!pair)return;
-    const wrap=panel.querySelector('#playerResultSets');if(!wrap)return;
-    wrap.insertAdjacentHTML('beforeend',rplBuildResultSet(pair,existing));
-    bindPlayerResultSetActions(wrap.lastElementChild);
-    renumberPlayerResultSets();
-  }
-  function bindPlayerResultSetActions(row){
-    if(!row)return;
-    row.querySelector('.rpl-player-remove-set')?.addEventListener('click',()=>{
-      const count=q('inlinePlayerResultPanel')?.querySelectorAll('.rpl-result-set').length||0;
-      if(count<=1){alert('Deve rimanere almeno un set.');return;}
-      if(!confirm('Sei sicuro di voler eliminare questo set? Il punteggio inserito per questo set verrà perso.'))return;
-      row.remove();renumberPlayerResultSets();
-    });
-  }
   function renderResultSets(cm){
     const players=window.rplDistintaPlayers(cm);
     const pairs=window.rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
-    return `<div id="playerResultSets">${pairs.map((pair,i)=>rplBuildResultSet(pair,i)).join('')}</div>
-      <div style="margin-top:10px"><button type="button" id="addPlayerResultSetBtn" style="width:100%;border-color:#d9ad2b;color:#ffd86a">➕ AGGIUNGI UN ALTRO SET</button></div>`;
+    return pairs.map((pair,i)=>`<div class="rpl-result-set"><div style="text-align:center;color:var(--gold2);font-weight:900">SET ${i+1}</div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${i}">${setScoreOptions()}</select><b>–</b><select data-set-b="${i}">${setScoreOptions()}</select></div></div>`).join('');
   }
   function showResponsibleHero(cm){
     const box=q('playerResponsibleHero'); if(!box)return;
@@ -2936,6 +2835,75 @@ async function loadPublicCalendar(){
     const now=Date.now();
     return (data||[]).find(m=>new Date(m.scheduled_at).getTime()>=now-12*60*60*1000)||null;
   }
+  async function loadPlayerVoting(){
+    const card=q('playerVotingCard');
+    const optionsBox=q('playerVotingOptions');
+    const summary=q('playerVotingSummary');
+    const windowMsg=q('playerVotingWindowMsg');
+    const two=q('playerTwoNights');
+    const msg=q('playerVotingMsg');
+    if(!card||!optionsBox||!playerRow)return;
+    card.classList.add('hidden');
+    optionsBox.innerHTML='';
+    if(msg){msg.className='msg';msg.textContent='';}
+
+    const wr=await sb.from('rpl_poll_weeks').select('*').eq('status','open').order('opens_at',{ascending:false}).limit(10);
+    if(wr.error){console.error('RPL voting weeks',wr.error);return;}
+    const now=new Date();
+    const week=(wr.data||[]).find(w=>new Date(w.opens_at)<=now&&now<new Date(w.closes_at));
+    if(!week)return;
+
+    const or=await sb.from('rpl_poll_options').select('*').eq('poll_week_id',week.id).order('sort_order',{ascending:true});
+    if(or.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento votazione.</div>';card.classList.remove('hidden');return;}
+    const options=or.data||[];
+    if(!options.length){return;}
+
+    const pr=await sb.from('rpl_poll_participants').select('wants_two_nights').eq('poll_week_id',week.id).eq('player_id',playerRow.id).maybeSingle();
+    const wantsTwo=!!pr.data?.wants_two_nights;
+    if(two){two.checked=wantsTwo;two.onchange=async()=>{
+      two.disabled=true;
+      const r=await sb.rpc('rpl_set_two_nights',{p_poll_week_id:week.id,p_wants_two:two.checked});
+      two.disabled=false;
+      if(r.error){two.checked=!two.checked;if(msg){msg.className='msg err';msg.textContent=r.error.message;}}
+      else await loadPlayerVoting();
+    };}
+
+    const vr=await sb.from('rpl_poll_votes').select('option_id,player_id,voted_at').eq('poll_week_id',week.id);
+    if(vr.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento voti.</div>';card.classList.remove('hidden');return;}
+    const votes=vr.data||[];
+    const mine=votes.filter(v=>String(v.player_id)===String(playerRow.id));
+    const maxVotes=wantsTwo?2:1;
+    if(summary)summary.textContent=`Hai utilizzato ${mine.length}/${maxVotes} ${maxVotes===1?'voto':'voti'} · Il voto è vincolante.`;
+    if(windowMsg)windowMsg.textContent=`Votazione aperta fino a ${new Date(week.closes_at).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}.`;
+
+    optionsBox.innerHTML=options.map(o=>{
+      const ov=votes.filter(v=>String(v.option_id)===String(o.id));
+      const full=!!o.is_full||ov.length>=Number(o.max_players||4);
+      const already=mine.some(v=>String(v.option_id)===String(o.id));
+      const canVote=!full&&!already&&mine.length<maxVotes;
+      const players=ov.map(v=>playerById(v.player_id)?.name||'Giocatore');
+      const d=new Date(`${o.play_date}T${o.start_time||'00:00:00'}`);
+      const dateLabel=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase();
+      const time=o.start_time?` · ORE ${String(o.start_time).slice(0,5)}`:'';
+      return `<div class="rpl-vote-option ${full?'rpl-vote-full':''}">
+        <div class="rpl-vote-date">${escP(dateLabel)}</div>
+        <div class="rpl-vote-meta">${escP(o.label||'Serata')}${escP(time)} · 👥 ${ov.length}/${o.max_players||4} giocatori</div>
+        ${players.length?`<div class="rpl-vote-players">${players.map(n=>`<span class="rpl-vote-player">${escP(n)}</span>`).join('')}</div>`:''}
+        <button type="button" class="rpl-vote-btn ${canVote?'primary':''}" data-vote-option="${o.id}" ${canVote?'':'disabled'}>${full?'🟢 PARTITA COMPLETA – 4/4':already?'✅ HAI VOTATO':mine.length>=maxVotes?'🔒 VOTI UTILIZZATI':'🎾 VOTA QUESTA SERATA'}</button>
+      </div>`;
+    }).join('');
+
+    optionsBox.querySelectorAll('[data-vote-option]').forEach(btn=>btn.addEventListener('click',async()=>{
+      const optionId=Number(btn.dataset.voteOption);btn.disabled=true;btn.textContent='⏳ REGISTRAZIONE…';
+      const r=await sb.rpc('rpl_cast_poll_vote',{p_poll_week_id:week.id,p_option_id:optionId});
+      if(r.error){if(msg){msg.className='msg err';msg.textContent=r.error.message;}await loadPlayerVoting();return;}
+      if(msg){msg.className='msg ok';msg.textContent='✅ Il tuo voto è stato registrato ed è vincolante.';}
+      await loadPlayerVoting();
+    }));
+
+    card.classList.remove('hidden');
+  }
+
   async function loadPlayerSession(){
     q('playerLoginCard')?.classList.add('hidden');
     const {data}=await sb.auth.getUser();
@@ -2950,7 +2918,7 @@ async function loadPublicCalendar(){
     if(playerAccount.force_password_change){q('playerPasswordPanel')?.classList.remove('hidden');}else q('playerPasswordPanel')?.classList.add('hidden');
     assignedMatch=await findAssignedMatch();
     if(assignedMatch)showResponsibleHero(assignedMatch);else clearResponsible();
-    await Promise.all([loadPlayerStats(),loadPlayerMatches()]);
+    await Promise.all([loadPlayerStats(),loadPlayerMatches(),loadPlayerVoting()]);
   }
   function renderPlayerProfile(){
     q('playerNameTitle').textContent=playerRow.name||'';q('playerNickTitle').textContent=playerRow.nickname?`“${playerRow.nickname}”`:'';q('playerFasciaTitle').textContent=`Fascia ${playerRow.fascia||'—'} · ${playerRow.fascia_value||'—'} punti`;
@@ -3007,36 +2975,17 @@ async function loadPublicCalendar(){
   }
   async function uploadAvatar(file){
     if(!file||!playerUser)return;
-    const msg=q('playerPhotoMsg');
-    msg.className='msg';msg.textContent='Preparazione foto…';
-    if(!file.type.startsWith('image/')){msg.className='msg err';msg.textContent='Seleziona un’immagine JPG, PNG o WEBP.';return}
-    if(file.size>12*1024*1024){msg.className='msg err';msg.textContent='La foto originale è troppo grande (massimo 12 MB).';return}
-    try{
-      const optimized=await new Promise((resolve,reject)=>{
-        const img=new Image(),url=URL.createObjectURL(file);
-        img.onload=()=>{
-          const max=900,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
-          const w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
-          const c=document.createElement('canvas');c.width=w;c.height=h;
-          const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
-          URL.revokeObjectURL(url);
-          c.toBlob(b=>b?resolve(b):reject(new Error('Impossibile elaborare la foto.')),'image/jpeg',0.84);
-        };
-        img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Impossibile leggere la foto.'))};
-        img.src=url;
-      });
-      msg.textContent='Caricamento foto…';
-      const path=`${playerUser.id}/profile.jpg`;
-      const {error}=await sb.storage.from('avatars').upload(path,optimized,{contentType:'image/jpeg',upsert:true,cacheControl:'3600'});
-      if(error){msg.className='msg err';msg.textContent='Errore caricamento foto: '+error.message;return}
-      const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);
-      if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
-      playerAccount.avatar_path=path;renderPlayerProfile();
-      msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
-      ['playerCameraInput','playerGalleryInput'].forEach(id=>{const el=q(id);if(el)el.value=''});
-    }catch(e){console.error('RPL avatar',e);msg.className='msg err';msg.textContent='Errore foto: '+(e.message||e)}
+    const msg=q('playerPhotoMsg');msg.className='msg';msg.textContent='Caricamento foto…';
+    if(!file.type.startsWith('image/')){msg.className='msg err';msg.textContent='Seleziona un’immagine.';return}
+    if(file.size>5*1024*1024){msg.className='msg err';msg.textContent='La foto deve essere massimo 5 MB.';return}
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    const path=`${playerUser.id}/profile.${ext}`;
+    const {error}=await sb.storage.from('avatars').upload(path,file,{contentType:file.type,upsert:true,cacheControl:'3600'});
+    if(error){msg.className='msg err';msg.textContent='Errore foto: '+error.message;return}
+    const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
+    playerAccount.avatar_path=path;renderPlayerProfile();msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
   }
-  function scoreRowsFromPanel(){const panel=q('inlinePlayerResultPanel');if(!panel)return [];return [...panel.querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,a1:Number(r.dataset.p1),a2:Number(r.dataset.p2),b1:Number(r.dataset.p3),b2:Number(r.dataset.p4),ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
+  function scoreRowsFromPanel(){return [...q('playerResultPanel').querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
   async function openPlayerResult(cm){
     const panel=q('inlinePlayerResultPanel');if(!panel)return;
     try{
@@ -3046,8 +2995,6 @@ async function loadPublicCalendar(){
       panel.innerHTML=`<div class="card" style="margin:0"><h2>🎾 Inserisci risultato partita</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo')}</div><div class="muted" style="margin-top:5px">${type} · Le coppie sono già compilate secondo la distinta ufficiale.</div>${renderResultSets(cm)}<button id="submitPlayerResultBtn" class="primary" style="width:100%;min-height:54px;margin-top:14px;font-size:16px">✅ CONFERMA E REGISTRA RISULTATO</button><button id="cancelPlayerResultBtn" style="width:100%;margin-top:8px">ANNULLA</button><div id="playerResultMsg" class="msg"></div></div>`;
       q('submitPlayerResultBtn').onclick=()=>submitPlayerResult(cm);
       q('cancelPlayerResultBtn').onclick=()=>{panel.innerHTML='';};
-      q('addPlayerResultSetBtn')?.addEventListener('click',()=>addPlayerResultSet(cm));
-      panel.querySelectorAll('.rpl-result-set').forEach(bindPlayerResultSetActions);
       panel.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){console.error('RPL player result',e);panel.innerHTML=`<div class="msg err">Impossibile aprire la distinta: ${escP(e.message||e)}</div>`;}
   }
@@ -3057,16 +3004,15 @@ async function loadPublicCalendar(){
     if(rows.some(x=>x.ga===x.gb)){msg.className='msg err';msg.textContent='Un set non può finire in parità.';return}
     const ids=[1,2,3,4].map(i=>Number(cm['player_'+i]));
     if(ids.some(Number.isNaN)||new Set(ids).size!==4){msg.className='msg err';msg.textContent='La partita del calendario non ha quattro giocatori validi.';return}
-    if(!rows.length){msg.className='msg err';msg.textContent='Inserisci almeno un set.';return}
-    const players=window.rplDistintaPlayers(cm);
+    const players=window.rplDistintaPlayers(cm),pairs=window.rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
     const {data:existing}=await sb.from('matches').select('id').eq('calendar_match_id',cm.id).maybeSingle();if(existing){msg.className='msg err';msg.textContent='Questa partita risulta già registrata.';await loadPlayerSession();return}
     const snap={};[1,2,3,4].forEach(i=>{snap[Number(cm['player_'+i])]={fascia:Number(cm['player_'+i+'_fascia']||playerById(cm['player_'+i])?.fascia||4),fascia_value:Number(cm['player_'+i+'_fascia_points']||playerById(cm['player_'+i])?.fascia_value||2)}});
-    const {data:m,error:me}=await sb.from('matches').insert({played_at:cm.scheduled_at,calendar_match_id:cm.id,is_confirmed:false}).select().single();
+    const {data:m,error:me}=await sb.from('matches').insert({played_at:cm.scheduled_at,calendar_match_id:cm.id}).select().single();
     if(me){msg.className='msg err';msg.textContent='Errore apertura partita: '+me.message;return}
     const matchId=m.id;
     const mpRows=ids.map(pid=>({match_id:matchId,player_id:pid,fascia:snap[pid].fascia,fascia_value:snap[pid].fascia_value}));
     let r=await sb.from('match_players').insert(mpRows);if(r.error){msg.className='msg err';msg.textContent='Errore giocatori: '+r.error.message;return}
-    const setRows=rows.map((x,i)=>({match_id:matchId,set_number:i+1,pair_a_player_1:x.a1,pair_a_player_2:x.a2,pair_b_player_1:x.b1,pair_b_player_2:x.b2,games_a:x.ga,games_b:x.gb}));
+    const setRows=pairs.map((pair,i)=>({match_id:matchId,set_number:i+1,pair_a_player_1:pair[0].id,pair_a_player_2:pair[1].id,pair_b_player_1:pair[2].id,pair_b_player_2:pair[3].id,games_a:rows[i].ga,games_b:rows[i].gb}));
     r=await sb.from('sets').insert(setRows);if(r.error){msg.className='msg err';msg.textContent='Errore set: '+r.error.message;return}
     const tally={};ids.forEach(id=>tally[id]={wins:0,losses:0,games:0});
     setRows.forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],win=x.games_a>x.games_b?A:B,lose=x.games_a>x.games_b?B:A;win.forEach(id=>{tally[id].wins++;tally[id].games+=Math.max(x.games_a,x.games_b)});lose.forEach(id=>{tally[id].losses++;tally[id].games+=Math.min(x.games_a,x.games_b)})});
@@ -3077,7 +3023,7 @@ async function loadPublicCalendar(){
     if(awards.length){r=await sb.from('match_awards').insert(awards);if(r.error){msg.className='msg err';msg.textContent='Errore premi automatici: '+r.error.message;return}}
     r=await sb.from('calendar_matches').update({result_submitted_at:new Date().toISOString(),result_submitted_by:playerUser.id}).eq('id',cm.id).is('result_submitted_at',null);
     if(r.error){msg.className='msg err';msg.textContent='Risultato salvato ma non riesco a chiudere l’assegnazione: '+r.error.message;return}
-    msg.className='msg ok';msg.textContent='✅ Risultato inviato. Ora è in attesa di controllo e conferma da parte di un operatore RPL.';
+    msg.className='msg ok';msg.textContent='✅ Risultato registrato. MVP e Imbattuto calcolati automaticamente.';
     assignedMatch=null;clearResponsible();panel.classList.add('hidden');panel.innerHTML='';await Promise.all([loadPlayerStats(),loadPlayerMatches()]);
   }
   async function playerLogout(){await sb.auth.signOut();playerUser=null;playerAccount=null;playerRow=null;assignedMatch=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden');q('playerPassword').value='';}
