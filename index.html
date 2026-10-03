@@ -641,6 +641,14 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:760px){.rpl-voting-options-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.rpl-vote-option{padding:8px}.rpl-vote-player{font-size:8px}}
 @media(max-width:430px){.rpl-voting-options-grid{grid-template-columns:1fr 1fr}.rpl-vote-date{font-size:11px}.rpl-vote-meta{font-size:9px}.rpl-vote-btn{font-size:9px}}
 </style>
+<style id="rpl-operator-voting-style">
+#operatorVotingSection .rpl-admin-poll-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.rpl-admin-poll{border:1px solid rgba(231,185,78,.28);border-radius:15px;padding:14px;margin:10px 0;background:rgba(255,255,255,.025)}
+.rpl-admin-poll-title{font-size:17px;font-weight:900;color:#ffd86a}.rpl-admin-poll-meta{font-size:11px;color:#aeb8c4;margin-top:4px}
+.rpl-admin-vote-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}.rpl-admin-vote-card{border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:10px;background:rgba(0,0,0,.14)}.rpl-admin-vote-card.full{border-color:rgba(57,217,138,.45)}
+.rpl-admin-vote-date{font-weight:900;color:#fff;font-size:13px}.rpl-admin-vote-count{font-size:12px;color:#ffd86a;margin-top:3px;font-weight:800}.rpl-admin-vote-names{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;min-height:25px}.rpl-admin-vote-name{font-size:9px;padding:4px 6px;border-radius:999px;background:rgba(231,185,78,.10);color:#f7e3a0;border:1px solid rgba(231,185,78,.20)}.rpl-admin-vote-card button{width:100%;margin-top:9px}
+@media(max-width:760px){.rpl-admin-vote-grid{grid-template-columns:1fr 1fr}}@media(max-width:450px){.rpl-admin-vote-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -834,6 +842,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button type="button" id="opMatchTab" class="primary" onclick="showOperatorSection('match')">🎾 Inserisci partita</button>
 <button type="button" id="opCalendarTab" onclick="showOperatorSection('calendar')">📅 Calendario</button>
+<button type="button" id="opVotingTab" onclick="showOperatorSection('voting')">🗳️ Votazioni settimanali</button>
+</div>
+</div>
+<div id="operatorVotingSection" class="hidden">
+<div class="card">
+<h2>🗳️ Votazioni settimanali</h2>
+<div class="muted">Controlla i voti dei giocatori e prepara il calendario. La proposta resta modificabile: nulla viene pubblicato automaticamente.</div>
+<div id="operatorVotingMsg" class="msg" style="margin-top:10px"></div>
+<div id="operatorVotingList" style="margin-top:12px">Caricamento…</div>
 </div>
 </div>
 <div id="bonusPreviewAdmin" style="margin-top:12px">
@@ -1106,6 +1123,7 @@ async function login(){
   $("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");
   $("operatorMatchSection")?.classList.add("hidden");
   $("operatorCalendarSection")?.classList.add("hidden");
+  $("operatorVotingSection")?.classList.add("hidden");
   $("operatorSubmenu")?.classList.remove("hidden");
   $("loginMsg").className="msg";$("loginMsg").textContent="";
   $("opMatchTab")?.classList.remove("primary");
@@ -1275,17 +1293,46 @@ async function calculateStandingsBefore(timestamp){
 }
 
 
+async function loadOperatorVoting(){
+  const host=$("operatorVotingList"), msg=$("operatorVotingMsg"); if(!host)return;
+  host.innerHTML="Caricamento…"; msg.className="msg"; msg.textContent="";
+  try{
+    const wr=await sb.from("rpl_poll_weeks").select("*").order("opens_at",{ascending:false}).limit(12); if(wr.error)throw wr.error;
+    const weeks=wr.data||[]; if(!weeks.length){host.innerHTML='<div class="muted">Nessuna votazione presente.</div>';return;}
+    const ids=weeks.map(w=>w.id);
+    const [or,vr]=await Promise.all([sb.from("rpl_poll_options").select("*").in("poll_week_id",ids).order("sort_order",{ascending:true}),sb.from("rpl_poll_votes").select("*").in("poll_week_id",ids)]);
+    if(or.error)throw or.error;if(vr.error)throw vr.error;
+    const opts=or.data||[], votes=vr.data||[], byPlayer={}; (dbPlayers||[]).forEach(p=>byPlayer[String(p.id)]=p);
+    host.innerHTML=weeks.map(w=>{
+      const oo=opts.filter(o=>o.poll_week_id===w.id), vv=votes.filter(x=>x.poll_week_id===w.id);
+      const fmt=d=>new Date(d+"T00:00:00").toLocaleDateString("it-IT");
+      return `<div class="rpl-admin-poll"><div class="rpl-admin-poll-head"><div><div class="rpl-admin-poll-title">SETTIMANA ${fmt(w.week_start)} → ${fmt(w.week_end)}</div><div class="rpl-admin-poll-meta">Stato: <b>${escOperator(w.status)}</b> · Apertura: ${new Date(w.opens_at).toLocaleString("it-IT")} · Chiusura: ${new Date(w.closes_at).toLocaleString("it-IT")}</div></div><button type="button" class="primary" onclick="generateCalendarFromPoll(${w.id})">🗓️ GENERA PROPOSTA CALENDARIO</button></div><div class="rpl-admin-vote-grid">${oo.map(o=>{const ov=vv.filter(x=>x.option_id===o.id),full=ov.length>=Number(o.max_players||4);return `<div class="rpl-admin-vote-card ${full?'full':''}"><div class="rpl-admin-vote-date">${escOperator(o.label||o.play_date)}</div><div class="rpl-admin-vote-count">${ov.length}/${o.max_players||4} voti${full?' · PARTITA COMPLETA':''}</div><div class="rpl-admin-vote-names">${ov.length?ov.map(x=>`<span class="rpl-admin-vote-name">${escOperator(byPlayer[String(x.player_id)]?.name||('Giocatore '+x.player_id))}</span>`).join(''):'<span class="muted">Nessun voto</span>'}</div></div>`}).join('')}</div></div>`;
+    }).join("");
+  }catch(e){console.error(e);host.innerHTML="";msg.className="msg err";msg.textContent="Errore caricamento votazioni: "+(e.message||e);}
+}
+async function generateCalendarFromPoll(weekId){
+  const msg=$("operatorVotingMsg");
+  try{
+    const [wr,or,vr]=await Promise.all([sb.from("rpl_poll_weeks").select("*").eq("id",weekId).single(),sb.from("rpl_poll_options").select("*").eq("poll_week_id",weekId).order("sort_order",{ascending:true}),sb.from("rpl_poll_votes").select("*").eq("poll_week_id",weekId)]);
+    if(wr.error)throw wr.error;if(or.error)throw or.error;if(vr.error)throw vr.error;
+    const week=wr.data, options=or.data||[], votes=vr.data||[];
+    const complete=options.map(o=>({...o,voters:votes.filter(v=>v.option_id===o.id)})).filter(o=>o.voters.length>=Number(o.max_players||4));
+    if(!complete.length){msg.className="msg err";msg.textContent="Nessuna serata ha ancora raggiunto 4 giocatori.";return;}
+    if(!confirm(`Generare una proposta calendario per ${complete.length} serata/e complete?\n\nLa proposta sarà modificabile prima del salvataggio.`))return;
+    showOperatorSection("calendar"); $("calWeekStart").value=week.week_start; $("calWeekEnd").value=week.week_end; $("calendarWeekRows").innerHTML="";
+    complete.forEach(o=>{const ids=o.voters.slice(0,Number(o.max_players||4)).map(v=>Number(v.player_id));addCalendarRow({date:o.play_date,time:(o.start_time||"").slice(0,5),court:"",match_type:"ALL_VS_ALL",player_1:ids[0]||"",player_2:ids[1]||"",player_3:ids[2]||"",player_4:ids[3]||""});});
+    msg.className="msg ok";msg.textContent=`✅ Proposta creata: ${complete.length} partita/e. Scegli i campi e modifica, se necessario, prima di SALVA SETTIMANA.`;
+    window.scrollTo({top:$("operatorCalendarSection").offsetTop-10,behavior:"smooth"});
+  }catch(e){console.error(e);msg.className="msg err";msg.textContent="Errore generazione proposta: "+(e.message||e);}
+}
 function showOperatorSection(which){
-  const m=$("operatorMatchSection"), c=$("operatorCalendarSection");
-  const mt=$("opMatchTab"), ct=$("opCalendarTab");
-  if(which==="calendar"){
-    m?.classList.add("hidden"); c?.classList.remove("hidden");
-    mt?.classList.remove("primary"); ct?.classList.add("primary");
-    fillCalendarPlayers(); renderCalendarWeek(); loadCalendarWeeks();
-  }else{
-    c?.classList.add("hidden"); m?.classList.remove("hidden");
-    ct?.classList.remove("primary"); mt?.classList.add("primary");
-  }
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection");
+  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab");
+  m?.classList.add("hidden"); c?.classList.add("hidden"); v?.classList.add("hidden");
+  mt?.classList.remove("primary"); ct?.classList.remove("primary"); vt?.classList.remove("primary");
+  if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
+  else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");loadOperatorVoting();}
+  else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
 function fillCalendarPlayers(){
   // Used by the weekly calendar rows. Player options come from the same DB-backed list used for match entry.
