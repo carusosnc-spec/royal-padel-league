@@ -696,6 +696,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
         <label class="rpl-photo-btn">📷 SCATTA FOTO<input id="playerCameraInput" type="file" accept="image/*" capture="environment" hidden></label>
         <label class="rpl-photo-btn">🖼️ SCEGLI DALLA GALLERIA<input id="playerGalleryInput" type="file" accept="image/*" hidden></label>
       </div>
+      <div class="muted" style="font-size:11px;margin-top:8px;text-align:center">La foto viene automaticamente ridimensionata e ottimizzata per il profilo.</div>
       <div id="playerPhotoMsg" class="msg"></div>
     </div>
 
@@ -2533,7 +2534,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.84</div>
+<div id="rplVersionBadge">RPL v6.5.85</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3006,15 +3007,34 @@ async function loadPublicCalendar(){
   }
   async function uploadAvatar(file){
     if(!file||!playerUser)return;
-    const msg=q('playerPhotoMsg');msg.className='msg';msg.textContent='Caricamento foto…';
-    if(!file.type.startsWith('image/')){msg.className='msg err';msg.textContent='Seleziona un’immagine.';return}
-    if(file.size>5*1024*1024){msg.className='msg err';msg.textContent='La foto deve essere massimo 5 MB.';return}
-    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
-    const path=`${playerUser.id}/profile.${ext}`;
-    const {error}=await sb.storage.from('avatars').upload(path,file,{contentType:file.type,upsert:true,cacheControl:'3600'});
-    if(error){msg.className='msg err';msg.textContent='Errore foto: '+error.message;return}
-    const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
-    playerAccount.avatar_path=path;renderPlayerProfile();msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
+    const msg=q('playerPhotoMsg');
+    msg.className='msg';msg.textContent='Preparazione foto…';
+    if(!file.type.startsWith('image/')){msg.className='msg err';msg.textContent='Seleziona un’immagine JPG, PNG o WEBP.';return}
+    if(file.size>12*1024*1024){msg.className='msg err';msg.textContent='La foto originale è troppo grande (massimo 12 MB).';return}
+    try{
+      const optimized=await new Promise((resolve,reject)=>{
+        const img=new Image(),url=URL.createObjectURL(file);
+        img.onload=()=>{
+          const max=900,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+          const w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
+          const c=document.createElement('canvas');c.width=w;c.height=h;
+          const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
+          URL.revokeObjectURL(url);
+          c.toBlob(b=>b?resolve(b):reject(new Error('Impossibile elaborare la foto.')),'image/jpeg',0.84);
+        };
+        img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Impossibile leggere la foto.'))};
+        img.src=url;
+      });
+      msg.textContent='Caricamento foto…';
+      const path=`${playerUser.id}/profile.jpg`;
+      const {error}=await sb.storage.from('avatars').upload(path,optimized,{contentType:'image/jpeg',upsert:true,cacheControl:'3600'});
+      if(error){msg.className='msg err';msg.textContent='Errore caricamento foto: '+error.message;return}
+      const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);
+      if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
+      playerAccount.avatar_path=path;renderPlayerProfile();
+      msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
+      ['playerCameraInput','playerGalleryInput'].forEach(id=>{const el=q(id);if(el)el.value=''});
+    }catch(e){console.error('RPL avatar',e);msg.className='msg err';msg.textContent='Errore foto: '+(e.message||e)}
   }
   function scoreRowsFromPanel(){const panel=q('inlinePlayerResultPanel');if(!panel)return [];return [...panel.querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,a1:Number(r.dataset.p1),a2:Number(r.dataset.p2),b1:Number(r.dataset.p3),b2:Number(r.dataset.p4),ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
   async function openPlayerResult(cm){
