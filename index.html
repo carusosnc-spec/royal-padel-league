@@ -682,7 +682,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 
     <div id="playerResponsibleHero" class="card hidden"></div>
 
-    <div id="playerVotingCard" class="card hidden">
+    <div id="playerVotingCard" class="card">
       <div style="text-align:center">
         <div style="color:var(--gold2);font-size:21px;font-weight:900;letter-spacing:.04em">🗳️ VOTA LA TUA SERATA</div>
         <div id="playerVotingWindowMsg" class="muted" style="margin-top:6px"></div>
@@ -2848,15 +2848,15 @@ async function loadPublicCalendar(){
     if(msg){msg.className='msg';msg.textContent='';}
 
     const wr=await sb.from('rpl_poll_weeks').select('*').eq('status','open').order('opens_at',{ascending:false}).limit(10);
-    if(wr.error){console.error('RPL voting weeks',wr.error);return;}
+    if(wr.error){console.error('RPL voting weeks',wr.error); optionsBox.innerHTML='<div class="msg err">Errore caricamento votazione: '+escP(wr.error.message||wr.error)+'</div>'; return;}
     const now=new Date();
     const week=(wr.data||[]).find(w=>new Date(w.opens_at)<=now&&now<new Date(w.closes_at));
-    if(!week)return;
+    if(!week){ windowMsg.textContent='Al momento non c’è una votazione aperta.'; optionsBox.innerHTML='<div class="muted" style="padding:12px 0">🕐 Nessuna votazione aperta in questo momento.</div>'; return;}
 
     const or=await sb.from('rpl_poll_options').select('*').eq('poll_week_id',week.id).order('sort_order',{ascending:true});
-    if(or.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento votazione.</div>';card.classList.remove('hidden');return;}
+    if(or.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento serate: '+escP(or.error.message||or.error)+'</div>';return;}
     const options=or.data||[];
-    if(!options.length){return;}
+    if(!options.length){optionsBox.innerHTML='<div class="muted">Nessuna serata disponibile per questa votazione.</div>';return;}
 
     const pr=await sb.from('rpl_poll_participants').select('wants_two_nights').eq('poll_week_id',week.id).eq('player_id',playerRow.id).maybeSingle();
     const wantsTwo=!!pr.data?.wants_two_nights;
@@ -2869,7 +2869,7 @@ async function loadPublicCalendar(){
     };}
 
     const vr=await sb.from('rpl_poll_votes').select('option_id,player_id,voted_at').eq('poll_week_id',week.id);
-    if(vr.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento voti.</div>';card.classList.remove('hidden');return;}
+    if(vr.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento voti: '+escP(vr.error.message||vr.error)+'</div>';return;}
     const votes=vr.data||[];
     const mine=votes.filter(v=>String(v.player_id)===String(playerRow.id));
     const maxVotes=wantsTwo?2:1;
