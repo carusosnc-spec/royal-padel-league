@@ -2925,7 +2925,7 @@ async function loadPublicCalendar(){
       btn.textContent='⏳';
       const r=await sb.rpc('rpl_remove_poll_vote',{p_poll_week_id:week.id,p_option_id:optionId});
       if(r.error){if(msg){msg.className='msg err';msg.textContent=r.error.message;}await loadPlayerVoting();return;}
-      if(msg){msg.className='msg ok';msg.textContent='↩️ Voto annullato. Puoi scegliere un'altra serata.';}
+      if(msg){msg.className='msg ok';msg.textContent='↩️ Voto annullato. Puoi scegliere un\'altra serata.';}
       await loadPlayerVoting();
     }));
 
