@@ -1309,7 +1309,7 @@ function addCalendarRow(data={}){
     ${[1,2,3,4].map(i=>`<div class="rpl-cal-field"><label>Giocatore ${i}</label><select class="cal-row-p${i}">${calendarPlayerOptions(data["player_"+i]||"")}</select><span class="calendar-player-meta cal-meta-p${i}" style="font-size:11px;color:#b88700">${calendarPlayerMeta(data["player_"+i]||"")}</span></div>`).join("")}
     <div class="rpl-cal-field" style="grid-column:1/-1"><label>🔴 Responsabile Partita</label><select class="cal-row-responsible">${calendarResponsibleOptions(data.responsible_player_id||"",[data.player_1,data.player_2,data.player_3,data.player_4])}</select><div class="muted">Il responsabile vedrà subito il tasto per inserire il risultato nella propria Area Giocatori.</div></div>
   </div>
-  <div class="rpl-cal-actions"><button type="button" onclick="removeCalendarRow(this)">🗑️ Rimuovi partita</button></div>`;
+  <div class="rpl-cal-actions"><button type="button" onclick="removeCalendarRow(this)">🗑️ CANCELLA PARTITA</button></div>`;
   host.appendChild(row);
   [1,2,3,4].forEach(i=>{
     row.querySelector(".cal-row-p"+i).addEventListener("change",e=>{
@@ -1321,7 +1321,30 @@ function addCalendarRow(data={}){
     });
   });
 }
-function removeCalendarRow(btn){btn.closest(".calendar-row")?.remove();}
+async function removeCalendarRow(btn){
+  const row=btn.closest(".calendar-row");
+  if(!row)return;
+  const id=row.dataset.id||"";
+  const ok=confirm(id
+    ? "Sei sicuro di voler cancellare questa partita dal calendario? L'operazione non può essere annullata."
+    : "Sei sicuro di voler rimuovere questa partita?"
+  );
+  if(!ok)return;
+  if(!id){row.remove();return;}
+  btn.disabled=true;
+  btn.textContent="⏳ Cancellazione…";
+  const r=await sb.from("calendar_matches").delete().eq("id",id);
+  if(r.error){
+    btn.disabled=false;
+    btn.textContent="🗑️ CANCELLA PARTITA";
+    alert("Impossibile cancellare la partita: "+r.error.message);
+    return;
+  }
+  row.remove();
+  const msg=$("calWeekMsg");
+  if(msg){msg.className="msg ok";msg.textContent="✅ Partita cancellata dal calendario.";}
+  await loadCalendarWeeks();
+}
 function calendarRowData(row){
   return {
     id:row.dataset.id||null,
@@ -2510,7 +2533,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.83</div>
+<div id="rplVersionBadge">RPL v6.5.84</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
