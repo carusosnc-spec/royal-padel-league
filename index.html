@@ -626,6 +626,21 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 .rpl-responsible-button{width:100%;min-height:64px;font-size:17px;margin-top:12px;background:linear-gradient(135deg,#8e681d,#f2ca63);color:#080d12;border-color:#f2ca63}.rpl-result-set{border-top:1px solid rgba(255,255,255,.1);padding:13px 0}.rpl-result-score{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}.rpl-result-score select{width:68px;text-align:center;font-size:20px;font-weight:900}.rpl-team-mini{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;font-size:12px;color:#dce3eb}.rpl-alert-title{font-size:18px;font-weight:900;color:var(--gold2);margin-bottom:6px}.rpl-match-card{border:1px solid rgba(231,185,78,.2);border-radius:12px;padding:12px;margin-bottom:9px;background:rgba(255,255,255,.02)}.rpl-match-card:last-child{margin-bottom:0}.rpl-match-card b{color:#fff}.rpl-match-meta{font-size:11px;color:#9da8b4;margin-top:4px}.rpl-closed{color:#39d98a;font-weight:800}.rpl-no-match{text-align:center;padding:18px;color:#9da8b4}
 @media(max-width:700px){.rpl-stat-grid{grid-template-columns:repeat(2,1fr)}.rpl-player-profile-head{align-items:flex-start}.rpl-avatar-box{width:78px;height:78px;flex-basis:78px}.rpl-player-logo-box{width:78px;height:78px;flex-basis:78px}.rpl-player-name-title{font-size:21px}.rpl-photo-btn{flex:1}.rpl-result-score select{width:62px}}
 </style>
+
+<style id="rpl-v6587-voting-compact">
+.rpl-voting-options-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.rpl-vote-option{padding:9px;border:1px solid rgba(231,185,78,.24);border-radius:11px;background:rgba(255,255,255,.025);min-width:0}
+.rpl-vote-date{font-size:12px;font-weight:900;color:#ffd86a;line-height:1.15}
+.rpl-vote-meta{font-size:10px;color:#aeb8c4;margin-top:3px;line-height:1.2}
+.rpl-vote-players{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;min-height:20px}
+.rpl-vote-player{font-size:9px;padding:3px 5px;border-radius:999px;background:rgba(255,255,255,.06);color:#d7dee8}
+.rpl-vote-btn{width:100%;margin-top:7px;padding:7px 6px;font-size:10px;line-height:1.1;min-height:34px}
+.rpl-vote-option.rpl-vote-full{border-color:rgba(57,217,138,.38);background:rgba(57,217,138,.045)}
+.rpl-vote-option.rpl-vote-mine{border-color:rgba(255,216,106,.7);background:rgba(255,216,106,.06)}
+.rpl-vote-cancel{margin-top:5px!important;background:transparent!important;border-color:rgba(255,255,255,.22)!important;color:#ffb4b8!important}
+@media(max-width:760px){.rpl-voting-options-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.rpl-vote-option{padding:8px}.rpl-vote-player{font-size:8px}}
+@media(max-width:430px){.rpl-voting-options-grid{grid-template-columns:1fr 1fr}.rpl-vote-date{font-size:11px}.rpl-vote-meta{font-size:9px}.rpl-vote-btn{font-size:9px}}
+</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -682,7 +697,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 
     <div id="playerResponsibleHero" class="card hidden"></div>
 
-    <div id="playerVotingCard" class="card">
+    <div id="playerVotingCard" class="card hidden">
       <div style="text-align:center">
         <div style="color:var(--gold2);font-size:21px;font-weight:900;letter-spacing:.04em">🗳️ VOTA LA TUA SERATA</div>
         <div id="playerVotingWindowMsg" class="muted" style="margin-top:6px"></div>
@@ -2467,7 +2482,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.86</div>
+<div id="rplVersionBadge">RPL v6.5.87</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2848,15 +2863,15 @@ async function loadPublicCalendar(){
     if(msg){msg.className='msg';msg.textContent='';}
 
     const wr=await sb.from('rpl_poll_weeks').select('*').eq('status','open').order('opens_at',{ascending:false}).limit(10);
-    if(wr.error){console.error('RPL voting weeks',wr.error); optionsBox.innerHTML='<div class="msg err">Errore caricamento votazione: '+escP(wr.error.message||wr.error)+'</div>'; return;}
+    if(wr.error){console.error('RPL voting weeks',wr.error);return;}
     const now=new Date();
     const week=(wr.data||[]).find(w=>new Date(w.opens_at)<=now&&now<new Date(w.closes_at));
-    if(!week){ windowMsg.textContent='Al momento non c’è una votazione aperta.'; optionsBox.innerHTML='<div class="muted" style="padding:12px 0">🕐 Nessuna votazione aperta in questo momento.</div>'; return;}
+    if(!week)return;
 
     const or=await sb.from('rpl_poll_options').select('*').eq('poll_week_id',week.id).order('sort_order',{ascending:true});
-    if(or.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento serate: '+escP(or.error.message||or.error)+'</div>';return;}
+    if(or.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento votazione.</div>';card.classList.remove('hidden');return;}
     const options=or.data||[];
-    if(!options.length){optionsBox.innerHTML='<div class="muted">Nessuna serata disponibile per questa votazione.</div>';return;}
+    if(!options.length){return;}
 
     const pr=await sb.from('rpl_poll_participants').select('wants_two_nights').eq('poll_week_id',week.id).eq('player_id',playerRow.id).maybeSingle();
     const wantsTwo=!!pr.data?.wants_two_nights;
@@ -2869,35 +2884,48 @@ async function loadPublicCalendar(){
     };}
 
     const vr=await sb.from('rpl_poll_votes').select('option_id,player_id,voted_at').eq('poll_week_id',week.id);
-    if(vr.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento voti: '+escP(vr.error.message||vr.error)+'</div>';return;}
+    if(vr.error){optionsBox.innerHTML='<div class="msg err">Errore caricamento voti.</div>';card.classList.remove('hidden');return;}
     const votes=vr.data||[];
     const mine=votes.filter(v=>String(v.player_id)===String(playerRow.id));
     const maxVotes=wantsTwo?2:1;
     if(summary)summary.textContent=`Hai utilizzato ${mine.length}/${maxVotes} ${maxVotes===1?'voto':'voti'} · Il voto è vincolante.`;
     if(windowMsg)windowMsg.textContent=`Votazione aperta fino a ${new Date(week.closes_at).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}.`;
 
-    optionsBox.innerHTML=options.map(o=>{
+    optionsBox.innerHTML='<div class="rpl-voting-options-grid">'+options.map(o=>{
       const ov=votes.filter(v=>String(v.option_id)===String(o.id));
       const full=!!o.is_full||ov.length>=Number(o.max_players||4);
       const already=mine.some(v=>String(v.option_id)===String(o.id));
       const canVote=!full&&!already&&mine.length<maxVotes;
       const players=ov.map(v=>playerById(v.player_id)?.name||'Giocatore');
       const d=new Date(`${o.play_date}T${o.start_time||'00:00:00'}`);
-      const dateLabel=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase();
-      const time=o.start_time?` · ORE ${String(o.start_time).slice(0,5)}`:'';
-      return `<div class="rpl-vote-option ${full?'rpl-vote-full':''}">
+      const dateLabel=d.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase();
+      const time=o.start_time?` · ${String(o.start_time).slice(0,5)}`:'';
+      return `<div class="rpl-vote-option ${full?'rpl-vote-full':''} ${already?'rpl-vote-mine':''}">
         <div class="rpl-vote-date">${escP(dateLabel)}</div>
-        <div class="rpl-vote-meta">${escP(o.label||'Serata')}${escP(time)} · 👥 ${ov.length}/${o.max_players||4} giocatori</div>
-        ${players.length?`<div class="rpl-vote-players">${players.map(n=>`<span class="rpl-vote-player">${escP(n)}</span>`).join('')}</div>`:''}
-        <button type="button" class="rpl-vote-btn ${canVote?'primary':''}" data-vote-option="${o.id}" ${canVote?'':'disabled'}>${full?'🟢 PARTITA COMPLETA – 4/4':already?'✅ HAI VOTATO':mine.length>=maxVotes?'🔒 VOTI UTILIZZATI':'🎾 VOTA QUESTA SERATA'}</button>
+        <div class="rpl-vote-meta">${escP(o.label||'Serata')}${escP(time)} · 👥 ${ov.length}/${o.max_players||4}</div>
+        ${players.length?`<div class="rpl-vote-players">${players.map(n=>`<span class="rpl-vote-player">${escP(n)}</span>`).join('')}</div>`:'<div class="rpl-vote-players"></div>'}
+        ${already
+          ? `<button type="button" class="rpl-vote-btn primary" data-vote-remove="${o.id}">✅ HAI VOTATO — TOGLI VOTO</button>`
+          : `<button type="button" class="rpl-vote-btn ${canVote?'primary':''}" data-vote-option="${o.id}" ${canVote?'':'disabled'}>${full?'🟢 COMPLETA – 4/4':mine.length>=maxVotes?'🔒 VOTI UTILIZZATI':'🎾 VOTA'}</button>`}
+        ${already?`<button type="button" class="rpl-vote-btn rpl-vote-cancel" data-vote-remove="${o.id}">ANNULLA VOTO</button>`:''}
       </div>`;
-    }).join('');
+    }).join('')+'</div>';
 
     optionsBox.querySelectorAll('[data-vote-option]').forEach(btn=>btn.addEventListener('click',async()=>{
-      const optionId=Number(btn.dataset.voteOption);btn.disabled=true;btn.textContent='⏳ REGISTRAZIONE…';
+      const optionId=Number(btn.dataset.voteOption);btn.disabled=true;btn.textContent='⏳';
       const r=await sb.rpc('rpl_cast_poll_vote',{p_poll_week_id:week.id,p_option_id:optionId});
       if(r.error){if(msg){msg.className='msg err';msg.textContent=r.error.message;}await loadPlayerVoting();return;}
-      if(msg){msg.className='msg ok';msg.textContent='✅ Il tuo voto è stato registrato ed è vincolante.';}
+      if(msg){msg.className='msg ok';msg.textContent='✅ Voto registrato.';}
+      await loadPlayerVoting();
+    }));
+
+    optionsBox.querySelectorAll('[data-vote-remove]').forEach(btn=>btn.addEventListener('click',async()=>{
+      const optionId=Number(btn.dataset.voteRemove);
+      btn.disabled=true;
+      btn.textContent='⏳';
+      const r=await sb.rpc('rpl_remove_poll_vote',{p_poll_week_id:week.id,p_option_id:optionId});
+      if(r.error){if(msg){msg.className='msg err';msg.textContent=r.error.message;}await loadPlayerVoting();return;}
+      if(msg){msg.className='msg ok';msg.textContent='↩️ Voto annullato. Puoi scegliere un'altra serata.';}
       await loadPlayerVoting();
     }));
 
