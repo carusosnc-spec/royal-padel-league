@@ -641,6 +641,9 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:760px){.rpl-voting-options-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.rpl-vote-option{padding:8px}.rpl-vote-player{font-size:8px}}
 @media(max-width:430px){.rpl-voting-options-grid{grid-template-columns:1fr 1fr}.rpl-vote-date{font-size:11px}.rpl-vote-meta{font-size:9px}.rpl-vote-btn{font-size:9px}}
 </style>
+<style id="rpl-operator-poll-create-style">
+.rpl-poll-create-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.rpl-poll-create-grid label,.rpl-poll-time-grid label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-create-grid input,.rpl-poll-time-grid input{min-height:38px;border:1px solid #d1d5db;border-radius:8px;padding:0 8px}.rpl-poll-days{display:flex;flex-wrap:wrap;gap:8px}.rpl-poll-days label{font-size:11px;font-weight:800;padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:9px}.rpl-poll-days input{margin-right:4px}@media(max-width:600px){.rpl-poll-create-grid{grid-template-columns:1fr}}
+</style>
 <style id="rpl-operator-voting-style">
 #operatorVotingSection .rpl-admin-poll-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .rpl-admin-poll{border:1px solid rgba(231,185,78,.28);border-radius:15px;padding:14px;margin:10px 0;background:rgba(255,255,255,.025)}
@@ -850,6 +853,25 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <h2>🗳️ Votazioni settimanali</h2>
 <div class="muted">Controlla i voti dei giocatori e prepara il calendario. La proposta resta modificabile: nulla viene pubblicato automaticamente.</div>
 <div id="operatorVotingMsg" class="msg" style="margin-top:10px"></div>
+<div class="rpl-admin-create-poll" style="margin-top:14px;padding:12px;border:1px solid rgba(231,185,78,.25);border-radius:12px;background:rgba(255,255,255,.02)">
+  <div style="font-weight:900;color:#ffd86a;margin-bottom:9px">➕ CREA NUOVA VOTAZIONE</div>
+  <div class="rpl-poll-create-grid">
+    <label>Settimana dal<input id="pollWeekStart" type="date"></label>
+    <label>Settimana al<input id="pollWeekEnd" type="date"></label>
+    <label>Apertura<input id="pollOpensAt" type="datetime-local"></label>
+    <label>Chiusura<input id="pollClosesAt" type="datetime-local"></label>
+  </div>
+  <div class="rpl-poll-days" style="margin-top:10px">
+    <label><input type="checkbox" class="poll-day-check" value="1" checked> Mercoledì</label>
+    <label><input type="checkbox" class="poll-day-check" value="2" checked> Giovedì</label>
+    <label><input type="checkbox" class="poll-day-check" value="3" checked> Venerdì</label>
+    <label><input type="checkbox" class="poll-day-check" value="4"> Sabato</label>
+  </div>
+  <div class="rpl-poll-time-grid" style="margin-top:10px">
+    <label>Ora standard<input id="pollDefaultTime" type="time" value="21:30"></label>
+  </div>
+  <button type="button" class="primary" style="margin-top:10px" onclick="createOperatorPoll()">💾 CREA VOTAZIONE</button>
+</div>
 <div id="operatorVotingList" style="margin-top:12px">Caricamento…</div>
 </div>
 </div>
@@ -1293,6 +1315,36 @@ async function calculateStandingsBefore(timestamp){
 }
 
 
+function setPollCreateDefaults(){
+  const now=new Date();
+  const monday=new Date(now); const day=monday.getDay(); const diff=(day===0?-6:1-day); monday.setDate(monday.getDate()+diff);
+  const sunday=new Date(monday); sunday.setDate(sunday.getDate()+6);
+  const isoDate=d=>d.toISOString().slice(0,10);
+  const localInput=d=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,16)};
+  const ws=$("pollWeekStart"),we=$("pollWeekEnd"),op=$("pollOpensAt"),cl=$("pollClosesAt");
+  if(ws&&!ws.value)ws.value=isoDate(monday); if(we&&!we.value)we.value=isoDate(sunday);
+  const open=new Date(monday); open.setDate(monday.getDate()-2); open.setHours(12,0,0,0);
+  const close=new Date(monday); close.setDate(monday.getDate()-1); close.setHours(12,0,0,0);
+  if(op&&!op.value)op.value=localInput(open); if(cl&&!cl.value)cl.value=localInput(close);
+}
+async function createOperatorPoll(){
+  const msg=$("operatorVotingMsg");
+  try{
+    const weekStart=$("pollWeekStart")?.value, weekEnd=$("pollWeekEnd")?.value, opens=$("pollOpensAt")?.value, closes=$("pollClosesAt")?.value, defaultTime=$("pollDefaultTime")?.value||"21:30";
+    const selected=[...document.querySelectorAll(".poll-day-check:checked")].map(x=>Number(x.value));
+    if(!weekStart||!weekEnd||!opens||!closes||!selected.length)throw new Error("Compila le date, apertura, chiusura e seleziona almeno una serata.");
+    const dates=[]; const start=new Date(weekStart+"T12:00:00"); const end=new Date(weekEnd+"T12:00:00");
+    for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){const dow=d.getDay(); const idx=dow===3?1:dow===4?2:dow===5?3:dow===6?4:0;if(selected.includes(idx))dates.push(new Date(d));}
+    if(!dates.length)throw new Error("Nessuna serata selezionata dentro l'intervallo della settimana.");
+    if(!confirm(`Creare la votazione ${weekStart} → ${weekEnd} con ${dates.length} serate?`))return;
+    const options=dates.map((d,i)=>({play_date:d.toISOString().slice(0,10),start_time:defaultTime,label:d.toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"long"}).toUpperCase(),sort_order:i,max_players:4}));
+    const {data,error}=await sb.rpc("rpl_create_poll_week",{p_week_start:weekStart,p_week_end:weekEnd,p_opens_at:new Date(opens).toISOString(),p_closes_at:new Date(closes).toISOString(),p_options:options});
+    if(error)throw error;
+    msg.className="msg ok";msg.textContent="✅ Votazione creata correttamente.";
+    await loadOperatorVoting();
+  }catch(e){console.error(e);msg.className="msg err";msg.textContent="Errore creazione votazione: "+(e.message||e);}
+}
+window.createOperatorPoll=createOperatorPoll;
 async function loadOperatorVoting(){
   const host=$("operatorVotingList"), msg=$("operatorVotingMsg"); if(!host)return;
   host.innerHTML="Caricamento…"; msg.className="msg"; msg.textContent="";
@@ -1714,8 +1766,8 @@ async function updateMatch(){
   closeEdit();await loadRanking();await loadOperatorHistory();
 }
 $("loadLastMatchBtn")?.addEventListener("click",loadLastCalendarMatch);
-$("publicBtn").onclick=()=>{location.hash="";const cal=$("publicCalendarPage");if(cal){cal.classList.add("hidden");cal.style.display="none";}$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("publicPage").style.display="";$("adminPage").classList.add("hidden");$("calendarPublicBtn")?.classList.remove("primary");$("partialBtn")?.classList.remove("primary");$("historyBtn")?.classList.remove("primary");$("adminBtn")?.classList.remove("primary");$("publicBtn")?.classList.add("primary");loadRanking()};
-$("adminBtn").onclick=async()=>{location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){
+$("publicBtn").onclick=()=>{hidePlayerArea?.();location.hash="";const cal=$("publicCalendarPage");if(cal){cal.classList.add("hidden");cal.style.display="none";}$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("publicPage").style.display="";$("adminPage").classList.add("hidden");$("calendarPublicBtn")?.classList.remove("primary");$("partialBtn")?.classList.remove("primary");$("historyBtn")?.classList.remove("primary");$("adminBtn")?.classList.remove("primary");$("publicBtn")?.classList.add("primary");loadRanking()};
+$("adminBtn").onclick=async()=>{hidePlayerArea?.();location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){
   $("loginBox").classList.add("hidden");
   $("operatorBox").classList.remove("hidden");
   $("operatorMatchSection")?.classList.add("hidden");
@@ -1850,7 +1902,7 @@ $("date").value=new Date().toISOString().slice(0,16);
   }
 
   function showPartial(){
-    hide("publicPage");hide("adminPage");hide("historyView");show("partialPage");
+    document.getElementById("playerAreaPage")?.classList.add("hidden");document.getElementById("playerAreaPage")?.style.setProperty("display","none","important");    hide("publicPage");hide("adminPage");hide("historyView");show("partialPage");
     $("publicBtn")?.classList.remove("primary");
     $("adminBtn")?.classList.remove("primary");
     $("historyBtn")?.classList.remove("primary");
@@ -1872,6 +1924,8 @@ $("date").value=new Date().toISOString().slice(0,16);
 
   function rplNormalizePublicNav(){
   const h=location.hash;
+  document.getElementById("playerAreaPage")?.classList.add("hidden");
+  document.getElementById("playerAreaPage")?.style.setProperty("display","none","important");
   if(h==="#calendar"){
     $("publicCalendarPage")?.classList.remove("hidden");
     $("publicPage")?.classList.add("hidden");
@@ -1911,7 +1965,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
   async function openHistory(){
-    const pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
+    document.getElementById("playerAreaPage")?.classList.add("hidden");document.getElementById("playerAreaPage")?.style.setProperty("display","none","important");    const pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
     if(!hist)return;
     pub?.classList.add("hidden");
     admin?.classList.add("hidden");
@@ -2529,7 +2583,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.87</div>
+<div id="rplVersionBadge">RPL v6.5.88</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2870,6 +2924,7 @@ async function loadPublicCalendar(){
   const normalizePhone=v=>{let x=String(v||'').replace(/[^\d+]/g,'');if(x.startsWith('00'))x='+'+x.slice(2);if(x.startsWith('+'))return x;if(x.startsWith('39'))return '+'+x;return '+39'+x.replace(/^0/,'');};
   const playerLogo=name=>{try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}};
   function hidePublicSections(){['publicPage','partialPage','adminPage','publicCalendarPage','bonusPage'].forEach(id=>{const el=q(id);if(el){el.classList.add('hidden');el.style.setProperty('display','none','important')}});const h=q('historyView');if(h)h.style.setProperty('display','none','important');}
+  function hidePlayerArea(){const p=q('playerAreaPage');if(p){p.classList.add('hidden');p.style.setProperty('display','none','important');}}
   function playerNavActive(){['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn','playerAreaBtn'].forEach(id=>q(id)?.classList.remove('primary'));q('playerAreaBtn')?.classList.add('primary');}
   function showPlayerArea(){location.hash='player';hidePublicSections();const page=q('playerAreaPage');if(page){page.classList.remove('hidden');page.style.display='block';}playerNavActive();window.scrollTo(0,0);loadPlayerSession();}
   window.showPlayerArea=showPlayerArea;
