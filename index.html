@@ -2450,7 +2450,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.80</div>
+<div id="rplVersionBadge">RPL v6.5.83</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2893,7 +2893,7 @@ async function loadPublicCalendar(){
     const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
     playerAccount.avatar_path=path;renderPlayerProfile();msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
   }
-  function scoreRowsFromPanel(){return [...q('playerResultPanel').querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
+  function scoreRowsFromPanel(){const panel=q('inlinePlayerResultPanel');if(!panel)return [];return [...panel.querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
   async function openPlayerResult(cm){
     const panel=q('inlinePlayerResultPanel');if(!panel)return;
     try{
