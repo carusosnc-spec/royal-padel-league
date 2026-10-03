@@ -2792,10 +2792,50 @@ async function loadPublicCalendar(){
   function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
   function playerById(id){return (window.dbPlayers||[]).find(p=>String(p.id)===String(id))||null;}
   function setScoreOptions(){return '<option value="">–</option>'+Array.from({length:8},(_,i)=>`<option value="${i}">${i}</option>`).join('');}
+  function rplBuildResultSet(pair,i){
+    return `<div class="rpl-result-set" data-p1="${pair[0].id}" data-p2="${pair[1].id}" data-p3="${pair[2].id}" data-p4="${pair[3].id}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="flex:1;text-align:center;color:var(--gold2);font-weight:900">SET ${i+1}</div>
+        <button type="button" class="rpl-player-remove-set" title="Elimina questo set" style="font-size:11px;padding:5px 8px;border:1px solid #7b8794;background:transparent;color:#b9c4d0;border-radius:7px">🗑️ Elimina</button>
+      </div>
+      <div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div>
+      <div class="rpl-result-score"><select data-set-a="${i}">${setScoreOptions()}</select><b>–</b><select data-set-b="${i}">${setScoreOptions()}</select></div>
+    </div>`;
+  }
+  function renumberPlayerResultSets(){
+    const panel=q('inlinePlayerResultPanel');if(!panel)return;
+    [...panel.querySelectorAll('.rpl-result-set')].forEach((row,i)=>{
+      const title=row.querySelector('div[style*="text-align:center"]');
+      if(title)title.textContent=`SET ${i+1}`;
+    });
+  }
+  function addPlayerResultSet(cm){
+    const panel=q('inlinePlayerResultPanel');if(!panel)return;
+    const players=window.rplDistintaPlayers(cm);
+    const type=cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL';
+    const pairs=window.rplSetPairs(players,type);
+    const existing=panel.querySelectorAll('.rpl-result-set').length;
+    const pair=pairs[existing % pairs.length];
+    if(!pair)return;
+    const wrap=panel.querySelector('#playerResultSets');if(!wrap)return;
+    wrap.insertAdjacentHTML('beforeend',rplBuildResultSet(pair,existing));
+    bindPlayerResultSetActions(wrap.lastElementChild);
+    renumberPlayerResultSets();
+  }
+  function bindPlayerResultSetActions(row){
+    if(!row)return;
+    row.querySelector('.rpl-player-remove-set')?.addEventListener('click',()=>{
+      const count=q('inlinePlayerResultPanel')?.querySelectorAll('.rpl-result-set').length||0;
+      if(count<=1){alert('Deve rimanere almeno un set.');return;}
+      if(!confirm('Sei sicuro di voler eliminare questo set? Il punteggio inserito per questo set verrà perso.'))return;
+      row.remove();renumberPlayerResultSets();
+    });
+  }
   function renderResultSets(cm){
     const players=window.rplDistintaPlayers(cm);
     const pairs=window.rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
-    return pairs.map((pair,i)=>`<div class="rpl-result-set"><div style="text-align:center;color:var(--gold2);font-weight:900">SET ${i+1}</div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${i}">${setScoreOptions()}</select><b>–</b><select data-set-b="${i}">${setScoreOptions()}</select></div></div>`).join('');
+    return `<div id="playerResultSets">${pairs.map((pair,i)=>rplBuildResultSet(pair,i)).join('')}</div>
+      <div style="margin-top:10px"><button type="button" id="addPlayerResultSetBtn" style="width:100%;border-color:#d9ad2b;color:#ffd86a">➕ AGGIUNGI UN ALTRO SET</button></div>`;
   }
   function showResponsibleHero(cm){
     const box=q('playerResponsibleHero'); if(!box)return;
@@ -2893,7 +2933,7 @@ async function loadPublicCalendar(){
     const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
     playerAccount.avatar_path=path;renderPlayerProfile();msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
   }
-  function scoreRowsFromPanel(){const panel=q('inlinePlayerResultPanel');if(!panel)return [];return [...panel.querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
+  function scoreRowsFromPanel(){const panel=q('inlinePlayerResultPanel');if(!panel)return [];return [...panel.querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,a1:Number(r.dataset.p1),a2:Number(r.dataset.p2),b1:Number(r.dataset.p3),b2:Number(r.dataset.p4),ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
   async function openPlayerResult(cm){
     const panel=q('inlinePlayerResultPanel');if(!panel)return;
     try{
@@ -2903,6 +2943,8 @@ async function loadPublicCalendar(){
       panel.innerHTML=`<div class="card" style="margin:0"><h2>🎾 Inserisci risultato partita</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo')}</div><div class="muted" style="margin-top:5px">${type} · Le coppie sono già compilate secondo la distinta ufficiale.</div>${renderResultSets(cm)}<button id="submitPlayerResultBtn" class="primary" style="width:100%;min-height:54px;margin-top:14px;font-size:16px">✅ CONFERMA E REGISTRA RISULTATO</button><button id="cancelPlayerResultBtn" style="width:100%;margin-top:8px">ANNULLA</button><div id="playerResultMsg" class="msg"></div></div>`;
       q('submitPlayerResultBtn').onclick=()=>submitPlayerResult(cm);
       q('cancelPlayerResultBtn').onclick=()=>{panel.innerHTML='';};
+      q('addPlayerResultSetBtn')?.addEventListener('click',()=>addPlayerResultSet(cm));
+      panel.querySelectorAll('.rpl-result-set').forEach(bindPlayerResultSetActions);
       panel.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){console.error('RPL player result',e);panel.innerHTML=`<div class="msg err">Impossibile aprire la distinta: ${escP(e.message||e)}</div>`;}
   }
@@ -2912,7 +2954,8 @@ async function loadPublicCalendar(){
     if(rows.some(x=>x.ga===x.gb)){msg.className='msg err';msg.textContent='Un set non può finire in parità.';return}
     const ids=[1,2,3,4].map(i=>Number(cm['player_'+i]));
     if(ids.some(Number.isNaN)||new Set(ids).size!==4){msg.className='msg err';msg.textContent='La partita del calendario non ha quattro giocatori validi.';return}
-    const players=window.rplDistintaPlayers(cm),pairs=window.rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
+    if(!rows.length){msg.className='msg err';msg.textContent='Inserisci almeno un set.';return}
+    const players=window.rplDistintaPlayers(cm);
     const {data:existing}=await sb.from('matches').select('id').eq('calendar_match_id',cm.id).maybeSingle();if(existing){msg.className='msg err';msg.textContent='Questa partita risulta già registrata.';await loadPlayerSession();return}
     const snap={};[1,2,3,4].forEach(i=>{snap[Number(cm['player_'+i])]={fascia:Number(cm['player_'+i+'_fascia']||playerById(cm['player_'+i])?.fascia||4),fascia_value:Number(cm['player_'+i+'_fascia_points']||playerById(cm['player_'+i])?.fascia_value||2)}});
     const {data:m,error:me}=await sb.from('matches').insert({played_at:cm.scheduled_at,calendar_match_id:cm.id}).select().single();
@@ -2920,7 +2963,7 @@ async function loadPublicCalendar(){
     const matchId=m.id;
     const mpRows=ids.map(pid=>({match_id:matchId,player_id:pid,fascia:snap[pid].fascia,fascia_value:snap[pid].fascia_value}));
     let r=await sb.from('match_players').insert(mpRows);if(r.error){msg.className='msg err';msg.textContent='Errore giocatori: '+r.error.message;return}
-    const setRows=pairs.map((pair,i)=>({match_id:matchId,set_number:i+1,pair_a_player_1:pair[0].id,pair_a_player_2:pair[1].id,pair_b_player_1:pair[2].id,pair_b_player_2:pair[3].id,games_a:rows[i].ga,games_b:rows[i].gb}));
+    const setRows=rows.map((x,i)=>({match_id:matchId,set_number:i+1,pair_a_player_1:x.a1,pair_a_player_2:x.a2,pair_b_player_1:x.b1,pair_b_player_2:x.b2,games_a:x.ga,games_b:x.gb}));
     r=await sb.from('sets').insert(setRows);if(r.error){msg.className='msg err';msg.textContent='Errore set: '+r.error.message;return}
     const tally={};ids.forEach(id=>tally[id]={wins:0,losses:0,games:0});
     setRows.forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],win=x.games_a>x.games_b?A:B,lose=x.games_a>x.games_b?B:A;win.forEach(id=>{tally[id].wins++;tally[id].games+=Math.max(x.games_a,x.games_b)});lose.forEach(id=>{tally[id].losses++;tally[id].games+=Math.min(x.games_a,x.games_b)})});
