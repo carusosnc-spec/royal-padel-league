@@ -1471,7 +1471,7 @@ function showOperatorSection(which){
   m?.classList.add("hidden"); c?.classList.add("hidden"); v?.classList.add("hidden");
   mt?.classList.remove("primary"); ct?.classList.remove("primary"); vt?.classList.remove("primary");
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
-  else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");initPollOptionDefaults();initPollOptionRows();loadOperatorVoting();}
+  else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
   else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
 function fillCalendarPlayers(){
@@ -2603,7 +2603,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.93</div>
+<div id="rplVersionBadge">RPL v6.5.94</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
