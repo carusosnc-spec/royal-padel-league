@@ -2603,7 +2603,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.94</div>
+<div id="rplVersionBadge">RPL v6.5.95</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2952,10 +2952,50 @@ async function loadPublicCalendar(){
   function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
   function playerById(id){return (window.dbPlayers||[]).find(p=>String(p.id)===String(id))||null;}
   function setScoreOptions(){return '<option value="">–</option>'+Array.from({length:8},(_,i)=>`<option value="${i}">${i}</option>`).join('');}
+  function resultPairForIndex(players,type,index){
+    const p=rplSortPlayers(players),A=p[0],B=p[1],C=p[2],D=p[3];
+    if(type==='ONE_VS_ONE') return index%2===0?[A,C,B,D]:[A,D,B,C];
+    const cycle=[[A,D,B,C],[A,C,B,D],[A,B,C,D]];
+    return cycle[index%3];
+  }
+  function renderResultSetRow(pair,index){
+    return `<div class="rpl-result-set" data-set-index="${index}" data-a1="${pair[0].id}" data-a2="${pair[1].id}" data-b1="${pair[2].id}" data-b2="${pair[3].id}"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="text-align:center;color:var(--gold2);font-weight:900;flex:1">SET ${index+1}</div><button type="button" class="rpl-remove-result-set" style="padding:5px 8px;font-size:11px">🗑️ Rimuovi</button></div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${index}">${setScoreOptions()}</select><b>–</b><select data-set-b="${index}">${setScoreOptions()}</select></div></div>`;
+  }
+  function renumberResultSets(panel){
+    [...panel.querySelectorAll('.rpl-result-set')].forEach((row,index)=>{
+      row.dataset.setIndex=index;
+      const title=row.querySelector('div > div'); if(title)title.textContent='SET '+(index+1);
+      const a=row.querySelector('[data-set-a]'),b=row.querySelector('[data-set-b]'); if(a)a.dataset.setA=index;if(b)b.dataset.setB=index;
+    });
+  }
   function renderResultSets(cm){
     const players=window.rplDistintaPlayers(cm);
-    const pairs=window.rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
-    return pairs.map((pair,i)=>`<div class="rpl-result-set"><div style="text-align:center;color:var(--gold2);font-weight:900">SET ${i+1}</div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${i}">${setScoreOptions()}</select><b>–</b><select data-set-b="${i}">${setScoreOptions()}</select></div></div>`).join('');
+    const type=cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL';
+    const pairs=Array.from({length:type==='ONE_VS_ONE'?4:6},(_,i)=>resultPairForIndex(players,type,i));
+    return `<div id="playerResultSets">${pairs.map((pair,i)=>renderResultSetRow(pair,i)).join('')}</div><div style="display:flex;justify-content:center;margin-top:10px"><button type="button" id="addPlayerResultSetBtn">➕ AGGIUNGI SET</button></div>`;
+  }
+  function bindResultSetControls(cm){
+    const panel=q('inlinePlayerResultPanel'); if(!panel)return;
+    const players=window.rplDistintaPlayers(cm),type=cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL',setsBox=q('playerResultSets');
+    if(!setsBox)return;
+    const bindRemove=()=>{
+      setsBox.querySelectorAll('.rpl-remove-result-set').forEach(btn=>{
+        btn.onclick=()=>{
+          const rows=setsBox.querySelectorAll('.rpl-result-set');
+          if(rows.length<=1)return;
+          btn.closest('.rpl-result-set')?.remove();
+          renumberResultSets(setsBox);
+          bindRemove();
+        };
+      });
+    };
+    q('addPlayerResultSetBtn')?.addEventListener('click',()=>{
+      const index=setsBox.querySelectorAll('.rpl-result-set').length;
+      const pair=resultPairForIndex(players,type,index);
+      setsBox.insertAdjacentHTML('beforeend',renderResultSetRow(pair,index));
+      bindRemove();
+    });
+    bindRemove();
   }
   function showResponsibleHero(cm){
     const box=q('playerResponsibleHero'); if(!box)return;
@@ -3140,7 +3180,7 @@ async function loadPublicCalendar(){
     const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
     playerAccount.avatar_path=path;renderPlayerProfile();msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
   }
-  function scoreRowsFromPanel(){return [...q('playerResultPanel').querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
+  function scoreRowsFromPanel(){const panel=q('inlinePlayerResultPanel');if(!panel)return [];return [...panel.querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,a1:Number(r.dataset.a1),a2:Number(r.dataset.a2),b1:Number(r.dataset.b1),b2:Number(r.dataset.b2),ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
   async function openPlayerResult(cm){
     const panel=q('inlinePlayerResultPanel');if(!panel)return;
     try{
@@ -3150,6 +3190,7 @@ async function loadPublicCalendar(){
       panel.innerHTML=`<div class="card" style="margin:0"><h2>🎾 Inserisci risultato partita</h2><div class="muted">${escP(fmtDate(cm.scheduled_at))} · ore ${escP(fmtTime(cm.scheduled_at))} · ${escP(cm.court||'Campo')}</div><div class="muted" style="margin-top:5px">${type} · Le coppie sono già compilate secondo la distinta ufficiale.</div>${renderResultSets(cm)}<button id="submitPlayerResultBtn" class="primary" style="width:100%;min-height:54px;margin-top:14px;font-size:16px">✅ CONFERMA E REGISTRA RISULTATO</button><button id="cancelPlayerResultBtn" style="width:100%;margin-top:8px">ANNULLA</button><div id="playerResultMsg" class="msg"></div></div>`;
       q('submitPlayerResultBtn').onclick=()=>submitPlayerResult(cm);
       q('cancelPlayerResultBtn').onclick=()=>{panel.innerHTML='';};
+      bindResultSetControls(cm);
       panel.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){console.error('RPL player result',e);panel.innerHTML=`<div class="msg err">Impossibile aprire la distinta: ${escP(e.message||e)}</div>`;}
   }
@@ -3159,7 +3200,7 @@ async function loadPublicCalendar(){
     if(rows.some(x=>x.ga===x.gb)){msg.className='msg err';msg.textContent='Un set non può finire in parità.';return}
     const ids=[1,2,3,4].map(i=>Number(cm['player_'+i]));
     if(ids.some(Number.isNaN)||new Set(ids).size!==4){msg.className='msg err';msg.textContent='La partita del calendario non ha quattro giocatori validi.';return}
-    const players=window.rplDistintaPlayers(cm),pairs=window.rplSetPairs(players,cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL');
+    const players=window.rplDistintaPlayers(cm);
     const {data:existing}=await sb.from('matches').select('id').eq('calendar_match_id',cm.id).maybeSingle();if(existing){msg.className='msg err';msg.textContent='Questa partita risulta già registrata.';await loadPlayerSession();return}
     const snap={};[1,2,3,4].forEach(i=>{snap[Number(cm['player_'+i])]={fascia:Number(cm['player_'+i+'_fascia']||playerById(cm['player_'+i])?.fascia||4),fascia_value:Number(cm['player_'+i+'_fascia_points']||playerById(cm['player_'+i])?.fascia_value||2)}});
     const {data:m,error:me}=await sb.from('matches').insert({played_at:cm.scheduled_at,calendar_match_id:cm.id}).select().single();
@@ -3167,7 +3208,7 @@ async function loadPublicCalendar(){
     const matchId=m.id;
     const mpRows=ids.map(pid=>({match_id:matchId,player_id:pid,fascia:snap[pid].fascia,fascia_value:snap[pid].fascia_value}));
     let r=await sb.from('match_players').insert(mpRows);if(r.error){msg.className='msg err';msg.textContent='Errore giocatori: '+r.error.message;return}
-    const setRows=pairs.map((pair,i)=>({match_id:matchId,set_number:i+1,pair_a_player_1:pair[0].id,pair_a_player_2:pair[1].id,pair_b_player_1:pair[2].id,pair_b_player_2:pair[3].id,games_a:rows[i].ga,games_b:rows[i].gb}));
+    const setRows=rows.map((x,i)=>({match_id:matchId,set_number:i+1,pair_a_player_1:x.a1,pair_a_player_2:x.a2,pair_b_player_1:x.b1,pair_b_player_2:x.b2,games_a:x.ga,games_b:x.gb}));
     r=await sb.from('sets').insert(setRows);if(r.error){msg.className='msg err';msg.textContent='Errore set: '+r.error.message;return}
     const tally={};ids.forEach(id=>tally[id]={wins:0,losses:0,games:0});
     setRows.forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],win=x.games_a>x.games_b?A:B,lose=x.games_a>x.games_b?B:A;win.forEach(id=>{tally[id].wins++;tally[id].games+=Math.max(x.games_a,x.games_b)});lose.forEach(id=>{tally[id].losses++;tally[id].games+=Math.min(x.games_a,x.games_b)})});
