@@ -2604,7 +2604,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.95</div>
+<div id="rplVersionBadge">RPL v6.5.97</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2979,24 +2979,23 @@ async function loadPublicCalendar(){
     const panel=q('inlinePlayerResultPanel'); if(!panel)return;
     const players=window.rplDistintaPlayers(cm),type=cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL',setsBox=q('playerResultSets');
     if(!setsBox)return;
-    const bindRemove=()=>{
-      setsBox.querySelectorAll('.rpl-remove-result-set').forEach(btn=>{
-        btn.onclick=()=>{
-          const rows=setsBox.querySelectorAll('.rpl-result-set');
-          if(rows.length<=1)return;
-          btn.closest('.rpl-result-set')?.remove();
-          renumberResultSets(setsBox);
-          bindRemove();
-        };
-      });
-    };
+    // Gestione delegata: ogni pulsante Rimuovi resta indipendente anche dopo più cancellazioni consecutive.
+    if(setsBox.dataset.controlsBound==='1')return;
+    setsBox.dataset.controlsBound='1';
+    setsBox.addEventListener('click',e=>{
+      const btn=e.target.closest('.rpl-remove-result-set');
+      if(!btn)return;
+      const rows=setsBox.querySelectorAll('.rpl-result-set');
+      if(rows.length<=1)return;
+      btn.closest('.rpl-result-set')?.remove();
+      renumberResultSets(setsBox);
+    });
     q('addPlayerResultSetBtn')?.addEventListener('click',()=>{
       const index=setsBox.querySelectorAll('.rpl-result-set').length;
       const pair=resultPairForIndex(players,type,index);
       setsBox.insertAdjacentHTML('beforeend',renderResultSetRow(pair,index));
-      bindRemove();
+      renumberResultSets(setsBox);
     });
-    bindRemove();
   }
   function showResponsibleHero(cm){
     const box=q('playerResponsibleHero'); if(!box)return;
