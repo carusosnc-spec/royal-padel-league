@@ -1382,9 +1382,19 @@ async function loadOperatorVoting(){
   if(!host)return;
   host.innerHTML="Caricamento…";
   if(archiveHost)archiveHost.innerHTML="Caricamento…";
-  msg.className="msg";msg.textContent="";
+  if(msg){msg.className="msg";msg.textContent="";}
+  const withTimeout=async(promise,label,ms=12000)=>{
+    let timer;
+    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error("Timeout caricamento "+label)),ms);});
+    try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}
+  };
   try{
-    const wr=await sb.from("rpl_poll_weeks").select("*").order("opens_at",{ascending:false}).limit(100);
+    /* Prima carichiamo SOLO le settimane: così l'elenco non resta bloccato
+       se una delle tabelle dei dettagli/voti risponde lentamente. */
+    const wr=await withTimeout(
+      sb.from("rpl_poll_weeks").select("*").order("opens_at",{ascending:false}).limit(100),
+      "settimane votazioni"
+    );
     if(wr.error)throw wr.error;
     const weeks=wr.data||[];
     if(!weeks.length){
@@ -1392,29 +1402,43 @@ async function loadOperatorVoting(){
       if(archiveHost)archiveHost.innerHTML='<div class="muted">Nessuna votazione archiviata.</div>';
       return;
     }
-    const ids=weeks.map(w=>w.id);
-    const [or,vr]=await Promise.all([
-      sb.from("rpl_poll_options").select("*").in("poll_week_id",ids).order("sort_order",{ascending:true}),
-      sb.from("rpl_poll_votes").select("*").in("poll_week_id",ids)
-    ]);
-    if(or.error)throw or.error;if(vr.error)throw vr.error;
-    const opts=or.data||[],votes=vr.data||[],byPlayer={};
-    (dbPlayers||[]).forEach(p=>byPlayer[String(p.id)]=p);
+
     const activeWeeks=weeks.filter(w=>w.is_archived!==true);
     const archivedWeeks=weeks.filter(w=>w.is_archived===true);
     const fmt=d=>new Date(d+"T00:00:00").toLocaleDateString("it-IT");
-    const renderWeek=w=>{
+    const byPlayer={};
+    (window.dbPlayers||dbPlayers||[]).forEach(p=>byPlayer[String(p.id)]=p);
+
+    const renderWeek=(w,opts=[],votes=[])=>{
       const oo=opts.filter(o=>o.poll_week_id===w.id),vv=votes.filter(x=>x.poll_week_id===w.id);
-      return `<div class="rpl-admin-poll"><div class="rpl-admin-poll-head"><div><div class="rpl-admin-poll-title">SETTIMANA ${fmt(w.week_start)} → ${fmt(w.week_end)}</div><div class="rpl-admin-poll-meta">Stato: <b>${escOperator(w.status||"—")}</b>${w.is_archived===true?' · <b>ARCHIVIATA</b>':''} · Apertura: ${new Date(w.opens_at).toLocaleString("it-IT")} · Chiusura: ${new Date(w.closes_at).toLocaleString("it-IT")}</div></div><div class="rpl-poll-admin-actions">${w.is_archived===true?`<button type="button" onclick="restoreOperatorPoll(${w.id})">↩️ RIPRISTINA</button>`:`<button type="button" class="primary" onclick="generateCalendarFromPoll(${w.id})">🗓️ GENERA PROPOSTA</button><button type="button" onclick="editOperatorPoll(${w.id})">✏️ MODIFICA</button><button type="button" onclick="deleteOperatorPoll(${w.id})">🗑️ CANCELLA</button><button type="button" onclick="archiveOperatorPoll(${w.id})">📦 ARCHIVIA</button>`}</div></div><div class="rpl-admin-vote-grid">${oo.map(o=>{const ov=vv.filter(x=>x.option_id===o.id),full=ov.length>=Number(o.max_players||4),court=o.court&&o.court!=="__TBD__"?o.court:"Campo non ancora definito";return `<div class="rpl-admin-vote-card ${full?'full':''}"><div class="rpl-admin-vote-date">${escOperator(o.label||o.play_date)}</div><div class="rpl-admin-vote-count">${ov.length}/${o.max_players||4} voti${full?' · PARTITA COMPLETA':''}</div><div class="rpl-admin-court">📍 ${escOperator(court)}</div><div class="rpl-admin-vote-names">${ov.length?ov.map(x=>`<span class="rpl-admin-vote-name">${escOperator(byPlayer[String(x.player_id)]?.name||('Giocatore '+x.player_id))}</span>`).join(''):'<span class="muted">Nessun voto</span>'}</div></div>`}).join('')}</div></div>`;
+      return `<div class="rpl-admin-poll ${w.is_archived===true?'archived':''}"><div class="rpl-admin-poll-head"><div><div class="rpl-admin-poll-title">SETTIMANA ${fmt(w.week_start)} → ${fmt(w.week_end)}</div><div class="rpl-admin-poll-meta">Stato: <b>${escOperator(w.status||"—")}</b>${w.is_archived===true?' · <b>ARCHIVIATA</b>':''} · Apertura: ${new Date(w.opens_at).toLocaleString("it-IT")} · Chiusura: ${new Date(w.closes_at).toLocaleString("it-IT")}</div></div><div class="rpl-poll-admin-actions">${w.is_archived===true?`<button type="button" onclick="restoreOperatorPoll(${w.id})">↩️ RIPRISTINA</button>`:`<button type="button" class="primary" onclick="generateCalendarFromPoll(${w.id})">🗓️ GENERA PROPOSTA</button><button type="button" onclick="editOperatorPoll(${w.id})">✏️ MODIFICA</button><button type="button" onclick="deleteOperatorPoll(${w.id})">🗑️ CANCELLA</button><button type="button" onclick="archiveOperatorPoll(${w.id})">📦 ARCHIVIA</button>`}</div></div><div class="rpl-admin-vote-grid">${oo.length?oo.map(o=>{const ov=vv.filter(x=>x.option_id===o.id),full=ov.length>=Number(o.max_players||4),court=o.court&&o.court!=="__TBD__"?o.court:"Campo non ancora definito";return `<div class="rpl-admin-vote-card ${full?'full':''}"><div class="rpl-admin-vote-date">${escOperator(o.label||o.play_date)}</div><div class="rpl-admin-vote-count">${ov.length}/${o.max_players||4} voti${full?' · PARTITA COMPLETA':''}</div><div class="rpl-admin-court">📍 ${escOperator(court)}</div><div class="rpl-admin-vote-names">${ov.length?ov.map(x=>`<span class="rpl-admin-vote-name">${escOperator(byPlayer[String(x.player_id)]?.name||('Giocatore '+x.player_id))}</span>`).join(''):'<span class="muted">Nessun voto</span>'}</div></div>`}).join(''):'<div class="muted">Dettagli della votazione non ancora caricati.</div>'}</div></div>`;
     };
-    host.innerHTML=activeWeeks.length?activeWeeks.map(renderWeek).join(""):'<div class="muted">Nessuna votazione attiva.</div>';
-    if(archiveHost)archiveHost.innerHTML=archivedWeeks.length?archivedWeeks.map(renderWeek).join(""):'<div class="muted">Nessuna votazione archiviata.</div>';
+
+    /* Mostra subito le settimane, anche prima dei dettagli. */
+    host.innerHTML=activeWeeks.length?activeWeeks.map(w=>renderWeek(w)).join(""):'<div class="muted">Nessuna votazione attiva.</div>';
+    if(archiveHost)archiveHost.innerHTML=archivedWeeks.length?archivedWeeks.map(w=>renderWeek(w)).join(""):'<div class="muted">Nessuna votazione archiviata.</div>';
+
+    /* I dettagli sono secondari: se una delle due letture fallisce, le settimane
+       restano comunque visibili e mostriamo un messaggio senza lasciare "Caricamento". */
+    const ids=weeks.map(w=>w.id);
+    try{
+      const [or,vr]=await Promise.all([
+        withTimeout(sb.from("rpl_poll_options").select("*").in("poll_week_id",ids).order("sort_order",{ascending:true}),"opzioni votazioni"),
+        withTimeout(sb.from("rpl_poll_votes").select("*").in("poll_week_id",ids),"voti votazioni")
+      ]);
+      if(or.error)throw or.error;if(vr.error)throw vr.error;
+      const opts=or.data||[],votes=vr.data||[];
+      host.innerHTML=activeWeeks.length?activeWeeks.map(w=>renderWeek(w,opts,votes)).join(""):'<div class="muted">Nessuna votazione attiva.</div>';
+      if(archiveHost)archiveHost.innerHTML=archivedWeeks.length?archivedWeeks.map(w=>renderWeek(w,opts,votes)).join(""):'<div class="muted">Nessuna votazione archiviata.</div>';
+    }catch(detailErr){
+      console.warn("Dettagli votazioni non disponibili:",detailErr);
+      if(msg){msg.className="msg";msg.textContent="⚠️ Votazioni caricate; alcuni dettagli dei voti non sono momentaneamente disponibili.";}
+    }
   }catch(e){
     console.error(e);
-    host.innerHTML="";
-    if(archiveHost)archiveHost.innerHTML="";
-    msg.className="msg err";
-    msg.textContent="Errore caricamento votazioni: "+(e.message||e);
+    host.innerHTML='<div class="msg err">Errore caricamento votazioni: '+escOperator(e.message||e)+'</div>';
+    if(archiveHost)archiveHost.innerHTML='<div class="msg err">Errore caricamento archivio: '+escOperator(e.message||e)+'</div>';
+    if(msg){msg.className="msg err";msg.textContent="Errore caricamento votazioni: "+(e.message||e);}
   }
 }
 
@@ -2579,7 +2603,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.92</div>
+<div id="rplVersionBadge">RPL v6.5.93</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
