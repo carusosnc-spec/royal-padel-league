@@ -660,6 +660,12 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:760px){.rpl-voting-options-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.rpl-vote-option{padding:8px}.rpl-vote-player{font-size:8px}}
 @media(max-width:430px){.rpl-voting-options-grid{grid-template-columns:1fr 1fr}.rpl-vote-date{font-size:11px}.rpl-vote-meta{font-size:9px}.rpl-vote-btn{font-size:9px}}
 </style>
+<style id="rpl-v65108-accounts-style">
+#operatorAccountsSection .rpl-account-row{display:grid;grid-template-columns:1.4fr .8fr .9fr 1fr;gap:8px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:7px;background:rgba(255,255,255,.02)}
+#operatorAccountsSection .rpl-account-status{font-weight:800;font-size:12px}
+#operatorAccountsSection .rpl-account-ok{color:#39d98a}.rpl-account-warn{color:#ffd86a}.rpl-account-err{color:#ff6b6b}
+@media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
+</style>
 <style id="rpl-operator-poll-create-style">
 .rpl-poll-create-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.rpl-poll-create-grid label,.rpl-poll-time-grid label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-create-grid input,.rpl-poll-time-grid input{min-height:38px;border:1px solid #d1d5db;border-radius:8px;padding:0 8px}.rpl-poll-days{display:flex;flex-wrap:wrap;gap:8px}.rpl-poll-days label{font-size:11px;font-weight:800;padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:9px}.rpl-poll-days input{margin-right:4px}@media(max-width:600px){.rpl-poll-create-grid{grid-template-columns:1fr}}
 </style>
@@ -884,6 +890,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <button type="button" id="opCalendarTab" onclick="showOperatorSection('calendar')">📅 Calendario</button>
 <button type="button" id="opVotingTab" onclick="showOperatorSection('voting')">🗳️ Votazioni settimanali</button>
 <button type="button" id="opConfirmTab" onclick="showOperatorSection('confirm')">✅ Partite da confermare</button>
+<button type="button" id="opAccountsTab" onclick="showOperatorSection('accounts')">👥 Account giocatori</button>
 </div>
 </div>
 <div id="operatorVotingSection" class="hidden">
@@ -913,6 +920,20 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   <div class="muted">Le votazioni archiviate non vengono cancellate: restano qui e possono essere ripristinate.</div>
   <div id="operatorVotingArchiveList" style="margin-top:10px">Caricamento…</div>
 </div>
+</div>
+</div>
+<div id="operatorAccountsSection" class="hidden">
+<div class="card">
+<h2>👥 Account giocatori</h2>
+<div class="muted">Crea gli account RPL dei giocatori partendo dal file di importazione. La password iniziale viene generata automaticamente e il giocatore dovrà cambiarla al primo accesso.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<label style="display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid rgba(231,185,78,.25);border-radius:10px;cursor:pointer">📥 CARICA FILE ACCOUNT <input id="accountImportFile" type="file" accept=".json,application/json" style="display:none"></label>
+<button type="button" onclick="loadAccountImportTemplate()">🔄 RICARICA ELENCO</button>
+<button type="button" class="primary" onclick="createAllPlayerAccounts()">🚀 CREA ACCOUNT MANCANTI</button>
+<button type="button" onclick="downloadAccountCredentials()">📄 SCARICA CREDENZIALI CREATE</button>
+</div>
+<div id="operatorAccountsMsg" class="msg" style="margin-top:10px"></div>
+<div id="operatorAccountsList" style="margin-top:12px">Nessun file caricato.</div>
 </div>
 </div>
 <div id="operatorConfirmSection" class="hidden">
@@ -1196,6 +1217,7 @@ async function login(){
   $("operatorCalendarSection")?.classList.add("hidden");
   $("operatorVotingSection")?.classList.add("hidden");
   $("operatorConfirmSection")?.classList.add("hidden");
+  $("operatorAccountsSection")?.classList.add("hidden");
   $("operatorSubmenu")?.classList.remove("hidden");
   $("loginMsg").className="msg";$("loginMsg").textContent="";
   $("opMatchTab")?.classList.remove("primary");
@@ -1204,7 +1226,7 @@ async function login(){
 }
 async function logout(){await sb.auth.signOut();currentUser=null;
 $("operatorBox").classList.add("hidden");$("loginBox").classList.remove("hidden");
-$("operatorMatchSection")?.classList.add("hidden");$("operatorCalendarSection")?.classList.add("hidden");
+$("operatorMatchSection")?.classList.add("hidden");$("operatorCalendarSection")?.classList.add("hidden");$("operatorAccountsSection")?.classList.add("hidden");
 }
 
 function setDateInputFromISO(iso){
@@ -1636,14 +1658,74 @@ async function confirmPendingMatch(id){
 }
 window.loadOperatorPendingMatches=loadOperatorPendingMatches;window.openPendingMatch=openPendingMatch;window.closePendingMatch=closePendingMatch;window.deletePendingMatch=deletePendingMatch;window.reactivatePendingMatch=reactivatePendingMatch;window.confirmPendingMatch=confirmPendingMatch;
 
+const accountImportState={rows:[],credentials:[]};
+function normalizeAccountPhone(v){
+  let x=String(v??'').replace(/[^0-9+]/g,'');
+  if(x.startsWith('0039'))x='+'+x.slice(2);
+  if(x.startsWith('39') && !x.startsWith('+39'))x='+'+x;
+  if(/^3\d{9}$/.test(x))x='+39'+x;
+  return x;
+}
+function accountTechnicalEmail(phone){return `rpl.${phone.replace(/^\+39/,'')}@royalpadelleague.it`;}
+function generateTempPassword(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';let out='Rpl-';for(let i=0;i<10;i++)out+=chars[Math.floor(Math.random()*chars.length)];return out;}
+function loadAccountImportTemplate(){
+  const host=$("operatorAccountsList"), msg=$("operatorAccountsMsg");
+  if(!accountImportState.rows.length){
+    host.innerHTML='<div class="muted">Carica il file <b>RPL_account_import.json</b> che ti preparo insieme a questa versione. Il file contiene solo nome giocatore e telefono.</div>';
+    return;
+  }
+  host.innerHTML=accountImportState.rows.map((r,i)=>`<div class="rpl-account-row"><div><b>${escOperator(r.name||'')}</b><div class="muted">${escOperator(r.nickname||'')}</div></div><div>📱 ${escOperator(r.phone||'')}</div><div class="rpl-account-status ${r.status==='CREATO'?'rpl-account-ok':r.status==='ERRORE'?'rpl-account-err':'rpl-account-warn'}">${escOperator(r.status||'DA CREARE')}</div><div>${r.temporary_password?`<b>Temp:</b> ${escOperator(r.temporary_password)}`:''}</div></div>`).join('');
+  msg.className='msg';msg.textContent=`${accountImportState.rows.length} giocatori caricati.`;
+}
+async function createAllPlayerAccounts(){
+  const msg=$("operatorAccountsMsg");
+  if(!accountImportState.rows.length){msg.className='msg err';msg.textContent='Prima carica il file di importazione.';return;}
+  if(!confirm(`Creare gli account mancanti per ${accountImportState.rows.length} giocatori?`))return;
+  msg.className='msg';msg.textContent='Creazione account in corso…';
+  const authClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  for(const r of accountImportState.rows){
+    try{
+      const phone=normalizeAccountPhone(r.phone);
+      if(!/^\+39\d{9,10}$/.test(phone))throw new Error('Numero di telefono non valido.');
+      const p=dbPlayers.find(x=>String(x.name).trim().toLowerCase()===String(r.name).trim().toLowerCase());
+      if(!p)throw new Error('Giocatore non trovato nel database RPL.');
+      const existing=await sb.from('player_accounts').select('id,user_id').eq('player_id',p.id).maybeSingle();
+      if(existing.error)throw existing.error;
+      if(existing.data){r.status='ESISTENTE';continue;}
+      const temporary_password=generateTempPassword();
+      const technicalEmail=accountTechnicalEmail(phone);
+      const created=await authClient.auth.signUp({email:technicalEmail,password:temporary_password});
+      if(created.error)throw created.error;
+      if(!created.data.user)throw new Error('Supabase non ha restituito l\'utente creato.');
+      const ins=await sb.from('player_accounts').insert({player_id:p.id,user_id:created.data.user.id,force_password_change:true,updated_at:new Date().toISOString()});
+      if(ins.error)throw ins.error;
+      r.status='CREATO';r.temporary_password=temporary_password;r.technical_email=technicalEmail;
+    }catch(e){r.status='ERRORE';r.error=e?.message||String(e);}
+    loadAccountImportTemplate();
+  }
+  const ok=accountImportState.rows.filter(x=>x.status==='CREATO').length, exists=accountImportState.rows.filter(x=>x.status==='ESISTENTE').length, err=accountImportState.rows.filter(x=>x.status==='ERRORE').length;
+  msg.className=err?'msg err':'msg ok';msg.textContent=`Operazione terminata: ${ok} creati · ${exists} già presenti · ${err} errori.`;
+}
+function downloadAccountCredentials(){
+  const rows=accountImportState.rows.filter(x=>x.temporary_password);
+  if(!rows.length){alert('Non ci sono nuove credenziali da scaricare.');return;}
+  const text=['ROYAL PADEL LEAGUE – CREDENZIALI TEMPORANEE','Usare queste credenziali solo per il primo accesso. Il giocatore dovrà cambiare la password.','',...rows.map(x=>`${x.name} | Telefono: ${x.phone} | Email tecnica: ${x.technical_email} | Password temporanea: ${x.temporary_password}`)].join('\n');
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='RPL_Credenziali_Temporanee.txt';a.click();URL.revokeObjectURL(url);
+}
+$('accountImportFile')?.addEventListener('change',async e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  try{const obj=JSON.parse(await file.text());if(!Array.isArray(obj))throw new Error('Formato file non valido.');accountImportState.rows=obj.map(x=>({name:x.name,nickname:x.nickname||'',phone:normalizeAccountPhone(x.phone),status:'DA CREARE'}));loadAccountImportTemplate();}
+  catch(err){$('operatorAccountsMsg').className='msg err';$('operatorAccountsMsg').textContent='Errore lettura file: '+(err.message||err);}
+});
 function showOperatorSection(which){
-  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), p=$("operatorConfirmSection");
-  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), pt=$("opConfirmTab");
-  m?.classList.add("hidden"); c?.classList.add("hidden"); v?.classList.add("hidden"); p?.classList.add("hidden");
-  mt?.classList.remove("primary"); ct?.classList.remove("primary"); vt?.classList.remove("primary"); pt?.classList.remove("primary");
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), p=$("operatorConfirmSection"), a=$("operatorAccountsSection");
+  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), pt=$("opConfirmTab"), at=$("opAccountsTab");
+  [m,c,v,p,a].forEach(x=>x?.classList.add("hidden"));
+  [mt,ct,vt,pt,at].forEach(x=>x?.classList.remove("primary"));
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
   else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
   else if(which==="confirm"){p?.classList.remove("hidden");pt?.classList.add("primary");loadOperatorPendingMatches();}
+  else if(which==="accounts"){a?.classList.remove("hidden");at?.classList.add("primary");loadAccountImportTemplate();}
   else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
 function fillCalendarPlayers(){
@@ -2679,7 +2761,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.107</div>
+<div id="rplVersionBadge">RPL v6.5.108</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
