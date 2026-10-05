@@ -623,7 +623,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 .rpl-public-profile-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:13px}
 .rpl-public-profile-meta>div{padding:9px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08)}
 .rpl-public-profile-meta b{display:block;color:#fff;font-size:12px}.rpl-public-profile-meta span{font-size:9px;color:#9da8b4}
-.rpl-profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:60;padding:16px;overflow:auto;display:flex;align-items:flex-start;justify-content:center}
+.rpl-profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:60;padding:16px;overflow:auto;display:flex;align-items:flex-start;justify-content:center}.rpl-profile-modal.hidden{display:none!important}
 .rpl-profile-modal-card{width:min(620px,100%);margin:20px auto;background:linear-gradient(180deg,#091725,#06111c);border:1px solid rgba(231,185,78,.55);border-radius:18px;padding:16px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
 .rpl-profile-modal-head{display:flex;align-items:center;gap:14px}.rpl-profile-modal-photo{width:92px;height:92px;flex:0 0 92px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:#07121e}.rpl-profile-modal-logo{width:70px;height:70px;flex:0 0 70px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e}
 .rpl-profile-modal-title{font-size:25px;font-weight:900;line-height:1.05}.rpl-profile-modal-nick{color:var(--gold2);font-weight:800;margin-top:4px}.rpl-profile-close{padding:6px 10px;font-size:18px;line-height:1}
@@ -2791,7 +2791,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.104</div>
+<div id="rplVersionBadge">RPL v6.5.105</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
