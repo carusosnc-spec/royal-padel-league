@@ -1674,7 +1674,7 @@ function loadAccountImportTemplate(){
     host.innerHTML='<div class="muted">Carica il file <b>RPL_account_import.json</b> che ti preparo insieme a questa versione. Il file contiene solo nome giocatore e telefono.</div>';
     return;
   }
-  host.innerHTML=accountImportState.rows.map((r,i)=>`<div class="rpl-account-row"><div><b>${escOperator(r.name||'')}</b><div class="muted">${escOperator(r.nickname||'')}</div></div><div>📱 ${escOperator(r.phone||'')}</div><div class="rpl-account-status ${r.status==='CREATO'?'rpl-account-ok':r.status==='ERRORE'?'rpl-account-err':'rpl-account-warn'}">${escOperator(r.status||'DA CREARE')}</div><div>${r.temporary_password?`<b>Temp:</b> ${escOperator(r.temporary_password)}`:''}</div></div>`).join('');
+  host.innerHTML=accountImportState.rows.map((r,i)=>`<div class="rpl-account-row"><div><b>${escOperator(r.name||'')}</b><div class="muted">${escOperator(r.nickname||'')}</div></div><div>📱 ${escOperator(r.phone||'')}</div><div class="rpl-account-status ${r.status==='CREATO'?'rpl-account-ok':r.status==='ERRORE'?'rpl-account-err':'rpl-account-warn'}">${escOperator(r.status||'DA CREARE')}${r.error?`<div class="muted" style="margin-top:4px;font-size:10px;white-space:normal;word-break:break-word">${escOperator(r.error)}</div>`:''}</div><div>${r.temporary_password?`<b>Temp:</b> ${escOperator(r.temporary_password)}`:''}</div></div>`).join('');
   msg.className='msg';msg.textContent=`${accountImportState.rows.length} giocatori caricati.`;
 }
 async function createAllPlayerAccounts(){
