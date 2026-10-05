@@ -849,6 +849,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <button type="button" id="opMatchTab" class="primary" onclick="showOperatorSection('match')">🎾 Inserisci partita</button>
 <button type="button" id="opCalendarTab" onclick="showOperatorSection('calendar')">📅 Calendario</button>
 <button type="button" id="opVotingTab" onclick="showOperatorSection('voting')">🗳️ Votazioni settimanali</button>
+<button type="button" id="opConfirmTab" onclick="showOperatorSection('confirm')">✅ Partite da confermare</button>
 </div>
 </div>
 <div id="operatorVotingSection" class="hidden">
@@ -878,6 +879,14 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   <div class="muted">Le votazioni archiviate non vengono cancellate: restano qui e possono essere ripristinate.</div>
   <div id="operatorVotingArchiveList" style="margin-top:10px">Caricamento…</div>
 </div>
+</div>
+</div>
+<div id="operatorConfirmSection" class="hidden">
+<div class="card">
+<h2>✅ Partite da confermare</h2>
+<div class="muted">Qui vengono raccolti i risultati inseriti dai Responsabili Partita. La conferma definitiva verrà collegata allo stato di approvazione del database, così solo le partite confermate potranno diventare ufficiali.</div>
+<div id="operatorConfirmMsg" class="msg" style="margin-top:10px"></div>
+<div id="operatorConfirmList" style="margin-top:12px">Caricamento…</div>
 </div>
 </div>
 <div id="bonusPreviewAdmin" style="margin-top:12px">
@@ -1151,6 +1160,7 @@ async function login(){
   $("operatorMatchSection")?.classList.add("hidden");
   $("operatorCalendarSection")?.classList.add("hidden");
   $("operatorVotingSection")?.classList.add("hidden");
+  $("operatorConfirmSection")?.classList.add("hidden");
   $("operatorSubmenu")?.classList.remove("hidden");
   $("loginMsg").className="msg";$("loginMsg").textContent="";
   $("opMatchTab")?.classList.remove("primary");
@@ -1465,13 +1475,40 @@ async function generateCalendarFromPoll(weekId){
     window.scrollTo({top:$("operatorCalendarSection").offsetTop-10,behavior:"smooth"});
   }catch(e){console.error(e);msg.className="msg err";msg.textContent="Errore generazione proposta: "+(e.message||e);}
 }
+async function loadOperatorPendingMatches(){
+  const box=$("operatorConfirmList"),msg=$("operatorConfirmMsg");
+  if(!box)return;
+  box.innerHTML='Caricamento…'; msg.className='msg'; msg.textContent='';
+  try{
+    const {data:matches,error:me}=await sb.from('matches').select('id,played_at,calendar_match_id').order('played_at',{ascending:false}).limit(50);
+    if(me)throw me;
+    if(!(matches||[]).length){box.innerHTML='<div class="muted">Nessuna partita inserita dal Responsabile.</div>';return;}
+    const ids=(matches||[]).map(x=>x.calendar_match_id).filter(Boolean);
+    let calendars=[];
+    if(ids.length){const {data,error}=await sb.from('calendar_matches').select('*').in('id',ids);if(error)throw error;calendars=data||[];}
+    const cmap={};calendars.forEach(x=>cmap[x.id]=x);
+    box.innerHTML=(matches||[]).map(m=>{
+      const c=cmap[m.calendar_match_id]||{};
+      const names=[1,2,3,4].map(i=>c['player_'+i+'_name']||playerById(c['player_'+i])?.name||'Giocatore');
+      return `<div class="card" style="margin:10px 0;border-color:rgba(231,185,78,.28)">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <div><b>🎾 ${escP(fmtDate(m.played_at))} · ${escP(fmtTime(m.played_at))}</b><div class="muted">📍 ${escP(c.court||'Campo')} · ${escP(c.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div></div>
+          <span style="padding:5px 9px;border-radius:999px;border:1px solid rgba(231,185,78,.4);color:#ffd86a;font-weight:800;font-size:11px">DA CONTROLLARE</span>
+        </div>
+        <div class="muted" style="margin-top:8px">${names.map(escP).join(' · ')}</div>
+        <div class="msg" style="margin-top:10px">⚠️ Il risultato è già presente in <b>matches</b>. Per far sì che la classifica si aggiorni <b>solo dopo CONFERMA PARTITA</b> serve aggiungere nel database uno stato reale <b>pending/confirmed</b>; non inserisco un pulsante fittizio che darebbe una falsa conferma.</div>
+      </div>`;
+    }).join('');
+  }catch(e){console.error(e);box.innerHTML='';msg.className='msg err';msg.textContent='Errore caricamento partite da confermare: '+(e.message||e);}
+}
 function showOperatorSection(which){
-  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection");
-  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab");
-  m?.classList.add("hidden"); c?.classList.add("hidden"); v?.classList.add("hidden");
-  mt?.classList.remove("primary"); ct?.classList.remove("primary"); vt?.classList.remove("primary");
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), p=$("operatorConfirmSection");
+  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), pt=$("opConfirmTab");
+  m?.classList.add("hidden"); c?.classList.add("hidden"); v?.classList.add("hidden"); p?.classList.add("hidden");
+  mt?.classList.remove("primary"); ct?.classList.remove("primary"); vt?.classList.remove("primary"); pt?.classList.remove("primary");
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
   else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
+  else if(which==="confirm"){p?.classList.remove("hidden");pt?.classList.add("primary");loadOperatorPendingMatches();}
   else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
 function fillCalendarPlayers(){
@@ -2604,7 +2641,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.97</div>
+<div id="rplVersionBadge">RPL v6.5.98</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2960,13 +2997,16 @@ async function loadPublicCalendar(){
     return cycle[index%3];
   }
   function renderResultSetRow(pair,index){
-    return `<div class="rpl-result-set" data-set-index="${index}" data-a1="${pair[0].id}" data-a2="${pair[1].id}" data-b1="${pair[2].id}" data-b2="${pair[3].id}"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="text-align:center;color:var(--gold2);font-weight:900;flex:1">SET ${index+1}</div><button type="button" class="rpl-remove-result-set" style="padding:5px 8px;font-size:11px">🗑️ Rimuovi</button></div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${index}">${setScoreOptions()}</select><b>–</b><select data-set-b="${index}">${setScoreOptions()}</select></div></div>`;
+    return `<div class="rpl-result-set" data-set-index="${index}" data-a1="${pair[0].id}" data-a2="${pair[1].id}" data-b1="${pair[2].id}" data-b2="${pair[3].id}"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div data-result-set-title style="text-align:center;color:var(--gold2);font-weight:900;flex:1">SET ${index+1}</div><button type="button" class="rpl-remove-result-set" style="padding:5px 8px;font-size:11px">🗑️ Rimuovi</button></div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${index}">${setScoreOptions()}</select><b>–</b><select data-set-b="${index}">${setScoreOptions()}</select></div></div>`;
   }
   function renumberResultSets(panel){
     [...panel.querySelectorAll('.rpl-result-set')].forEach((row,index)=>{
       row.dataset.setIndex=index;
-      const title=row.querySelector('div > div'); if(title)title.textContent='SET '+(index+1);
-      const a=row.querySelector('[data-set-a]'),b=row.querySelector('[data-set-b]'); if(a)a.dataset.setA=index;if(b)b.dataset.setB=index;
+      const title=row.querySelector('[data-result-set-title]');
+      if(title)title.textContent='SET '+(index+1);
+      const a=row.querySelector('[data-set-a]'),b=row.querySelector('[data-set-b]');
+      if(a)a.dataset.setA=index;
+      if(b)b.dataset.setB=index;
     });
   }
   function renderResultSets(cm){
@@ -2979,20 +3019,23 @@ async function loadPublicCalendar(){
     const panel=q('inlinePlayerResultPanel'); if(!panel)return;
     const players=window.rplDistintaPlayers(cm),type=cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL',setsBox=q('playerResultSets');
     if(!setsBox)return;
-    // Gestione delegata: ogni pulsante Rimuovi resta indipendente anche dopo più cancellazioni consecutive.
+    const addBtn=q('addPlayerResultSetBtn');
     if(setsBox.dataset.controlsBound==='1')return;
     setsBox.dataset.controlsBound='1';
     setsBox.addEventListener('click',e=>{
       const btn=e.target.closest('.rpl-remove-result-set');
-      if(!btn)return;
+      if(!btn || !setsBox.contains(btn))return;
+      const row=btn.closest('.rpl-result-set');
       const rows=setsBox.querySelectorAll('.rpl-result-set');
-      if(rows.length<=1)return;
-      btn.closest('.rpl-result-set')?.remove();
+      if(!row || rows.length<=1)return;
+      row.remove();
       renumberResultSets(setsBox);
     });
-    q('addPlayerResultSetBtn')?.addEventListener('click',()=>{
+    addBtn?.addEventListener('click',()=>{
       const index=setsBox.querySelectorAll('.rpl-result-set').length;
+      if(index>=30){alert('Puoi inserire al massimo 30 set per una partita.');return;}
       const pair=resultPairForIndex(players,type,index);
+      if(!pair)return;
       setsBox.insertAdjacentHTML('beforeend',renderResultSetRow(pair,index));
       renumberResultSets(setsBox);
     });
