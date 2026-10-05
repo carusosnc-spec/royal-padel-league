@@ -1682,29 +1682,35 @@ async function createAllPlayerAccounts(){
   if(!accountImportState.rows.length){msg.className='msg err';msg.textContent='Prima carica il file di importazione.';return;}
   if(!confirm(`Creare gli account mancanti per ${accountImportState.rows.length} giocatori?`))return;
   msg.className='msg';msg.textContent='Creazione account in corso…';
-  const authClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-  for(const r of accountImportState.rows){
-    try{
+  try{
+    const {data:{session},error:sessionError}=await sb.auth.getSession();
+    if(sessionError||!session)throw new Error('Sessione operatore non valida.');
+    const payload=[];
+    for(const r of accountImportState.rows){
       const phone=normalizeAccountPhone(r.phone);
-      if(!/^\+39\d{9,10}$/.test(phone))throw new Error('Numero di telefono non valido.');
+      if(!/^\+39\d{9,10}$/.test(phone)){r.status='ERRORE';r.error='Numero di telefono non valido.';continue;}
       const p=dbPlayers.find(x=>String(x.name).trim().toLowerCase()===String(r.name).trim().toLowerCase());
-      if(!p)throw new Error('Giocatore non trovato nel database RPL.');
-      const existing=await sb.from('player_accounts').select('id,user_id').eq('player_id',p.id).maybeSingle();
-      if(existing.error)throw existing.error;
-      if(existing.data){r.status='ESISTENTE';continue;}
-      const temporary_password=generateTempPassword();
-      const technicalEmail=accountTechnicalEmail(phone);
-      const created=await authClient.auth.signUp({email:technicalEmail,password:temporary_password});
-      if(created.error)throw created.error;
-      if(!created.data.user)throw new Error('Supabase non ha restituito l\'utente creato.');
-      const ins=await sb.from('player_accounts').insert({player_id:p.id,user_id:created.data.user.id,force_password_change:true,updated_at:new Date().toISOString()});
-      if(ins.error)throw ins.error;
-      r.status='CREATO';r.temporary_password=temporary_password;r.technical_email=technicalEmail;
-    }catch(e){r.status='ERRORE';r.error=e?.message||String(e);}
+      if(!p){r.status='ERRORE';r.error='Giocatore non trovato nel database RPL.';continue;}
+      r.status='IN CORSO';r.error='';
+      payload.push({player_id:p.id,name:r.name,phone});
+    }
     loadAccountImportTemplate();
-  }
-  const ok=accountImportState.rows.filter(x=>x.status==='CREATO').length, exists=accountImportState.rows.filter(x=>x.status==='ESISTENTE').length, err=accountImportState.rows.filter(x=>x.status==='ERRORE').length;
-  msg.className=err?'msg err':'msg ok';msg.textContent=`Operazione terminata: ${ok} creati · ${exists} già presenti · ${err} errori.`;
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/rpl-create-player-accounts`,{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({rows:payload})
+    });
+    let out=null;try{out=await response.json();}catch{throw new Error(`Risposta non valida dalla funzione Supabase (HTTP ${response.status}).`);}
+    if(!response.ok)throw new Error(out?.error||`Errore funzione Supabase (HTTP ${response.status}).`);
+    const byId=new Map((out.results||[]).map(x=>[String(x.player_id),x]));
+    for(const r of accountImportState.rows){
+      const p=dbPlayers.find(x=>String(x.name).trim().toLowerCase()===String(r.name).trim().toLowerCase());
+      const x=p?byId.get(String(p.id)):null;
+      if(!x)continue;
+      r.status=x.status;r.error=x.error||'';r.temporary_password=x.temporary_password||'';r.technical_email=x.technical_email||'';
+    }
+    loadAccountImportTemplate();
+    const ok=accountImportState.rows.filter(x=>x.status==='CREATO').length, exists=accountImportState.rows.filter(x=>x.status==='ESISTENTE').length, err=accountImportState.rows.filter(x=>x.status==='ERRORE').length;
+    msg.className=err?'msg err':'msg ok';msg.textContent=`Operazione terminata: ${ok} creati · ${exists} già presenti · ${err} errori.`;
+  }catch(e){msg.className='msg err';msg.textContent='Errore creazione account: '+(e?.message||String(e));loadAccountImportTemplate();}
 }
 function downloadAccountCredentials(){
   const rows=accountImportState.rows.filter(x=>x.temporary_password);
@@ -2761,7 +2767,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.110</div>
+<div id="rplVersionBadge">RPL v6.5.111</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
