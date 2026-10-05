@@ -625,11 +625,11 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 .rpl-public-profile-meta b{display:block;color:#fff;font-size:12px}.rpl-public-profile-meta span{font-size:9px;color:#9da8b4}
 .rpl-profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:60;padding:16px;overflow:auto;display:flex;align-items:flex-start;justify-content:center}.rpl-profile-modal.hidden{display:none!important}
 .rpl-profile-modal-card{width:min(620px,100%);margin:20px auto;background:linear-gradient(180deg,#091725,#06111c);border:1px solid rgba(231,185,78,.55);border-radius:18px;padding:16px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
-.rpl-profile-modal-head{display:flex;align-items:center;gap:14px}.rpl-profile-modal-photo{width:92px;height:92px;flex:0 0 92px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:#07121e}.rpl-profile-modal-logo{width:70px;height:70px;flex:0 0 70px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e}
+.rpl-profile-modal-head{display:flex;align-items:center;gap:14px}.rpl-profile-modal-photo{width:118px;height:118px;flex:0 0 118px;border-radius:50%;object-fit:cover;image-rendering:auto;border:2px solid var(--gold);background:#07121e}.rpl-profile-modal-logo{width:70px;height:70px;flex:0 0 70px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e}
 .rpl-profile-modal-title{font-size:25px;font-weight:900;line-height:1.05}.rpl-profile-modal-nick{color:var(--gold2);font-weight:800;margin-top:4px}.rpl-profile-close{padding:6px 10px;font-size:18px;line-height:1}
 .rpl-profile-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.rpl-profile-stat{border:1px solid rgba(231,185,78,.2);border-radius:10px;padding:9px;text-align:center;background:rgba(255,255,255,.02)}.rpl-profile-stat b{display:block;font-size:18px;color:#fff}.rpl-profile-stat span{font-size:8px;color:#9da8b4}
 .rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.15)}
-@media(max-width:600px){.rpl-player-extra-grid{grid-template-columns:1fr}.rpl-profile-ranks{grid-template-columns:1fr 1fr}.rpl-profile-rank.main{grid-column:1/-1}.rpl-profile-stat-grid{grid-template-columns:repeat(2,1fr)}.rpl-profile-modal-head{align-items:flex-start}.rpl-profile-modal-photo{width:78px;height:78px;flex-basis:78px}.rpl-profile-modal-logo{width:58px;height:58px;flex-basis:58px}.rpl-profile-modal-title{font-size:21px}}
+@media(max-width:600px){.rpl-player-extra-grid{grid-template-columns:1fr}.rpl-profile-ranks{grid-template-columns:1fr 1fr}.rpl-profile-rank.main{grid-column:1/-1}.rpl-profile-stat-grid{grid-template-columns:repeat(2,1fr)}.rpl-profile-modal-head{align-items:flex-start}.rpl-profile-modal-photo{width:96px;height:96px;flex-basis:96px}.rpl-profile-modal-logo{width:58px;height:58px;flex-basis:58px}.rpl-profile-modal-title{font-size:21px}}
 </style>
 <style id="rpl-player-area-style">
 #playerAreaBtn{order:7!important}
@@ -639,11 +639,11 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 .rpl-player-profile-head{display:flex;align-items:center;gap:16px}
 .rpl-player-logo-box{width:92px;height:92px;flex:0 0 92px;border-radius:50%;overflow:hidden;border:2px solid rgba(231,185,78,.7);background:#07121e;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.28)}
 .rpl-player-logo-box img{width:100%;height:100%;object-fit:cover;display:none}.rpl-player-logo-box.has-image img{display:block}.rpl-player-logo-box.has-image #playerLogoFallback{display:none}
-.rpl-avatar-box{width:92px;height:92px;flex:0 0 92px;border-radius:50%;overflow:hidden;border:2px solid var(--gold);background:#07121e;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.32)}
-.rpl-avatar-box img{width:100%;height:100%;object-fit:cover;display:none}.rpl-avatar-box.has-image img{display:block}.rpl-avatar-box.has-image #playerAvatarFallback{display:none}
+.rpl-avatar-box{width:112px;height:112px;flex:0 0 112px;border-radius:50%;overflow:hidden;border:2px solid var(--gold);background:#07121e;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.32)}
+.rpl-avatar-box img{width:100%;height:100%;object-fit:cover;display:none;image-rendering:auto}.rpl-avatar-box.has-image img{display:block}.rpl-avatar-box.has-image #playerAvatarFallback{display:none}
 .rpl-player-kicker{font-size:10px;color:#9da8b4;letter-spacing:.18em}.rpl-player-name-title{font-size:25px;font-weight:900;line-height:1.1}.rpl-player-nick-title{color:var(--gold2);font-weight:800;margin-top:4px}.rpl-photo-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.rpl-photo-btn{display:inline-flex!important;align-items:center;justify-content:center;padding:10px 12px;border:1px solid #7f6a32;border-radius:10px;background:#0b1825;color:#fff;cursor:pointer;font-size:12px;font-weight:800}.rpl-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.rpl-stat{border:1px solid rgba(231,185,78,.25);border-radius:12px;padding:12px;background:rgba(255,255,255,.025);text-align:center}.rpl-stat b{display:block;font-size:21px;color:#fff}.rpl-stat span{display:block;font-size:10px;color:#9da8b4;margin-top:3px}.rpl-responsible-hero{border:1px solid #e7b94e;background:linear-gradient(135deg,rgba(231,185,78,.18),rgba(0,0,0,.15));box-shadow:0 12px 30px rgba(0,0,0,.28)}
 .rpl-responsible-button{width:100%;min-height:64px;font-size:17px;margin-top:12px;background:linear-gradient(135deg,#8e681d,#f2ca63);color:#080d12;border-color:#f2ca63}.rpl-result-set{border-top:1px solid rgba(255,255,255,.1);padding:13px 0}.rpl-result-score{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}.rpl-result-score select{width:68px;text-align:center;font-size:20px;font-weight:900}.rpl-team-mini{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;font-size:12px;color:#dce3eb}.rpl-alert-title{font-size:18px;font-weight:900;color:var(--gold2);margin-bottom:6px}.rpl-match-card{border:1px solid rgba(231,185,78,.2);border-radius:12px;padding:12px;margin-bottom:9px;background:rgba(255,255,255,.02)}.rpl-match-card:last-child{margin-bottom:0}.rpl-match-card b{color:#fff}.rpl-match-meta{font-size:11px;color:#9da8b4;margin-top:4px}.rpl-closed{color:#39d98a;font-weight:800}.rpl-no-match{text-align:center;padding:18px;color:#9da8b4}
-@media(max-width:700px){.rpl-stat-grid{grid-template-columns:repeat(2,1fr)}.rpl-player-profile-head{align-items:flex-start}.rpl-avatar-box{width:78px;height:78px;flex-basis:78px}.rpl-player-logo-box{width:78px;height:78px;flex-basis:78px}.rpl-player-name-title{font-size:21px}.rpl-photo-btn{flex:1}.rpl-result-score select{width:62px}}
+@media(max-width:700px){.rpl-stat-grid{grid-template-columns:repeat(2,1fr)}.rpl-player-profile-head{align-items:flex-start}.rpl-avatar-box{width:96px;height:96px;flex-basis:96px}.rpl-player-logo-box{width:78px;height:78px;flex-basis:78px}.rpl-player-name-title{font-size:21px}.rpl-photo-btn{flex:1}.rpl-result-score select{width:62px}}
 </style>
 
 <style id="rpl-v6587-voting-compact">
@@ -2402,118 +2402,6 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   });
 })();
 </script>
-<!-- RPL PLAYER CARD PROTOTYPE: GIANNI CARUSO -->
-<div id="rplPlayerCardGianni" class="rpl-player-card-overlay" aria-hidden="true">
-  <div class="rpl-player-card-backdrop" data-close-player-card></div>
-  <div class="rpl-player-card-modal" role="dialog" aria-modal="true" aria-label="Scheda Gianni Caruso">
-    <button class="rpl-player-card-close" type="button" data-close-player-card aria-label="Chiudi">×</button>
-    <div class="rpl-player-card">
-      <div class="rpl-card-corner">
-        <div class="rpl-card-ovr">75</div>
-        <div class="rpl-card-label">OVR</div>
-        <div class="rpl-card-fascia">F1</div>
-      </div>
-      <div class="rpl-card-brand">ROYAL PADEL LEAGUE</div>
-      <div class="rpl-card-hero">
-        <img id="rplGianniLogo" alt="Gianni Caruso — The Golden President">
-      </div>
-      <div class="rpl-card-name">GIANNI CARUSO</div>
-      <div class="rpl-card-nick">THE GOLDEN PRESIDENT</div>
-      <div class="rpl-card-stats">
-        <div class="rpl-stat"><b>60</b><span>VELOCITÀ</span></div>
-        <div class="rpl-stat"><b>70</b><span>POTENZA</span></div>
-        <div class="rpl-stat"><b>95</b><span>PRECISIONE</span></div>
-        <div class="rpl-stat"><b>90</b><span>TATTICA</span></div>
-        <div class="rpl-stat"><b>85</b><span>DIFESA</span></div>
-        <div class="rpl-stat"><b>50</b><span>RESISTENZA</span></div>
-      </div>
-      <div class="rpl-card-footer">
-        <span>ROYAL PADEL LEAGUE</span>
-        <span>WHERE LEGENDS PLAY</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style id="rpl-player-card-style">
-.rpl-player-card-overlay{display:none;position:fixed;inset:0;z-index:99999}
-.rpl-player-card-overlay.open{display:block}
-.rpl-player-card-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px)}
-.rpl-player-card-modal{position:relative;z-index:2;width:min(92vw,390px);margin:3vh auto 0}
-.rpl-player-card-close{position:absolute;right:-7px;top:-10px;width:40px;height:40px;border:2px solid #fff;border-radius:50%;background:#111;color:#fff;font-size:28px;line-height:32px;cursor:pointer;z-index:4}
-.rpl-player-card{position:relative;overflow:hidden;border-radius:26px;padding:17px 18px 18px;
-  background:
-    radial-gradient(circle at 50% 30%,rgba(255,255,255,.72),transparent 27%),
-    linear-gradient(145deg,#fff4bd 0%,#e4c35b 28%,#b88922 52%,#f5df91 76%,#9c701b 100%);
-  border:3px solid #fff2a5;box-shadow:0 28px 80px rgba(0,0,0,.65);color:#111}
-.rpl-player-card:before{content:"";position:absolute;inset:8px;border:1px solid rgba(255,255,255,.7);border-radius:20px;pointer-events:none}
-.rpl-card-brand{text-align:center;font-weight:900;font-size:11px;letter-spacing:2.3px;margin:2px 0 2px;position:relative}
-.rpl-card-corner{position:absolute;left:20px;top:34px;z-index:2;text-align:center}
-.rpl-card-ovr{font-size:48px;font-weight:950;line-height:.86}
-.rpl-card-label{font-size:9px;font-weight:900;letter-spacing:1.6px;margin-top:4px}
-.rpl-card-fascia{font-size:12px;font-weight:950;margin-top:7px;border-top:1px solid rgba(0,0,0,.35);padding-top:5px}
-.rpl-card-hero{height:235px;margin-top:2px;display:flex;align-items:center;justify-content:center;position:relative}
-.rpl-card-hero img{width:210px;height:210px;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.28))}
-.rpl-card-name{text-align:center;font-size:25px;font-weight:950;letter-spacing:.4px;position:relative}
-.rpl-card-nick{text-align:center;font-size:11px;font-weight:900;letter-spacing:2px;margin-top:3px;position:relative}
-.rpl-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:11px 25px;margin:17px 8px 0;padding:13px 0 12px;border-top:1px solid rgba(0,0,0,.3);border-bottom:1px solid rgba(0,0,0,.25);position:relative}
-.rpl-stat{display:flex;align-items:center;gap:9px}
-.rpl-stat b{font-size:25px;line-height:1;min-width:36px}
-.rpl-stat span{font-size:9px;font-weight:950;letter-spacing:.5px}
-.rpl-card-footer{display:flex;justify-content:space-between;gap:10px;margin:11px 7px 0;font-size:7px;font-weight:900;letter-spacing:1.1px;opacity:.85;position:relative}
-.rpl-player-logo-clickable{cursor:pointer!important}
-@media(max-width:430px){.rpl-player-card-modal{margin-top:2vh}.rpl-card-hero{height:215px}.rpl-card-hero img{width:185px;height:185px}.rpl-card-name{font-size:22px}}
-</style>
-
-<script id="rpl-player-card-script">
-(function(){
-  const overlay=document.getElementById("rplPlayerCardGianni");
-  const logo=document.getElementById("rplGianniLogo");
-  function gianniLogo(){
-    try{return typeof window.logoFile==="function" ? window.logoFile("Gianni Caruso") : "";}catch(e){return "";}
-  }
-  function openGianniCard(){
-    const src=gianniLogo();
-    if(src) logo.src=src;
-    overlay.classList.add("open");
-    overlay.setAttribute("aria-hidden","false");
-    document.body.style.overflow="hidden";
-  }
-  function closeCard(){
-    overlay.classList.remove("open");
-    overlay.setAttribute("aria-hidden","true");
-    document.body.style.overflow="";
-  }
-  window.openGianniCard=openGianniCard;
-  window.closeGianniCard=closeCard;
-
-  document.addEventListener("click",function(e){
-    const close=e.target.closest("[data-close-player-card]");
-    if(close){closeCard();return;}
-    const img=e.target.closest("img");
-    if(!img)return;
-    const player=(img.getAttribute("data-player-name")||img.alt||"").trim();
-    const src=gianniLogo();
-    if(player==="Gianni Caruso" || (src && img.currentSrc===src)){
-      img.classList.add("rpl-player-logo-clickable");
-      openGianniCard();
-    }
-  },true);
-
-  document.addEventListener("touchend",function(e){
-    const img=e.target.closest && e.target.closest("img[data-player-name='Gianni Caruso']");
-    if(img){
-      e.preventDefault();
-      openGianniCard();
-    }
-  },{passive:false});
-
-  document.addEventListener("keydown",function(e){
-    if(e.key==="Escape" && overlay.classList.contains("open")) closeCard();
-  });
-})();
-</script>
-
 <style id="rpl-score-select-style">
 .rpl-score-selects{display:flex;align-items:center;justify-content:center;gap:7px}
 .rpl-score-selects select{width:62px;min-width:62px;padding:9px 8px;border:1px solid #ccc;border-radius:10px;font-size:17px;font-weight:800;text-align:center;background:#fff}
@@ -2791,7 +2679,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.105</div>
+<div id="rplVersionBadge">RPL v6.5.106</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3401,7 +3289,7 @@ async function loadPublicCalendar(){
     const required=minSetsRequired();const general=all.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb,eligible:required===null||s.sets>=required})).sort((a,b)=>(a.eligible!==b.eligible?(a.eligible?-1:1):b.total-a.total||b.base-a.base||a.name.localeCompare(b.name,'it')));
     const current=new Date(),first=new Date(current.getFullYear(),current.getMonth(),1),next=new Date(current.getFullYear(),current.getMonth()+1,1);const monthKey=x=>String(x.getMonth()+1).padStart(2,'0');
     const mid=(matches||[]).filter(m=>new Date(m.played_at)>=first&&new Date(m.played_at)<next);const mids=mid.map(m=>m.id);let partial=0,bonus=0;
-    if(mids.length){const [pm,ps,pa]=await Promise.all([sb.from('match_players').select('*').in('match_id',mids),sb.from('sets').select('*').in('match_id',mids),sb.from('match_awards').select('*').in('match_id',mids)]);if(pm.error||ps.error||pa.error)throw(pm.error||ps.error||pa.error);const pSnap={};(pm.data||[]).forEach(x=>pSnap[x.match_id+'_'+x.player_id]=x);const pst=emptyStats();(ps.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);W.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=wg;z.pt+=(pSnap[x.match_id+'_'+L[0]]?.fascia_value||0)+(pSnap[x.match_id+'_'+L[1]]?.fascia_value||0)}});L.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=lg}})});(pa.data||[]).forEach(x=>{const z=pst.find(s=>s.id===x.player_id);if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++}});const pr=pst.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb})).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,'it'));partial=pr.findIndex(x=>String(x.id)===String(playerId))+1;const bonusPoints=[100,72,60,48,40,32,24,16,8,4];const elig=pr.filter(x=>x.sets>=minSetsRequired()&&x.sets>0);bonus=elig.findIndex(x=>String(x.id)===String(playerId))+1;if(bonus===0)bonus=0;}
+    if(mids.length){const [pm,ps,pa]=await Promise.all([sb.from('match_players').select('*').in('match_id',mids),sb.from('sets').select('*').in('match_id',mids),sb.from('match_awards').select('*').in('match_id',mids)]);if(pm.error||ps.error||pa.error)throw(pm.error||ps.error||pa.error);const pSnap={};(pm.data||[]).forEach(x=>pSnap[x.match_id+'_'+x.player_id]=x);const pst=emptyStats();(ps.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);W.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=wg;z.pt+=(pSnap[x.match_id+'_'+L[0]]?.fascia_value||0)+(pSnap[x.match_id+'_'+L[1]]?.fascia_value||0)}});L.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=lg}})});(pa.data||[]).forEach(x=>{const z=pst.find(s=>s.id===x.player_id);if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++}});const pr=pst.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb})).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,'it'));partial=pr.findIndex(x=>String(x.id)===String(playerId))+1;const bonusPoints=[100,72,60,48,40,32,24,16,8,4];const elig=pr.filter(x=>{const gs=all.find(g=>String(g.id)===String(x.id));return x.sets>0&&gs&&gs.sets>=minSetsRequired()});bonus=elig.findIndex(x=>String(x.id)===String(playerId))+1;if(bonus===0)bonus=0;}
     return {general:general.findIndex(x=>String(x.id)===String(playerId))+1,partial,bonus};
   }
   async function openRplPlayerProfile(playerId){
