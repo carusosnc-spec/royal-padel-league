@@ -884,7 +884,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div id="operatorConfirmSection" class="hidden">
 <div class="card">
 <h2>✅ Partite da confermare</h2>
-<div class="muted">Qui vengono raccolti i risultati inseriti dai Responsabili Partita. La conferma definitiva verrà collegata allo stato di approvazione del database, così solo le partite confermate potranno diventare ufficiali.</div>
+<div class="muted">Qui vengono raccolti i risultati inseriti dai Responsabili Partita. Controlla ogni partita prima di renderla ufficiale: puoi aprirla, modificarla, cancellarla definitivamente oppure riattivarla per chiedere al Responsabile di reinserire il risultato.</div>
 <div id="operatorConfirmMsg" class="msg" style="margin-top:10px"></div>
 <div id="operatorConfirmList" style="margin-top:12px">Caricamento…</div>
 </div>
@@ -1123,7 +1123,7 @@ function render(){
 
 async function loadRanking(){
   const calculationStats=emptyStats();
-  const {data:matches,error:me}=await sb.from("matches").select("id,played_at").order("played_at",{ascending:true});
+  const {data:matches,error:me}=await sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").order("played_at",{ascending:true});
   if(me){$("status").textContent="Errore caricamento partite: "+me.message;return}
   if(!matches.length){stats=calculationStats;render();return}
   const ids=matches.map(m=>m.id);
@@ -1215,7 +1215,7 @@ async function calendarMatchAlreadyRecorded(cm){
   // Cerca le partite registrate in una finestra prudente attorno all'orario del calendario.
   const from=new Date(scheduled-6*60*60*1000).toISOString();
   const to=new Date(scheduled+24*60*60*1000).toISOString();
-  const {data:matches,error}=await sb.from("matches").select("id,played_at").gte("played_at",from).lte("played_at",to).order("played_at",{ascending:true});
+  const {data:matches,error}=await sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").gte("played_at",from).lte("played_at",to).order("played_at",{ascending:true});
   if(error)throw error;
   if(!matches?.length)return false;
   const mids=matches.map(x=>x.id);
@@ -1292,7 +1292,7 @@ async function saveMatch(){
     });
   }
 
-  const {data:match,error:me}=await sb.from("matches").insert({played_at:playedAt}).select().single();
+  const {data:match,error:me}=await sb.from("matches").insert({played_at:playedAt,approval_status:"confirmed"}).select().single();
   if(me){$("msg").className="msg err";$("msg").textContent="Errore partita: "+me.message;return}
   const matchId=match.id;
   const mpRows=ids.map(pid=>({match_id:matchId,player_id:pid,fascia:snapshot[pid].fascia,fascia_value:snapshot[pid].fascia_value}));
@@ -1311,7 +1311,7 @@ async function saveMatch(){
   resetForm();await loadRanking();await loadOperatorHistory();
 }
 async function calculateStandingsBefore(timestamp){
-  const {data:matches}=await sb.from("matches").select("id,played_at").lt("played_at",timestamp).order("played_at",{ascending:true});
+  const {data:matches}=await sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").lt("played_at",timestamp).order("played_at",{ascending:true});
   if(!matches||!matches.length)return dbPlayers.filter(p=>!p.is_guest).map(p=>({id:p.id,base:0,total:0}));
   const ids=matches.map(m=>m.id);
   const [{data:mp},{data:sets},{data:aw}]=await Promise.all([
@@ -1478,29 +1478,129 @@ async function generateCalendarFromPoll(weekId){
 async function loadOperatorPendingMatches(){
   const box=$("operatorConfirmList"),msg=$("operatorConfirmMsg");
   if(!box)return;
-  box.innerHTML='Caricamento…'; msg.className='msg'; msg.textContent='';
+  box.innerHTML='<div class="muted">Caricamento…</div>'; if(msg){msg.className='msg';msg.textContent='';}
   try{
-    const {data:matches,error:me}=await sb.from('matches').select('id,played_at,calendar_match_id').order('played_at',{ascending:false}).limit(50);
+    const {data:matches,error:me}=await sb.from('matches').select('id,played_at,calendar_match_id,approval_status').eq('approval_status','pending').order('played_at',{ascending:false}).limit(50);
     if(me)throw me;
-    if(!(matches||[]).length){box.innerHTML='<div class="muted">Nessuna partita inserita dal Responsabile.</div>';return;}
+    if(!(matches||[]).length){box.innerHTML='<div class="muted" style="padding:18px;text-align:center">🎉 Nessuna partita da confermare.</div>';return;}
     const ids=(matches||[]).map(x=>x.calendar_match_id).filter(Boolean);
     let calendars=[];
     if(ids.length){const {data,error}=await sb.from('calendar_matches').select('*').in('id',ids);if(error)throw error;calendars=data||[];}
     const cmap={};calendars.forEach(x=>cmap[x.id]=x);
-    box.innerHTML=(matches||[]).map(m=>{
-      const c=cmap[m.calendar_match_id]||{};
-      const names=[1,2,3,4].map(i=>c['player_'+i+'_name']||playerById(c['player_'+i])?.name||'Giocatore');
-      return `<div class="card" style="margin:10px 0;border-color:rgba(231,185,78,.28)">
+    const mids=matches.map(x=>x.id);
+    const [mpR,setsR,plR]=await Promise.all([
+      sb.from('match_players').select('match_id,player_id').in('match_id',mids),
+      sb.from('sets').select('match_id,set_number,games_a,games_b').in('match_id',mids).order('set_number'),
+      sb.from('players').select('id,name,nickname')
+    ]);
+    if(mpR.error)throw mpR.error;if(setsR.error)throw setsR.error;if(plR.error)throw plR.error;
+    const names={};(plR.data||[]).forEach(p=>names[String(p.id)]=p.name+(p.nickname?' — '+p.nickname:''));
+    const playersBy={},setsBy={};
+    (mpR.data||[]).forEach(x=>{const k=String(x.match_id);(playersBy[k]??=[]).push(names[String(x.player_id)]||'Giocatore');});
+    (setsR.data||[]).forEach(x=>{const k=String(x.match_id);(setsBy[k]??=[]).push(x);});
+    box.innerHTML=matches.map(m=>{
+      const k=String(m.id),c=cmap[m.calendar_match_id]||{},ps=[...new Set(playersBy[k]||[])],sets=setsBy[k]||[];
+      const scores=sets.map(s=>`${s.games_a}-${s.games_b}`).join(' · ')||'—';
+      return `<div class="card rpl-pending-match" style="margin:10px 0;border-color:rgba(231,185,78,.35)">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
-          <div><b>🎾 ${escP(fmtDate(m.played_at))} · ${escP(fmtTime(m.played_at))}</b><div class="muted">📍 ${escP(c.court||'Campo')} · ${escP(c.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div></div>
-          <span style="padding:5px 9px;border-radius:999px;border:1px solid rgba(231,185,78,.4);color:#ffd86a;font-weight:800;font-size:11px">DA CONTROLLARE</span>
+          <div><b>🎾 ${escOperator(fmtDate(m.played_at))} · ore ${escOperator(fmtTime(m.played_at))}</b><div class="muted">📍 ${escOperator(c.court||'Campo')} · ${escOperator(c.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div></div>
+          <span style="padding:5px 9px;border-radius:999px;border:1px solid rgba(231,185,78,.55);color:#ffd86a;font-weight:900;font-size:11px">⏳ DA CONFERMARE</span>
         </div>
-        <div class="muted" style="margin-top:8px">${names.map(escP).join(' · ')}</div>
-        <div class="msg" style="margin-top:10px">⚠️ Il risultato è già presente in <b>matches</b>. Per far sì che la classifica si aggiorni <b>solo dopo CONFERMA PARTITA</b> serve aggiungere nel database uno stato reale <b>pending/confirmed</b>; non inserisco un pulsante fittizio che darebbe una falsa conferma.</div>
+        <div style="margin-top:8px;font-weight:700">${ps.map(escOperator).join(' · ')}</div>
+        <div style="margin-top:7px"><span class="badge">🎾 ${escOperator(scores)}</span> <span class="muted">${sets.length} set</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button type="button" class="smallbtn" onclick="openPendingMatch(${JSON.stringify(m.id)})">🔎 APRI / CONTROLLA</button>
+          <button type="button" class="smallbtn edit" onclick="openEdit(${JSON.stringify(m.id)})">✏️ MODIFICA</button>
+          <button type="button" class="smallbtn danger" onclick="deletePendingMatch(${JSON.stringify(m.id)})">🗑️ CANCELLA</button>
+          <button type="button" class="smallbtn" onclick="reactivatePendingMatch(${JSON.stringify(m.id)})">↩️ RIATTIVA PARTITA</button>
+          <button type="button" class="smallbtn primary" onclick="confirmPendingMatch(${JSON.stringify(m.id)})">✅ CONFERMA PARTITA</button>
+        </div>
       </div>`;
     }).join('');
-  }catch(e){console.error(e);box.innerHTML='';msg.className='msg err';msg.textContent='Errore caricamento partite da confermare: '+(e.message||e);}
+  }catch(e){
+    console.error('Errore caricamento partite da confermare:',e);
+    box.innerHTML='<div class="msg err">Errore caricamento partite da confermare.</div>';
+    if(msg){msg.className='msg err';msg.textContent=e.message||String(e);}
+  }
 }
+async function openPendingMatch(id){
+  const host=$("pendingMatchModal"),body=$("pendingMatchBody"); if(!host||!body)return;
+  host.classList.remove('hidden'); body.innerHTML='<div class="muted">Caricamento…</div>';
+  try{
+    const [{data:m,error:me},{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
+      sb.from('matches').select('*').eq('id',id).single(),
+      sb.from('match_players').select('*').eq('match_id',id).order('id'),
+      sb.from('sets').select('*').eq('match_id',id).order('set_number'),
+      sb.from('match_awards').select('*').eq('match_id',id)
+    ]);
+    if(me)throw me;if(mpe)throw mpe;if(se)throw se;if(ae)throw ae;
+    if(!m)throw new Error('Partita non trovata.');
+    const playerIds=[...(mp||[]).map(x=>x.player_id)];
+    const {data:players,error:pe}=await sb.from('players').select('id,name,nickname').in('id',playerIds);if(pe)throw pe;
+    const pn={};(players||[]).forEach(p=>pn[p.id]=p.name+(p.nickname?' — '+p.nickname:''));
+    const calendar=m.calendar_match_id?((await sb.from('calendar_matches').select('*').eq('id',m.calendar_match_id).maybeSingle()).data||{}):{};
+    const rows=(sets||[]).map(x=>`<div style="padding:10px;border:1px solid rgba(231,185,78,.18);border-radius:10px;margin-top:8px"><b>SET ${x.set_number}</b><div class="muted">${escOperator(pn[x.pair_a_player_1]||'')} + ${escOperator(pn[x.pair_a_player_2]||'')} <b>VS</b> ${escOperator(pn[x.pair_b_player_1]||'')} + ${escOperator(pn[x.pair_b_player_2]||'')}</div><div style="font-size:20px;font-weight:900;margin-top:4px">${x.games_a} – ${x.games_b}</div></div>`).join('');
+    const mv=(aw||[]).filter(x=>x.award_type==='MVP').map(x=>pn[x.player_id]).filter(Boolean),im=(aw||[]).filter(x=>x.award_type==='IMBATTUTO').map(x=>pn[x.player_id]).filter(Boolean);
+    body.innerHTML=`<div><b>📅 ${escOperator(fmtDate(m.played_at))} · ${escOperator(fmtTime(m.played_at))}</b><div class="muted">📍 ${escOperator(calendar.court||'Campo')} · ${escOperator(calendar.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div></div>
+      <div style="margin-top:12px"><b>Giocatori</b><div class="muted">${playerIds.map(x=>escOperator(pn[x]||'Giocatore')).join(' · ')}</div></div>
+      <div style="margin-top:12px"><b>Risultati</b>${rows||'<div class="muted">Nessun set.</div>'}</div>
+      <div style="margin-top:12px" class="muted">🏅 MVP: ${escOperator(mv.join(', ')||'nessuno')}<br>🛡️ Imbattuto: ${escOperator(im.join(', ')||'nessuno')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+        <button type="button" class="smallbtn edit" onclick="closePendingMatch();openEdit(${JSON.stringify(id)})">✏️ MODIFICA</button>
+        <button type="button" class="smallbtn danger" onclick="closePendingMatch();deletePendingMatch(${JSON.stringify(id)})">🗑️ CANCELLA</button>
+        <button type="button" class="smallbtn" onclick="closePendingMatch();reactivatePendingMatch(${JSON.stringify(id)})">↩️ RIATTIVA PARTITA</button>
+        <button type="button" class="smallbtn primary" onclick="closePendingMatch();confirmPendingMatch(${JSON.stringify(id)})">✅ CONFERMA PARTITA</button>
+      </div>`;
+  }catch(e){body.innerHTML=`<div class="msg err">Errore apertura partita: ${escOperator(e.message||e)}</div>`;}
+}
+function closePendingMatch(){$("pendingMatchModal")?.classList.add('hidden');}
+async function deletePendingMatch(id){
+  if(!confirm('Cancellare DEFINITIVAMENTE questa partita in attesa di conferma? Il risultato inserito non sarà più recuperabile.'))return;
+  try{
+    const {data:m,error:me}=await sb.from('matches').select('calendar_match_id,approval_status').eq('id',id).single();
+    if(me)throw me;
+    if(m?.approval_status!=='pending')throw new Error('La partita non è più in stato da confermare.');
+    // Elimina esplicitamente i dati collegati prima della partita, così CANCELLA è davvero definitivo.
+    const {error:ae}=await sb.from('match_awards').delete().eq('match_id',id);if(ae)throw ae;
+    const {error:se}=await sb.from('sets').delete().eq('match_id',id);if(se)throw se;
+    const {error:pe}=await sb.from('match_players').delete().eq('match_id',id);if(pe)throw pe;
+    const {error:xe}=await sb.from('matches').delete().eq('id',id).eq('approval_status','pending');if(xe)throw xe;
+    // CANCELLA NON riapre il calendario: la partita resta chiusa al Responsabile.
+    $('operatorConfirmMsg').className='msg ok';$('operatorConfirmMsg').textContent='🗑️ Partita cancellata definitivamente.';
+    await loadOperatorPendingMatches();
+  }catch(e){$('operatorConfirmMsg').className='msg err';$('operatorConfirmMsg').textContent='Errore cancellazione: '+(e.message||e);}
+}
+async function reactivatePendingMatch(id){
+  if(!confirm('Riattivare questa partita per il Responsabile? Il risultato attuale verrà eliminato e il Responsabile dovrà reinserirlo.'))return;
+  try{
+    const {data:m,error:me}=await sb.from('matches').select('calendar_match_id,approval_status').eq('id',id).single();
+    if(me)throw me;
+    if(m?.approval_status!=='pending')throw new Error('La partita non è più in stato da confermare.');
+    const {error:ae}=await sb.from('match_awards').delete().eq('match_id',id);if(ae)throw ae;
+    const {error:se}=await sb.from('sets').delete().eq('match_id',id);if(se)throw se;
+    const {error:pe}=await sb.from('match_players').delete().eq('match_id',id);if(pe)throw pe;
+    const {error:xe}=await sb.from('matches').delete().eq('id',id).eq('approval_status','pending');if(xe)throw xe;
+    if(m.calendar_match_id){
+      const {error:ce}=await sb.from('calendar_matches').update({result_submitted_at:null,result_submitted_by:null}).eq('id',m.calendar_match_id);
+      if(ce)throw ce;
+    }
+    $('operatorConfirmMsg').className='msg ok';$('operatorConfirmMsg').textContent='↩️ Partita riattivata: il Responsabile può reinserire il risultato.';
+    await loadOperatorPendingMatches();
+  }catch(e){$('operatorConfirmMsg').className='msg err';$('operatorConfirmMsg').textContent='Errore riattivazione: '+(e.message||e);}
+}
+async function confirmPendingMatch(id){
+  if(!confirm('Confermare questa partida? Dopo la conferma entrerà ufficialmente nel calcolo della classifica.'))return;
+  try{
+    const {data:m,error:me}=await sb.from('matches').select('id,approval_status').eq('id',id).single();if(me)throw me;
+    if(m.approval_status!=='pending')throw new Error('La partita non è più in stato da confermare.');
+    const {error}=await sb.from('matches').update({approval_status:'confirmed',approved_at:new Date().toISOString(),approved_by:currentUser?.id||null}).eq('id',id).eq('approval_status','pending');
+    if(error)throw error;
+    $("operatorConfirmMsg").className='msg ok';$("operatorConfirmMsg").textContent='✅ Partita confermata: ora è ufficiale e viene considerata dalla classifica.';
+    await loadRanking();await loadOperatorHistory();await loadOperatorPendingMatches();
+  }catch(e){$("operatorConfirmMsg").className='msg err';$("operatorConfirmMsg").textContent='Errore conferma: '+(e.message||e);}
+}
+window.loadOperatorPendingMatches=loadOperatorPendingMatches;window.openPendingMatch=openPendingMatch;window.closePendingMatch=closePendingMatch;window.deletePendingMatch=deletePendingMatch;window.reactivatePendingMatch=reactivatePendingMatch;window.confirmPendingMatch=confirmPendingMatch;
+
 function showOperatorSection(which){
   const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), p=$("operatorConfirmSection");
   const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), pt=$("opConfirmTab");
@@ -1763,7 +1863,7 @@ async function loadOperatorHistory(){
   try{
     // Keep the operator history completely independent from the public history.
     // Fetch only the match list first, then enrich it with the existing tables.
-    const query=sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
+    const query=sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").order("played_at",{ascending:false});
     const mr=await Promise.race([
       query,
       new Promise((_,reject)=>setTimeout(()=>reject(new Error("Timeout caricamento storico")),10000))
@@ -1906,10 +2006,17 @@ $("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
 (async()=>{await loadPlayers();buildSets();await loadRanking()})();
 </script>
+<div id="pendingMatchModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.65);padding:18px;z-index:21;overflow:auto">
+<div class="card" style="max-width:760px;margin:30px auto">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">🔎 Controllo partita</h2><button type="button" onclick="closePendingMatch()">✕</button></div>
+<div class="muted" style="margin-top:6px">Controlla il risultato inserito dal Responsabile prima di renderlo ufficiale.</div>
+<div id="pendingMatchBody" style="margin-top:14px"></div>
+<div style="margin-top:14px"><button type="button" onclick="closePendingMatch()">CHIUDI</button></div>
+</div></div>
 <div id="editModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);padding:18px;z-index:20;overflow:auto">
 <div class="card" style="max-width:850px;margin:30px auto">
 <div style="display:flex;justify-content:space-between;align-items:center"><h2>✏️ Modifica partita</h2><button onclick="closeEdit()">✕</button></div>
-<div class="muted">Le modifiche ricalcolano automaticamente la classifica. Le fasce congelate della partita vengono mantenute.</div>
+<div class="muted">Le modifiche vengono salvate sulla partita in attesa di conferma. Le fasce congelate della partita vengono mantenute.</div>
 <input type="hidden" id="editId">
 <label>Data e ora di inizio partita</label><input id="editDate" type="datetime-local">
 <div class="players">
@@ -1997,7 +2104,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     try{
       const start=from+"T00:00:00";
       const end=to+"T23:59:59";
-      const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at").gte("played_at",start).lte("played_at",end).order("played_at",{ascending:true});
+      const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").gte("played_at",start).lte("played_at",end).order("played_at",{ascending:true});
       if(me)throw me;
       if(!matches?.length){renderPartial(stats,from,to);summary.textContent=`Periodo: ${from} → ${to} · Nessuna partita nel periodo.`;return;}
       const ids=matches.map(m=>m.id);
@@ -2149,7 +2256,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
       const to=$("historyTo")?.value||"";
       const player=$("historyPlayer")?.value||"";
 
-      let mq=window.sb.from("matches").select("id,played_at").order("played_at",{ascending:false});
+      let mq=window.sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").order("played_at",{ascending:false});
       if(from)mq=mq.gte("played_at",from+"T00:00:00");
       if(to)mq=mq.lte("played_at",to+"T23:59:59");
       let mr=await mq;
@@ -2641,7 +2748,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.98</div>
+<div id="rplVersionBadge">RPL v6.5.100</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2803,7 +2910,7 @@ async function loadPublicCalendar(){
    summary.textContent='Calcolo Classifica Bonus…';
    try{
      const [mr,mpr,sr,ar]=await Promise.all([
-       window.sb.from('matches').select('id,played_at').order('played_at',{ascending:true}),
+       window.sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true}),
        window.sb.from('match_players').select('*'),
        window.sb.from('sets').select('*').order('set_number'),
        window.sb.from('match_awards').select('*')
@@ -2851,7 +2958,7 @@ async function loadPublicCalendar(){
     content.innerHTML='<div>Calcolo anteprima con la stessa logica della Classifica Parziale…</div>';
     try{
       const start='2026-09-15T00:00:00', end='2026-10-01T00:00:00';
-      const {data:matches,error:me}=await sb.from('matches').select('id,played_at').gte('played_at',start).lt('played_at',end).order('played_at',{ascending:true});
+      const {data:matches,error:me}=await sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').gte('played_at',start).lt('played_at',end).order('played_at',{ascending:true});
       if(me) throw me;
       const matchIds=(matches||[]).map(x=>x.id);
       if(!matchIds.length){content.innerHTML='<div>Nessuna partita nel periodo 15–30 settembre.</div>';return;}
@@ -3172,7 +3279,7 @@ async function loadPublicCalendar(){
   }
   async function loadPlayerStats(){
     const out=q('playerStatsGrid');if(!out)return;
-    const {data:matches,error:me}=await sb.from('matches').select('id,played_at').order('played_at',{ascending:true});if(me){out.innerHTML='<div class="msg err">Errore caricamento statistiche.</div>';return}
+    const {data:matches,error:me}=await sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true});if(me){out.innerHTML='<div class="msg err">Errore caricamento statistiche.</div>';return}
     const ids=(matches||[]).map(x=>x.id);let mp=[],sets=[],aw=[];
     if(ids.length){const r=await Promise.all([sb.from('match_players').select('*').in('match_id',ids),sb.from('sets').select('*').in('match_id',ids),sb.from('match_awards').select('*').in('match_id',ids)]);mp=r[0].data||[];sets=r[1].data||[];aw=r[2].data||[];}
     const snap={};mp.forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
@@ -3246,7 +3353,7 @@ async function loadPublicCalendar(){
     const players=window.rplDistintaPlayers(cm);
     const {data:existing}=await sb.from('matches').select('id').eq('calendar_match_id',cm.id).maybeSingle();if(existing){msg.className='msg err';msg.textContent='Questa partita risulta già registrata.';await loadPlayerSession();return}
     const snap={};[1,2,3,4].forEach(i=>{snap[Number(cm['player_'+i])]={fascia:Number(cm['player_'+i+'_fascia']||playerById(cm['player_'+i])?.fascia||4),fascia_value:Number(cm['player_'+i+'_fascia_points']||playerById(cm['player_'+i])?.fascia_value||2)}});
-    const {data:m,error:me}=await sb.from('matches').insert({played_at:cm.scheduled_at,calendar_match_id:cm.id}).select().single();
+    const {data:m,error:me}=await sb.from('matches').insert({played_at:cm.scheduled_at,calendar_match_id:cm.id,approval_status:'pending'}).select().single();
     if(me){msg.className='msg err';msg.textContent='Errore apertura partita: '+me.message;return}
     const matchId=m.id;
     const mpRows=ids.map(pid=>({match_id:matchId,player_id:pid,fascia:snap[pid].fascia,fascia_value:snap[pid].fascia_value}));
