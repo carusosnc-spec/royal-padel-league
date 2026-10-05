@@ -1332,6 +1332,7 @@ function addPollOptionRow(data={}){
   row.innerHTML=`<label>Giorno<input class="poll-option-date" type="date" value="${data.date||''}"></label>
   <label>Tipo<select class="poll-option-kind"><option value="time">Orario preciso</option><option value="mattina">Mattina</option><option value="pomeriggio">Pomeriggio</option><option value="sera">Sera</option></select></label>
   <label class="poll-option-time-wrap">Ora<input class="poll-option-time" type="time" value="${data.time||'21:30'}"></label>
+  <label>Campo<select class="poll-option-court">${calendarCourtOptions(data.court||'')}<option value="__TBD__">Campo non ancora definito</option></select></label>
   <button type="button" class="poll-option-remove">🗑️</button>`;
   const kind=row.querySelector('.poll-option-kind'), wrap=row.querySelector('.poll-option-time-wrap');
   kind.value=data.kind||'time';
@@ -1354,13 +1355,13 @@ async function createOperatorPoll(){
     const rows=[...document.querySelectorAll('#pollOptionRows .rpl-poll-option-row')];
     if(!rows.length)throw new Error("Aggiungi almeno un giorno o una fascia di gioco.");
     const options=rows.map((row,i)=>{
-      const date=row.querySelector('.poll-option-date').value, kind=row.querySelector('.poll-option-kind').value, time=row.querySelector('.poll-option-time').value;
+      const date=row.querySelector('.poll-option-date').value, kind=row.querySelector('.poll-option-kind').value, time=row.querySelector('.poll-option-time').value, court=row.querySelector('.poll-option-court')?.value||'__TBD__';
       if(!date)throw new Error("Ogni opzione deve avere una data.");
       if(date<weekStart||date>weekEnd)throw new Error("Tutte le date devono essere comprese nella settimana selezionata.");
       if(kind==='time'&&!time)throw new Error("Inserisci l'orario oppure scegli Mattina, Pomeriggio o Sera.");
       const d=new Date(date+'T12:00:00'); const day=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase();
       const suffix=kind==='time'?`ORE ${time}`:kind.toUpperCase();
-      return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,sort_order:i,max_players:4};
+      return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,court,sort_order:i,max_players:4};
     });
     const keys=options.map(o=>`${o.play_date}|${o.label}`); if(new Set(keys).size!==keys.length)throw new Error("Hai inserito due volte la stessa fascia nello stesso giorno.");
     if(!confirm(`Creare la votazione ${weekStart} → ${weekEnd} con ${options.length} possibilità di gioco?`))return;
@@ -1371,22 +1372,14 @@ async function createOperatorPoll(){
 }
 window.createOperatorPoll=createOperatorPoll;
 async function loadOperatorVoting(){
-  const host=$("operatorVotingList"), msg=$("operatorVotingMsg"); if(!host)return;
-  host.innerHTML="Caricamento…"; msg.className="msg"; msg.textContent="";
-  try{
-    const wr=await sb.from("rpl_poll_weeks").select("*").order("opens_at",{ascending:false}).limit(12); if(wr.error)throw wr.error;
-    const weeks=wr.data||[]; if(!weeks.length){host.innerHTML='<div class="muted">Nessuna votazione presente.</div>';return;}
-    const ids=weeks.map(w=>w.id);
-    const [or,vr]=await Promise.all([sb.from("rpl_poll_options").select("*").in("poll_week_id",ids).order("sort_order",{ascending:true}),sb.from("rpl_poll_votes").select("*").in("poll_week_id",ids)]);
-    if(or.error)throw or.error;if(vr.error)throw vr.error;
-    const opts=or.data||[], votes=vr.data||[], byPlayer={}; (dbPlayers||[]).forEach(p=>byPlayer[String(p.id)]=p);
-    host.innerHTML=weeks.map(w=>{
-      const oo=opts.filter(o=>o.poll_week_id===w.id), vv=votes.filter(x=>x.poll_week_id===w.id);
-      const fmt=d=>new Date(d+"T00:00:00").toLocaleDateString("it-IT");
-      return `<div class="rpl-admin-poll"><div class="rpl-admin-poll-head"><div><div class="rpl-admin-poll-title">SETTIMANA ${fmt(w.week_start)} → ${fmt(w.week_end)}</div><div class="rpl-admin-poll-meta">Stato: <b>${escOperator(w.status)}</b> · Apertura: ${new Date(w.opens_at).toLocaleString("it-IT")} · Chiusura: ${new Date(w.closes_at).toLocaleString("it-IT")}</div></div><button type="button" class="primary" onclick="generateCalendarFromPoll(${w.id})">🗓️ GENERA PROPOSTA CALENDARIO</button></div><div class="rpl-admin-vote-grid">${oo.map(o=>{const ov=vv.filter(x=>x.option_id===o.id),full=ov.length>=Number(o.max_players||4);return `<div class="rpl-admin-vote-card ${full?'full':''}"><div class="rpl-admin-vote-date">${escOperator(o.label||o.play_date)}</div><div class="rpl-admin-vote-count">${ov.length}/${o.max_players||4} voti${full?' · PARTITA COMPLETA':''}</div><div class="rpl-admin-vote-names">${ov.length?ov.map(x=>`<span class="rpl-admin-vote-name">${escOperator(byPlayer[String(x.player_id)]?.name||('Giocatore '+x.player_id))}</span>`).join(''):'<span class="muted">Nessun voto</span>'}</div></div>`}).join('')}</div></div>`;
-    }).join("");
-  }catch(e){console.error(e);host.innerHTML="";msg.className="msg err";msg.textContent="Errore caricamento votazioni: "+(e.message||e);}
-}
+  const host=$("operatorVotingList"),msg=$("operatorVotingMsg");if(!host)return;host.innerHTML="Caricamento…";msg.className="msg";msg.textContent="";
+  try{const wr=await sb.from("rpl_poll_weeks").select("*").order("opens_at",{ascending:false}).limit(30);if(wr.error)throw wr.error;const weeks=wr.data||[];if(!weeks.length){host.innerHTML='<div class="muted">Nessuna votazione presente.</div>';return;}const ids=weeks.map(w=>w.id);const [or,vr]=await Promise.all([sb.from("rpl_poll_options").select("*").in("poll_week_id",ids).order("sort_order",{ascending:true}),sb.from("rpl_poll_votes").select("*").in("poll_week_id",ids)]);if(or.error)throw or.error;if(vr.error)throw vr.error;const opts=or.data||[],votes=vr.data||[],byPlayer={};(dbPlayers||[]).forEach(p=>byPlayer[String(p.id)]=p);host.innerHTML=weeks.filter(w=>w.status!=="archived").map(w=>{const oo=opts.filter(o=>o.poll_week_id===w.id),vv=votes.filter(x=>x.poll_week_id===w.id);const fmt=d=>new Date(d+"T00:00:00").toLocaleDateString("it-IT");return `<div class="rpl-admin-poll"><div class="rpl-admin-poll-head"><div><div class="rpl-admin-poll-title">SETTIMANA ${fmt(w.week_start)} → ${fmt(w.week_end)}</div><div class="rpl-admin-poll-meta">Stato: <b>${escOperator(w.status)}</b> · Apertura: ${new Date(w.opens_at).toLocaleString("it-IT")} · Chiusura: ${new Date(w.closes_at).toLocaleString("it-IT")}</div></div><div class="rpl-poll-admin-actions"><button type="button" class="primary" onclick="generateCalendarFromPoll(${w.id})">🗓️ GENERA PROPOSTA</button><button type="button" onclick="editOperatorPoll(${w.id})">✏️ MODIFICA</button><button type="button" onclick="deleteOperatorPoll(${w.id})">🗑️ CANCELLA</button><button type="button" onclick="archiveOperatorPoll(${w.id})">📦 ARCHIVIA</button></div></div><div class="rpl-admin-vote-grid">${oo.map(o=>{const ov=vv.filter(x=>x.option_id===o.id),full=ov.length>=Number(o.max_players||4),court=o.court&&o.court!=="__TBD__"?o.court:"Campo non ancora definito";return `<div class="rpl-admin-vote-card ${full?'full':''}"><div class="rpl-admin-vote-date">${escOperator(o.label||o.play_date)}</div><div class="rpl-admin-vote-count">${ov.length}/${o.max_players||4} voti${full?' · PARTITA COMPLETA':''}</div><div class="rpl-admin-court">📍 ${escOperator(court)}</div><div class="rpl-admin-vote-names">${ov.length?ov.map(x=>`<span class="rpl-admin-vote-name">${escOperator(byPlayer[String(x.player_id)]?.name||('Giocatore '+x.player_id))}</span>`).join(''):'<span class="muted">Nessun voto</span>'}</div></div>`}).join('')}</div></div>`}).join("");}catch(e){console.error(e);host.innerHTML="";msg.className="msg err";msg.textContent="Errore caricamento votazioni: "+(e.message||e);}}
+window.loadOperatorVoting=loadOperatorVoting;
+async function managePollWeek(action,id){const msg=$("operatorVotingMsg");if(action==='delete'&&!confirm('Cancellare definitivamente questa votazione e tutti i suoi voti?'))return;if(action==='archive'&&!confirm('Archiviare questa votazione?'))return;const r=await sb.rpc('rpl_manage_poll_week',{p_poll_week_id:id,p_action:action});if(r.error){msg.className='msg err';msg.textContent='Errore: '+r.error.message;return;}msg.className='msg ok';msg.textContent=action==='delete'?'✅ Votazione cancellata.':'📦 Votazione archiviata.';await loadOperatorVoting();}
+async function deleteOperatorPoll(id){return managePollWeek('delete',id)} async function archiveOperatorPoll(id){return managePollWeek('archive',id)}
+async function editOperatorPoll(id){const {data:w,error:we}=await sb.from('rpl_poll_weeks').select('*').eq('id',id).single();if(we){alert(we.message);return;}const {data:o,error:oe}=await sb.from('rpl_poll_options').select('*').eq('poll_week_id',id).order('sort_order');if(oe){alert(oe.message);return;}$("pollWeekStart").value=w.week_start;$("pollWeekEnd").value=w.week_end;$("pollOpensAt").value=new Date(w.opens_at).toISOString().slice(0,16);$("pollClosesAt").value=new Date(w.closes_at).toISOString().slice(0,16);const host=$("pollOptionRows");host.innerHTML='';(o||[]).forEach(x=>{let kind=x.start_time?'time':(x.label||'').includes('MATTINA')?'mattina':(x.label||'').includes('POMERIGGIO')?'pomeriggio':'sera';addPollOptionRow({date:x.play_date,time:(x.start_time||'').slice(0,5),kind,court:x.court||'__TBD__'});});const btn=document.querySelector('button[onclick="createOperatorPoll()"]');if(btn){btn.textContent='💾 SALVA MODIFICHE';btn.onclick=()=>updateOperatorPoll(id);}msg.className='msg ok';msg.textContent='✏️ Modifica caricata.';window.scrollTo({top:$("operatorVotingSection").offsetTop-10,behavior:'smooth'});}
+async function updateOperatorPoll(id){const msg=$("operatorVotingMsg");try{const ws=$("pollWeekStart").value,we=$("pollWeekEnd").value,op=$("pollOpensAt").value,cl=$("pollClosesAt").value;const rows=[...document.querySelectorAll('#pollOptionRows .rpl-poll-option-row')];const options=rows.map((row,i)=>{const date=row.querySelector('.poll-option-date').value,kind=row.querySelector('.poll-option-kind').value,time=row.querySelector('.poll-option-time').value,court=row.querySelector('.poll-option-court')?.value||'__TBD__';if(!date)throw new Error('Ogni opzione deve avere una data.');const d=new Date(date+'T12:00:00'),day=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase(),suffix=kind==='time'?`ORE ${time}`:kind.toUpperCase();return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,court,sort_order:i,max_players:4};});const r=await sb.rpc('rpl_update_poll_week',{p_poll_week_id:id,p_week_start:ws,p_week_end:we,p_opens_at:new Date(op).toISOString(),p_closes_at:new Date(cl).toISOString(),p_options:options});if(r.error)throw r.error;msg.className='msg ok';msg.textContent='✅ Votazione modificata.';await loadOperatorVoting();}catch(e){msg.className='msg err';msg.textContent='Errore modifica: '+e.message;}}
+window.editOperatorPoll=editOperatorPoll;window.updateOperatorPoll=updateOperatorPoll;
 async function generateCalendarFromPoll(weekId){
   const msg=$("operatorVotingMsg");
   try{
@@ -1397,7 +1390,7 @@ async function generateCalendarFromPoll(weekId){
     if(!complete.length){msg.className="msg err";msg.textContent="Nessuna serata ha ancora raggiunto 4 giocatori.";return;}
     if(!confirm(`Generare una proposta calendario per ${complete.length} serata/e complete?\n\nLa proposta sarà modificabile prima del salvataggio.`))return;
     showOperatorSection("calendar"); $("calWeekStart").value=week.week_start; $("calWeekEnd").value=week.week_end; $("calendarWeekRows").innerHTML="";
-    complete.forEach(o=>{const ids=o.voters.slice(0,Number(o.max_players||4)).map(v=>Number(v.player_id));addCalendarRow({date:o.play_date,time:(o.start_time||"").slice(0,5),court:"",match_type:"ALL_VS_ALL",player_1:ids[0]||"",player_2:ids[1]||"",player_3:ids[2]||"",player_4:ids[3]||""});});
+    complete.forEach(o=>{const ids=o.voters.slice(0,Number(o.max_players||4)).map(v=>Number(v.player_id));addCalendarRow({date:o.play_date,time:(o.start_time||"").slice(0,5),court:o.court||"",match_type:"ALL_VS_ALL",player_1:ids[0]||"",player_2:ids[1]||"",player_3:ids[2]||"",player_4:ids[3]||""});});
     msg.className="msg ok";msg.textContent=`✅ Proposta creata: ${complete.length} partita/e. Scegli i campi e modifica, se necessario, prima di SALVA SETTIMANA.`;
     window.scrollTo({top:$("operatorCalendarSection").offsetTop-10,behavior:"smooth"});
   }catch(e){console.error(e);msg.className="msg err";msg.textContent="Errore generazione proposta: "+(e.message||e);}
@@ -1408,7 +1401,7 @@ function showOperatorSection(which){
   m?.classList.add("hidden"); c?.classList.add("hidden"); v?.classList.add("hidden");
   mt?.classList.remove("primary"); ct?.classList.remove("primary"); vt?.classList.remove("primary");
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
-  else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");loadOperatorVoting();}
+  else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");initPollOptionDefaults();initPollOptionRows();loadOperatorVoting();}
   else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
 function fillCalendarPlayers(){
@@ -2540,7 +2533,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.89</div>
+<div id="rplVersionBadge">RPL v6.5.90</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2868,7 +2861,7 @@ async function loadPublicCalendar(){
 </script>
 
 
-<style id="rpl-player-voting-style">
+<style id="rpl-v6590-voting-admin">.rpl-poll-option-row{display:grid;grid-template-columns:1.1fr .9fr .8fr 1.2fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.18);border-radius:10px;margin-bottom:7px;background:rgba(255,255,255,.02)}.rpl-poll-option-row label{font-size:11px}.rpl-poll-option-row select,.rpl-poll-option-row input{width:100%;box-sizing:border-box}.rpl-poll-admin-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.rpl-poll-admin-actions button{font-size:11px;padding:7px 9px}.rpl-admin-poll.archived{opacity:.55}.rpl-vote-weather{display:flex;align-items:center;gap:7px;margin-top:7px;padding:6px 7px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}.rpl-vote-weather-icon{font-size:24px;line-height:1}.rpl-vote-weather-temp{font-size:11px;font-weight:900;color:#f7e3a0}.rpl-vote-weather-sub{font-size:9px;color:#9eabb8}.rpl-vote-court{font-size:10px;color:#ffd86a;margin-top:5px;font-weight:800}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-row button{grid-column:2}.rpl-poll-option-row .poll-option-time-wrap{grid-column:1/-1}}</style><style id="rpl-player-voting-style">
 .rpl-vote-option{border:1px solid rgba(231,185,78,.30);border-radius:14px;padding:13px;margin:10px 0;background:linear-gradient(180deg,rgba(8,25,40,.9),rgba(3,12,21,.92))}
 .rpl-vote-option.rpl-vote-full{opacity:.72;border-color:rgba(255,255,255,.15)}
 .rpl-vote-date{font-size:16px;font-weight:900;color:#fff}.rpl-vote-meta{font-size:12px;color:#aebccc;margin-top:4px}.rpl-vote-players{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.rpl-vote-player{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(231,185,78,.10);border:1px solid rgba(231,185,78,.24);color:#f7e3a0}.rpl-vote-btn{width:100%;margin-top:10px;min-height:44px}.rpl-vote-btn:disabled{opacity:.5;cursor:not-allowed}
@@ -2909,6 +2902,9 @@ async function loadPublicCalendar(){
     const now=Date.now();
     return (data||[]).find(m=>new Date(m.scheduled_at).getTime()>=now-12*60*60*1000)||null;
   }
+  const RPL_ENNA_LAT=37.5675,RPL_ENNA_LON=14.2796,rplWeatherCache={};
+  function rplWeatherInfo(code){const m={0:['☀️','Sereno'],1:['🌤️','Preval. sereno'],2:['⛅','Parzialmente nuvoloso'],3:['☁️','Nuvoloso'],45:['🌫️','Nebbia'],48:['🌫️','Nebbia'],51:['🌦️','Pioviggine'],53:['🌦️','Pioviggine'],55:['🌧️','Pioviggine'],61:['🌦️','Pioggia'],63:['🌧️','Pioggia'],65:['🌧️','Pioggia forte'],71:['🌨️','Neve'],73:['🌨️','Neve'],75:['❄️','Neve forte'],80:['🌦️','Rovesci'],81:['🌧️','Rovesci'],82:['⛈️','Rovesci forti'],95:['⛈️','Temporale'],96:['⛈️','Temporale'],99:['⛈️','Temporale']};return m[code]||['🌡️','Meteo'];}
+  async function rplGetWeather(date,kind,time){try{const key=date+'|'+kind+'|'+time;if(rplWeatherCache[key])return rplWeatherCache[key];const url=`https://api.open-meteo.com/v1/forecast?latitude=${RPL_ENNA_LAT}&longitude=${RPL_ENNA_LON}&daily=weather_code,temperature_2m_max,temperature_2m_min&hourly=weather_code,temperature_2m&timezone=Europe%2FRome&start_date=${date}&end_date=${date}`;const r=await fetch(url);if(!r.ok)throw 0;const j=await r.json();let temp=null,code=null;if(kind==='time'&&time){const h=Number(time.slice(0,2));temp=j.hourly?.temperature_2m?.[h];code=j.hourly?.weather_code?.[h];}else{const rr={mattina:[8,11],pomeriggio:[14,17],sera:[19,22]}[kind]||[12,15],hs=Array.from({length:rr[1]-rr[0]+1},(_,i)=>rr[0]+i),ts=hs.map(h=>j.hourly?.temperature_2m?.[h]).filter(Number.isFinite),cs=hs.map(h=>j.hourly?.weather_code?.[h]).filter(x=>x!==undefined);temp=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:j.daily?.temperature_2m_max?.[0];code=cs.length?cs[Math.floor(cs.length/2)]:j.daily?.weather_code?.[0];}const z=rplWeatherInfo(code),out={icon:z[0],label:z[1],temp:temp==null?null:Math.round(temp)};rplWeatherCache[key]=out;return out;}catch(e){return null;}}
   async function loadPlayerVoting(){
     const card=q('playerVotingCard');
     const optionsBox=q('playerVotingOptions');
@@ -2950,7 +2946,7 @@ async function loadPublicCalendar(){
     if(summary)summary.textContent=`Hai utilizzato ${mine.length}/${maxVotes} ${maxVotes===1?'voto':'voti'} · Il voto è vincolante.`;
     if(windowMsg)windowMsg.textContent=`Votazione aperta fino a ${new Date(week.closes_at).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}.`;
 
-    optionsBox.innerHTML='<div class="rpl-voting-options-grid">'+options.map(o=>{
+    optionsBox.innerHTML='<div class="rpl-voting-options-grid">'+(await Promise.all(options.map(async o=>{
       const ov=votes.filter(v=>String(v.option_id)===String(o.id));
       const full=!!o.is_full||ov.length>=Number(o.max_players||4);
       const already=mine.some(v=>String(v.option_id)===String(o.id));
@@ -2958,17 +2954,19 @@ async function loadPublicCalendar(){
       const players=ov.map(v=>playerById(v.player_id)?.name||'Giocatore');
       const d=new Date(`${o.play_date}T${o.start_time||'00:00:00'}`);
       const dateLabel=d.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase();
-      const time=o.start_time?` · ${String(o.start_time).slice(0,5)}`:'';
+      const time=o.start_time?` · ${String(o.start_time).slice(0,5)}`:''; const kind=o.start_time?'time':((o.label||'').includes('MATTINA')?'mattina':(o.label||'').includes('POMERIGGIO')?'pomeriggio':'sera'); const weather=await rplGetWeather(o.play_date,kind,o.start_time);
       return `<div class="rpl-vote-option ${full?'rpl-vote-full':''} ${already?'rpl-vote-mine':''}">
         <div class="rpl-vote-date">${escP(dateLabel)}</div>
         <div class="rpl-vote-meta">${escP(o.label||'Serata')}${escP(time)} · 👥 ${ov.length}/${o.max_players||4}</div>
+        <div class="rpl-vote-court">📍 ${escP(o.court&&o.court!=="__TBD__"?o.court:"Campo non ancora definito")}</div>
+        ${weather?`<div class="rpl-vote-weather"><span class="rpl-vote-weather-icon">${weather.icon}</span><div><div class="rpl-vote-weather-temp">${weather.temp!=null?weather.temp+'°C':'—'} · ${escP(weather.label)}</div><div class="rpl-vote-weather-sub">Previsione Enna</div></div></div>`:''}
         ${players.length?`<div class="rpl-vote-players">${players.map(n=>`<span class="rpl-vote-player">${escP(n)}</span>`).join('')}</div>`:'<div class="rpl-vote-players"></div>'}
         ${already
           ? `<button type="button" class="rpl-vote-btn primary" data-vote-remove="${o.id}">✅ HAI VOTATO — TOGLI VOTO</button>`
           : `<button type="button" class="rpl-vote-btn ${canVote?'primary':''}" data-vote-option="${o.id}" ${canVote?'':'disabled'}>${full?'🟢 COMPLETA – 4/4':mine.length>=maxVotes?'🔒 VOTI UTILIZZATI':'🎾 VOTA'}</button>`}
         ${already?`<button type="button" class="rpl-vote-btn rpl-vote-cancel" data-vote-remove="${o.id}">ANNULLA VOTO</button>`:''}
       </div>`;
-    }).join('')+'</div>';
+    }))).join('')+'</div>';;
 
     optionsBox.querySelectorAll('[data-vote-option]').forEach(btn=>btn.addEventListener('click',async()=>{
       const optionId=Number(btn.dataset.voteOption);btn.disabled=true;btn.textContent='⏳';
