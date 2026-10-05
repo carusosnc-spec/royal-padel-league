@@ -652,6 +652,9 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 .rpl-admin-vote-date{font-weight:900;color:#fff;font-size:13px}.rpl-admin-vote-count{font-size:12px;color:#ffd86a;margin-top:3px;font-weight:800}.rpl-admin-vote-names{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;min-height:25px}.rpl-admin-vote-name{font-size:9px;padding:4px 6px;border-radius:999px;background:rgba(231,185,78,.10);color:#f7e3a0;border:1px solid rgba(231,185,78,.20)}.rpl-admin-vote-card button{width:100%;margin-top:9px}
 @media(max-width:760px){.rpl-admin-vote-grid{grid-template-columns:1fr 1fr}}@media(max-width:450px){.rpl-admin-vote-grid{grid-template-columns:1fr}}
 </style>
+<style id="rpl-v6589-poll-editor-style">
+.rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
+</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -861,16 +864,12 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
     <label>Apertura<input id="pollOpensAt" type="datetime-local"></label>
     <label>Chiusura<input id="pollClosesAt" type="datetime-local"></label>
   </div>
-  <div class="rpl-poll-days" style="margin-top:10px">
-    <label><input type="checkbox" class="poll-day-check" value="1" checked> Mercoledì</label>
-    <label><input type="checkbox" class="poll-day-check" value="2" checked> Giovedì</label>
-    <label><input type="checkbox" class="poll-day-check" value="3" checked> Venerdì</label>
-    <label><input type="checkbox" class="poll-day-check" value="4"> Sabato</label>
+  <div class="muted" style="margin-top:10px">Aggiungi tutte le possibilità di gioco: puoi usare qualsiasi giorno da lunedì a domenica e inserire più fasce nello stesso giorno.</div>
+  <div id="pollOptionRows" class="rpl-poll-option-rows" style="margin-top:10px"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+    <button type="button" onclick="addPollOptionRow()">➕ AGGIUNGI GIORNO / FASCIA</button>
+    <button type="button" class="primary" onclick="createOperatorPoll()">💾 CREA VOTAZIONE</button>
   </div>
-  <div class="rpl-poll-time-grid" style="margin-top:10px">
-    <label>Ora standard<input id="pollDefaultTime" type="time" value="21:30"></label>
-  </div>
-  <button type="button" class="primary" style="margin-top:10px" onclick="createOperatorPoll()">💾 CREA VOTAZIONE</button>
 </div>
 <div id="operatorVotingList" style="margin-top:12px">Caricamento…</div>
 </div>
@@ -1327,21 +1326,47 @@ function setPollCreateDefaults(){
   const close=new Date(monday); close.setDate(monday.getDate()-1); close.setHours(12,0,0,0);
   if(op&&!op.value)op.value=localInput(open); if(cl&&!cl.value)cl.value=localInput(close);
 }
+function addPollOptionRow(data={}){
+  const host=$("pollOptionRows"); if(!host)return;
+  const row=document.createElement("div"); row.className="rpl-poll-option-row";
+  row.innerHTML=`<label>Giorno<input class="poll-option-date" type="date" value="${data.date||''}"></label>
+  <label>Tipo<select class="poll-option-kind"><option value="time">Orario preciso</option><option value="mattina">Mattina</option><option value="pomeriggio">Pomeriggio</option><option value="sera">Sera</option></select></label>
+  <label class="poll-option-time-wrap">Ora<input class="poll-option-time" type="time" value="${data.time||'21:30'}"></label>
+  <button type="button" class="poll-option-remove">🗑️</button>`;
+  const kind=row.querySelector('.poll-option-kind'), wrap=row.querySelector('.poll-option-time-wrap');
+  kind.value=data.kind||'time';
+  const sync=()=>{wrap.style.display=kind.value==='time'?'flex':'none';}; kind.onchange=sync; sync();
+  row.querySelector('.poll-option-remove').onclick=()=>row.remove(); host.appendChild(row);
+}
+window.addPollOptionRow=addPollOptionRow;
+function initPollOptionRows(){
+  const host=$("pollOptionRows"); if(!host||host.children.length)return;
+  const ws=$("pollWeekStart")?.value; if(!ws){addPollOptionRow();return;}
+  const d=new Date(ws+'T12:00:00');
+  [2,3,4].forEach(offset=>{const x=new Date(d);x.setDate(d.getDate()+offset);addPollOptionRow({date:x.toISOString().slice(0,10),kind:'time',time:'21:30'});});
+}
+window.initPollOptionRows=initPollOptionRows;
 async function createOperatorPoll(){
   const msg=$("operatorVotingMsg");
   try{
-    const weekStart=$("pollWeekStart")?.value, weekEnd=$("pollWeekEnd")?.value, opens=$("pollOpensAt")?.value, closes=$("pollClosesAt")?.value, defaultTime=$("pollDefaultTime")?.value||"21:30";
-    const selected=[...document.querySelectorAll(".poll-day-check:checked")].map(x=>Number(x.value));
-    if(!weekStart||!weekEnd||!opens||!closes||!selected.length)throw new Error("Compila le date, apertura, chiusura e seleziona almeno una serata.");
-    const dates=[]; const start=new Date(weekStart+"T12:00:00"); const end=new Date(weekEnd+"T12:00:00");
-    for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){const dow=d.getDay(); const idx=dow===3?1:dow===4?2:dow===5?3:dow===6?4:0;if(selected.includes(idx))dates.push(new Date(d));}
-    if(!dates.length)throw new Error("Nessuna serata selezionata dentro l'intervallo della settimana.");
-    if(!confirm(`Creare la votazione ${weekStart} → ${weekEnd} con ${dates.length} serate?`))return;
-    const options=dates.map((d,i)=>({play_date:d.toISOString().slice(0,10),start_time:defaultTime,label:d.toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"long"}).toUpperCase(),sort_order:i,max_players:4}));
-    const {data,error}=await sb.rpc("rpl_create_poll_week",{p_week_start:weekStart,p_week_end:weekEnd,p_opens_at:new Date(opens).toISOString(),p_closes_at:new Date(closes).toISOString(),p_options:options});
+    const weekStart=$("pollWeekStart")?.value, weekEnd=$("pollWeekEnd")?.value, opens=$("pollOpensAt")?.value, closes=$("pollClosesAt")?.value;
+    if(!weekStart||!weekEnd||!opens||!closes)throw new Error("Compila settimana, apertura e chiusura della votazione.");
+    const rows=[...document.querySelectorAll('#pollOptionRows .rpl-poll-option-row')];
+    if(!rows.length)throw new Error("Aggiungi almeno un giorno o una fascia di gioco.");
+    const options=rows.map((row,i)=>{
+      const date=row.querySelector('.poll-option-date').value, kind=row.querySelector('.poll-option-kind').value, time=row.querySelector('.poll-option-time').value;
+      if(!date)throw new Error("Ogni opzione deve avere una data.");
+      if(date<weekStart||date>weekEnd)throw new Error("Tutte le date devono essere comprese nella settimana selezionata.");
+      if(kind==='time'&&!time)throw new Error("Inserisci l'orario oppure scegli Mattina, Pomeriggio o Sera.");
+      const d=new Date(date+'T12:00:00'); const day=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase();
+      const suffix=kind==='time'?`ORE ${time}`:kind.toUpperCase();
+      return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,sort_order:i,max_players:4};
+    });
+    const keys=options.map(o=>`${o.play_date}|${o.label}`); if(new Set(keys).size!==keys.length)throw new Error("Hai inserito due volte la stessa fascia nello stesso giorno.");
+    if(!confirm(`Creare la votazione ${weekStart} → ${weekEnd} con ${options.length} possibilità di gioco?`))return;
+    const {error}=await sb.rpc("rpl_create_poll_week",{p_week_start:weekStart,p_week_end:weekEnd,p_opens_at:new Date(opens).toISOString(),p_closes_at:new Date(closes).toISOString(),p_options:options});
     if(error)throw error;
-    msg.className="msg ok";msg.textContent="✅ Votazione creata correttamente.";
-    await loadOperatorVoting();
+    msg.className="msg ok";msg.textContent="✅ Votazione creata correttamente."; await loadOperatorVoting();
   }catch(e){console.error(e);msg.className="msg err";msg.textContent="Errore creazione votazione: "+(e.message||e);}
 }
 window.createOperatorPoll=createOperatorPoll;
@@ -2247,93 +2272,25 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
 <script id="rpl-score-select-fix">/* Score controls are native selects in V6.5.24; no DOM observer needed. */</script>
 
 
-<script id="rpl-nav-controller-v6533">
+<script id="rpl-nav-controller-v6589">
 (function(){
-  function navButtons(){
-    return {
-      home:document.getElementById("publicBtn"),
-      calendar:document.getElementById("calendarPublicBtn"),
-      partial:document.getElementById("partialBtn"),
-      history:document.getElementById("historyBtn"),
-      admin:document.getElementById("adminBtn")
-    };
-  }
-  function active(key){
-    const b=navButtons();
-    Object.keys(b).forEach(k=>b[k]?.classList.toggle("primary",k===key));
-  }
-  function showHomeNow(){
-    const b=navButtons();
-    location.hash="";
-    document.getElementById("publicCalendarPage")?.classList.add("hidden");
-    document.getElementById("partialPage")?.classList.add("hidden");
-    document.getElementById("historyView")?.style.setProperty("display","none");
-    document.getElementById("publicCalendarPage")?.classList.add("hidden");
-    document.getElementById("publicPage")?.classList.remove("hidden");
-    document.getElementById("adminPage")?.classList.add("hidden");
-    active("home");
-    if(typeof loadRanking==="function") loadRanking();
-    window.scrollTo(0,0);
-  }
-  function showPartialNow(){
-    const b=navButtons();
-    location.hash="partial";
-    document.getElementById("publicPage")?.classList.add("hidden");
-    document.getElementById("publicCalendarPage")?.classList.add("hidden");
-    document.getElementById("adminPage")?.classList.add("hidden");
-    document.getElementById("historyView")?.style.setProperty("display","none");
-    document.getElementById("partialPage")?.classList.remove("hidden");
-    active("partial");
-    if(typeof window.showPartial==="function") window.showPartial();
-    window.scrollTo(0,0);
-  }
-  function showHistoryNow(){
-    const b=navButtons();
-    location.hash="history";
-    document.getElementById("publicPage")?.classList.add("hidden");
-    document.getElementById("publicCalendarPage")?.classList.add("hidden");
-    document.getElementById("adminPage")?.classList.add("hidden");
-    document.getElementById("partialPage")?.classList.add("hidden");
-    active("history");
-    if(typeof window.showHistory==="function") window.showHistory();
-    window.scrollTo(0,0);
-  }
-  async function showAdminNow(){
-    const b=navButtons();
-    location.hash="";
-    document.getElementById("partialPage")?.classList.add("hidden");
-    document.getElementById("historyView")?.style.setProperty("display","none");
-    document.getElementById("publicPage")?.classList.add("hidden");
-    document.getElementById("publicCalendarPage")?.classList.add("hidden");
-    document.getElementById("adminPage")?.classList.remove("hidden");
-    active("admin");
-    // Reuse the existing auth/operator handler, but only after the view is visible.
-    if(b.admin && typeof b.admin.onclick==="function"){
-      // Existing handler also changes the view; call it only for auth/data loading.
-      try{ await b.admin.onclick(); }catch(e){ console.error(e); }
-      active("admin");
-    }
-    window.scrollTo(0,0);
-  }
-
+  const ids=['publicBtn','calendarPublicBtn','partialBtn','historyBtn','bonusBtn','adminBtn','playerAreaBtn'];
+  const el=id=>document.getElementById(id);
+  function hidePlayer(){const p=el('playerAreaPage');if(p){p.classList.add('hidden');p.style.setProperty('display','none','important');}}
+  function clearActive(activeId){ids.forEach(id=>el(id)?.classList.toggle('primary',id===activeId));}
+  function prep(activeId){hidePlayer();clearActive(activeId);}
+  function showHome(){prep('publicBtn');location.hash='';el('publicCalendarPage')?.classList.add('hidden');el('partialPage')?.classList.add('hidden');el('adminPage')?.classList.add('hidden');el('bonusPage')?.classList.add('hidden');el('historyView')?.style.setProperty('display','none','important');el('publicPage')?.classList.remove('hidden');el('publicPage')?.style.removeProperty('display');if(typeof loadRanking==='function')loadRanking();window.scrollTo(0,0);}
+  function showCalendar(){prep('calendarPublicBtn');if(typeof window.showPublicCalendar==='function')window.showPublicCalendar();clearActive('calendarPublicBtn');}
+  function showPartial(){prep('partialBtn');location.hash='partial';el('publicPage')?.classList.add('hidden');el('publicCalendarPage')?.classList.add('hidden');el('adminPage')?.classList.add('hidden');el('bonusPage')?.classList.add('hidden');el('historyView')?.style.setProperty('display','none','important');el('partialPage')?.classList.remove('hidden');el('partialPage')?.style.removeProperty('display');if(typeof window.showPartial==='function')window.showPartial();clearActive('partialBtn');window.scrollTo(0,0);}
+  function showHistory(){prep('historyBtn');location.hash='history';el('publicPage')?.classList.add('hidden');el('publicCalendarPage')?.classList.add('hidden');el('partialPage')?.classList.add('hidden');el('adminPage')?.classList.add('hidden');el('bonusPage')?.classList.add('hidden');if(typeof window.showHistory==='function')window.showHistory();clearActive('historyBtn');window.scrollTo(0,0);}
+  function showBonusNow(){prep('bonusBtn');if(typeof window.showBonus==='function')window.showBonus();clearActive('bonusBtn');}
+  function showAdmin(){prep('adminBtn');location.hash='';el('publicPage')?.classList.add('hidden');el('publicCalendarPage')?.classList.add('hidden');el('partialPage')?.classList.add('hidden');el('bonusPage')?.classList.add('hidden');el('historyView')?.style.setProperty('display','none','important');el('adminPage')?.classList.remove('hidden');el('adminPage')?.style.removeProperty('display');clearActive('adminBtn');window.scrollTo(0,0);}
   function install(){
-    const b=navButtons();
-    if(!b.home||!b.calendar||!b.partial||!b.history||!b.admin)return;
-
-    // Replace navigation listeners with a single deterministic capture handler.
-    b.home.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showHomeNow();},true);
-    b.calendar.addEventListener("click",e=>{
-      e.preventDefault();e.stopImmediatePropagation();
-      if(typeof window.showPublicCalendar==="function") window.showPublicCalendar();
-    },true);
-    b.partial.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showPartialNow();},true);
-    b.history.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showHistoryNow();},true);
-    b.admin.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();showAdminNow();},true);
-
-    active(location.hash==="#calendar"?"calendar":location.hash==="#history"?"history":location.hash==="#partial"?"partial":"home");
+    const map={publicBtn:showHome,calendarPublicBtn:showCalendar,partialBtn:showPartial,historyBtn:showHistory,bonusBtn:showBonusNow,adminBtn:showAdmin};
+    Object.entries(map).forEach(([id,fn])=>el(id)?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();fn();},true));
+    el('playerAreaBtn')?.addEventListener('click',()=>clearActive('playerAreaBtn'),true);
   }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);
-  else install();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
 
@@ -2583,7 +2540,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.88</div>
+<div id="rplVersionBadge">RPL v6.5.89</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
