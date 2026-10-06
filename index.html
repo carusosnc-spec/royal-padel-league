@@ -669,6 +669,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
+<!-- RPL VERSION 7.4 - Smartphone + notification deep links + poll edit fix -->
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1436,7 +1437,7 @@ async function createOperatorPoll(){
     const {error}=await sb.rpc("rpl_create_poll_week",{p_week_start:weekStart,p_week_end:weekEnd,p_opens_at:new Date(opens).toISOString(),p_closes_at:new Date(closes).toISOString(),p_options:options});
     if(error)throw error;
     const pollRecipients=await rplGetActivePlayerIds();
-    await rplAutoSendNotification(pollRecipients,"🗳️ Nuova votazione RPL","È stata pubblicata una nuova votazione settimanale. Controlla l'Area Giocatore per vedere apertura e serate disponibili.");
+    await rplAutoSendNotification(pollRecipients,"🗳️ Nuova votazione RPL","È stata pubblicata una nuova votazione settimanale. Controlla l'Area Giocatore per vedere apertura e serate disponibili.","?rpl=vote#player");
     msg.className="msg ok";msg.textContent="✅ Votazione creata correttamente. Notifica automatica inviata ai giocatori con notifiche attive."; await loadOperatorVoting();
   }catch(e){console.error(e);msg.className="msg err";msg.textContent="Errore creazione votazione: "+(e.message||e);}
 }
@@ -1512,7 +1513,7 @@ async function deleteOperatorPoll(id){return managePollWeek('delete',id)}
 async function archiveOperatorPoll(id){return managePollWeek('archive',id)}
 async function restoreOperatorPoll(id){const msg=$("operatorVotingMsg");if(!confirm('Ripristinare questa votazione nell’elenco attivo?'))return;try{const r=await sb.rpc('rpl_restore_poll_week',{p_poll_week_id:id});if(r.error)throw r.error;msg.className='msg ok';msg.textContent='↩️ Votazione ripristinata correttamente.';await loadOperatorVoting();}catch(e){console.error(e);msg.className='msg err';msg.textContent='Errore ripristino: '+(e.message||e);}}
 async function editOperatorPoll(id){const {data:w,error:we}=await sb.from('rpl_poll_weeks').select('*').eq('id',id).single();if(we){alert(we.message);return;}const {data:o,error:oe}=await sb.from('rpl_poll_options').select('*').eq('poll_week_id',id).order('sort_order');if(oe){alert(oe.message);return;}$("pollWeekStart").value=w.week_start;$("pollWeekEnd").value=w.week_end;$("pollOpensAt").value=new Date(w.opens_at).toISOString().slice(0,16);$("pollClosesAt").value=new Date(w.closes_at).toISOString().slice(0,16);const host=$("pollOptionRows");host.innerHTML='';(o||[]).forEach(x=>{let kind=x.start_time?'time':(x.label||'').includes('MATTINA')?'mattina':(x.label||'').includes('POMERIGGIO')?'pomeriggio':'sera';addPollOptionRow({date:x.play_date,time:(x.start_time||'').slice(0,5),kind,court:x.court||'__TBD__'});});const btn=document.querySelector('button[onclick="createOperatorPoll()"]');if(btn){btn.textContent='💾 SALVA MODIFICHE';btn.onclick=()=>updateOperatorPoll(id);}msg.className='msg ok';msg.textContent='✏️ Modifica caricata.';window.scrollTo({top:$("operatorVotingSection").offsetTop-10,behavior:'smooth'});}
-async function updateOperatorPoll(id){const msg=$("operatorVotingMsg");try{const ws=$("pollWeekStart").value,we=$("pollWeekEnd").value,op=$("pollOpensAt").value,cl=$("pollClosesAt").value;const rows=[...document.querySelectorAll('#pollOptionRows .rpl-poll-option-row')];const options=rows.map((row,i)=>{const date=row.querySelector('.poll-option-date').value,kind=row.querySelector('.poll-option-kind').value,time=row.querySelector('.poll-option-time').value,court=row.querySelector('.poll-option-court')?.value||'__TBD__';if(!date)throw new Error('Ogni opzione deve avere una data.');const d=new Date(date+'T12:00:00'),day=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase(),suffix=kind==='time'?`ORE ${time}`:kind.toUpperCase();return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,court,sort_order:i,max_players:4};});const r=await sb.rpc('rpl_update_poll_week',{p_poll_week_id:id,p_week_start:ws,p_week_end:we,p_opens_at:new Date(op).toISOString(),p_closes_at:new Date(cl).toISOString(),p_options:options});if(r.error)throw r.error;const pollRecipients=await rplGetActivePlayerIds();await rplAutoSendNotification(pollRecipients,"🗳️ Votazione RPL aggiornata","La votazione settimanale è stata modificata. Controlla le nuove date e gli orari nell'Area Giocatore.");msg.className='msg ok';msg.textContent='✅ Votazione modificata. Notifica automatica inviata.';await loadOperatorVoting();}catch(e){msg.className='msg err';msg.textContent='Errore modifica: '+e.message;}}
+async function updateOperatorPoll(id){const msg=$("operatorVotingMsg");try{const ws=$("pollWeekStart").value,we=$("pollWeekEnd").value,op=$("pollOpensAt").value,cl=$("pollClosesAt").value;const rows=[...document.querySelectorAll('#pollOptionRows .rpl-poll-option-row')];const options=rows.map((row,i)=>{const date=row.querySelector('.poll-option-date').value,kind=row.querySelector('.poll-option-kind').value,time=row.querySelector('.poll-option-time').value,court=row.querySelector('.poll-option-court')?.value||'__TBD__';if(!date)throw new Error('Ogni opzione deve avere una data.');const d=new Date(date+'T12:00:00'),day=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase(),suffix=kind==='time'?`ORE ${time}`:kind.toUpperCase();return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,court,sort_order:i,max_players:4};});const r=await sb.rpc('rpl_update_poll_week',{p_poll_week_id:id,p_week_start:ws,p_week_end:we,p_opens_at:new Date(op).toISOString(),p_closes_at:new Date(cl).toISOString(),p_options:options});if(r.error)throw r.error;const pollRecipients=await rplGetActivePlayerIds();await rplAutoSendNotification(pollRecipients,"🗳️ Votazione RPL aggiornata","La votazione settimanale è stata modificata. Controlla le nuove date e gli orari nell'Area Giocatore.","?rpl=vote#player");msg.className='msg ok';msg.textContent='✅ Votazione modificata. Notifica automatica inviata.';await loadOperatorVoting();}catch(e){msg.className='msg err';msg.textContent='Errore modifica: '+e.message;}}
 window.editOperatorPoll=editOperatorPoll;window.updateOperatorPoll=updateOperatorPoll;
 async function generateCalendarFromPoll(weekId){
   const msg=$("operatorVotingMsg");
@@ -1650,7 +1651,7 @@ async function confirmPendingMatch(id){
     const {error}=await sb.from('matches').update({approval_status:'confirmed',approved_at:new Date().toISOString(),approved_by:currentUser?.id||null}).eq('id',id).eq('approval_status','pending');
     if(error)throw error;
     const rankingRecipients=await rplGetActivePlayerIds();
-    await rplAutoSendNotification(rankingRecipients,"🏆 Classifica RPL aggiornata","Una partita è stata confermata: la classifica ufficiale è stata aggiornata. Vieni a vedere la tua nuova posizione.");
+    await rplAutoSendNotification(rankingRecipients,"🏆 Classifica RPL aggiornata","Una partita è stata confermata: la classifica ufficiale è stata aggiornata. Vieni a vedere la tua nuova posizione.","#public");
     $("operatorConfirmMsg").className='msg ok';$("operatorConfirmMsg").textContent='✅ Partita confermata: ora è ufficiale e viene considerata dalla classifica. Notifica automatica inviata.';
     await loadRanking();await loadOperatorHistory();await loadOperatorPendingMatches();
   }catch(e){$("operatorConfirmMsg").className='msg err';$("operatorConfirmMsg").textContent='Errore conferma: '+(e.message||e);}
@@ -1767,11 +1768,11 @@ async function getCalendarRankSnapshot(timestamp, ids){
     return ids.map((_,i)=>1000+i);
   }
 }
-async function rplAutoSendNotification(playerIds,title,body){
+async function rplAutoSendNotification(playerIds,title,body,target){
   try{
     const ids=[...new Set((playerIds||[]).map(Number).filter(Number.isFinite))];
     if(!ids.length)return {ok:false,sent:0};
-    const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'send',player_ids:ids,title,body,url:location.origin+location.pathname+'#player'}});
+    const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'send',player_ids:ids,title,body,url:target ? (target.startsWith('http') ? target : location.origin+location.pathname+target) : location.origin+location.pathname+'#player'}});
     if(error)throw error;
     console.log('RPL notifica automatica:',{title,ids,sent:data?.sent||0,failed:data?.failed||0});
     return data||{ok:true};
@@ -1839,7 +1840,7 @@ async function saveCalendarWeek(){
     const nr=await sb.from("calendar_matches").select("player_1,player_2,player_3,player_4").in("id",keep);
     (nr.data||[]).forEach(addMatchPlayers);
   }catch(e){console.warn("Impossibile recuperare i destinatari del calendario:",e);}
-  await rplAutoSendNotification([...affectedPlayers],"📅 Calendario RPL aggiornato","Il calendario della settimana è stato pubblicato o modificato. Controlla le tue partite nell'Area Giocatore.");
+  await rplAutoSendNotification([...affectedPlayers],"📅 Calendario RPL aggiornato","Il calendario della settimana è stato pubblicato o modificato. Controlla le tue partite nell'Area Giocatore.","?rpl=calendar#player");
   msg.className="msg ok";msg.textContent=`✅ Settimana salvata: ${keep.length} partite. Notifiche automatiche inviate ai giocatori interessati.`;
   await loadCalendarWeeks();
 }
@@ -2835,7 +2836,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v7.1</div>
+<div id="rplVersionBadge">RPL v7.4</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3180,6 +3181,23 @@ async function loadPublicCalendar(){
   function playerNavActive(){['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn','playerAreaBtn'].forEach(id=>q(id)?.classList.remove('primary'));q('playerAreaBtn')?.classList.add('primary');}
   function showPlayerArea(){location.hash='player';hidePublicSections();const page=q('playerAreaPage');if(page){page.classList.remove('hidden');page.style.display='block';}playerNavActive();window.scrollTo(0,0);loadPlayerSession();}
   window.showPlayerArea=showPlayerArea;
+  function rplOpenRequestedPlayerArea(){
+    try{
+      const p=new URLSearchParams(location.search);
+      const target=p.get('rpl');
+      if(!target)return;
+      setTimeout(()=>{
+        if(target==='vote'){
+          const card=q('playerVotingCard');
+          card?.scrollIntoView({behavior:'smooth',block:'start'});
+        } else if(target==='calendar'){
+          const card=q('playerAssignedMatchCard');
+          card?.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      },1200);
+    }catch(e){console.warn('Deep link RPL:',e);}
+  }
+
   function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
   function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
   function playerById(id){return (window.dbPlayers||[]).find(p=>String(p.id)===String(id))||null;}
@@ -3346,6 +3364,7 @@ async function loadPublicCalendar(){
     playerAccount=r.data;playerRow=playerById(playerAccount.player_id);
     if(!playerRow){q('playerLoginCard')?.classList.remove('hidden');q('playerDashboard')?.classList.add('hidden');q('playerLoginMsg').textContent='Giocatore non trovato.';return;}
     q('playerDashboard')?.classList.remove('hidden');
+    rplOpenRequestedPlayerArea();
     renderPlayerProfile();
     if(playerAccount.force_password_change){q('playerPasswordPanel')?.classList.remove('hidden');}else q('playerPasswordPanel')?.classList.add('hidden');
     assignedMatch=await findAssignedMatch();
@@ -3531,7 +3550,7 @@ async function loadPublicCalendar(){
     const title=q('rplNotifyTitle')?.value.trim()||'🔔 Royal Padel League';const body=q('rplNotifyBody')?.value.trim()||'Hai una nuova comunicazione RPL.';
     msg.className='rpl-notify-status';msg.textContent='Invio notifiche…';
     try{
-      const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'send',player_ids:ids,title,body,url:location.origin+location.pathname+'#player'}});
+      const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'send',player_ids:ids,title,body,url:target ? (target.startsWith('http') ? target : location.origin+location.pathname+target) : location.origin+location.pathname+'#player'}});
       if(error) throw new Error(error.message||'Errore invio notifiche.');
       msg.className='rpl-notify-status ok';msg.textContent=`✅ ${data?.sent||0} notifica/e inviata/e${data?.missing?` · ${data.missing} senza dispositivo attivo`:''}.`;
     }catch(e){
