@@ -934,6 +934,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </div>
 <div id="operatorAccountsMsg" class="msg" style="margin-top:10px"></div>
 <div id="operatorAccountsList" style="margin-top:12px">Nessun file caricato.</div>
+<div style="margin-top:18px;padding:14px;border:1px solid rgba(231,185,78,.25);border-radius:12px;background:rgba(255,255,255,.02)">
+  <div style="font-weight:900;color:#ffd86a;margin-bottom:6px">🔑 RIGENERA PASSWORD TEMPORANEA</div>
+  <div class="muted">Se un giocatore dimentica la password personale, genera una nuova password temporanea. La vecchia password viene invalidata e al prossimo accesso il giocatore dovrà sceglierne una nuova.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:10px">
+    <label style="min-width:260px;flex:1">Giocatore<select id="accountResetPlayer" style="width:100%;margin-top:4px"></select></label>
+    <button type="button" class="primary" onclick="resetSelectedPlayerPassword()">🔄 RIGENERA PASSWORD</button>
+  </div>
+  <div id="accountResetResult" class="msg" style="margin-top:10px"></div>
+</div>
 </div>
 </div>
 <div id="operatorConfirmSection" class="hidden">
@@ -1723,6 +1732,46 @@ $('accountImportFile')?.addEventListener('change',async e=>{
   try{const obj=JSON.parse(await file.text());if(!Array.isArray(obj))throw new Error('Formato file non valido.');accountImportState.rows=obj.map(x=>({name:x.name,nickname:x.nickname||'',phone:normalizeAccountPhone(x.phone),status:'DA CREARE'}));loadAccountImportTemplate();}
   catch(err){$('operatorAccountsMsg').className='msg err';$('operatorAccountsMsg').textContent='Errore lettura file: '+(err.message||err);}
 });
+async function loadPlayerAccountResetList(){
+  const sel=$("accountResetPlayer"), out=$("accountResetResult");
+  if(!sel)return;
+  sel.innerHTML='<option value="">Caricamento…</option>';
+  if(!dbPlayers.length){sel.innerHTML='<option value="">Nessun giocatore disponibile</option>';return;}
+  try{
+    const {data:accounts,error}=await sb.from('player_accounts').select('player_id').not('player_id','is',null);
+    if(error)throw error;
+    const ids=new Set((accounts||[]).map(x=>String(x.player_id)));
+    const rows=dbPlayers.filter(p=>ids.has(String(p.id))).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
+    if(!rows.length){sel.innerHTML='<option value="">Nessun account creato</option>';return;}
+    sel.innerHTML='<option value="">Seleziona un giocatore…</option>'+rows.map(p=>`<option value="${escOperator(p.id)}">${escOperator(p.name||'')}${p.nickname?` — ${escOperator(p.nickname)}`:''}</option>`).join('');
+    if(out)out.textContent='';
+  }catch(e){
+    sel.innerHTML='<option value="">Errore caricamento</option>';
+    if(out){out.className='msg err';out.textContent='Errore caricamento account: '+(e?.message||String(e));}
+  }
+}
+async function resetSelectedPlayerPassword(){
+  const sel=$("accountResetPlayer"), out=$("accountResetResult"), playerId=sel?.value;
+  if(!playerId){out.className='msg err';out.textContent='Seleziona prima un giocatore.';return;}
+  const player=dbPlayers.find(p=>String(p.id)===String(playerId));
+  if(!player)return;
+  if(!confirm(`Rigenerare la password temporanea per ${player.name}? La password attuale verrà invalidata.`))return;
+  out.className='msg';out.textContent='Rigenerazione password in corso…';
+  try{
+    const {data:{session},error:sessionError}=await sb.auth.getSession();
+    if(sessionError||!session)throw new Error('Sessione operatore non valida.');
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/rpl-create-player-accounts`,{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},
+      body:JSON.stringify({action:'reset_password',player_id:playerId,name:player.name})
+    });
+    let result=null;try{result=await response.json();}catch{throw new Error(`Risposta non valida dalla funzione Supabase (HTTP ${response.status}).`);}
+    if(!response.ok||result?.status!=='RIGENERATA')throw new Error(result?.error||`Errore funzione Supabase (HTTP ${response.status}).`);
+    out.className='msg ok';out.innerHTML=`✅ Password temporanea rigenerata per <b>${escOperator(player.name)}</b>.<br><br><b>Password temporanea:</b> <span style="font-size:16px;color:#ffd86a">${escOperator(result.temporary_password)}</span><br><span class="muted">Il giocatore dovrà cambiarla al prossimo accesso.</span>`;
+  }catch(e){out.className='msg err';out.textContent='Errore rigenerazione password: '+(e?.message||String(e));}
+}
+window.loadPlayerAccountResetList=loadPlayerAccountResetList;
+window.resetSelectedPlayerPassword=resetSelectedPlayerPassword;
+
 function showOperatorSection(which){
   const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), p=$("operatorConfirmSection"), a=$("operatorAccountsSection");
   const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), pt=$("opConfirmTab"), at=$("opAccountsTab");
@@ -1731,7 +1780,7 @@ function showOperatorSection(which){
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
   else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
   else if(which==="confirm"){p?.classList.remove("hidden");pt?.classList.add("primary");loadOperatorPendingMatches();}
-  else if(which==="accounts"){a?.classList.remove("hidden");at?.classList.add("primary");loadAccountImportTemplate();}
+  else if(which==="accounts"){a?.classList.remove("hidden");at?.classList.add("primary");loadAccountImportTemplate();loadPlayerAccountResetList();}
   else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
 function fillCalendarPlayers(){
