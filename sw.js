@@ -1,4 +1,4 @@
-const CACHE_NAME = "rpl-v7.1";
+const CACHE_NAME = "rpl-v7.2";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png"];
 
 self.addEventListener("install", event => {

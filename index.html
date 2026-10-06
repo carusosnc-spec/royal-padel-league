@@ -727,7 +727,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 
     <div id="playerNotificationCard" class="card rpl-notify-card">
       <div class="rpl-notify-title">🔔 NOTIFICHE RPL</div>
-      <div class="muted">Ricevi comunicazioni della Royal Padel League su questo dispositivo.</div>
+      <div class="muted">Ricevi comunicazioni della Royal Padel League direttamente su questo dispositivo.</div>
+      <div id="playerMobileNotificationHelp" class="rpl-notify-mobile-help" style="margin-top:10px;padding:11px 12px;border:1px solid rgba(231,185,78,.28);border-radius:10px;background:rgba(231,185,78,.05);font-size:13px;line-height:1.45"></div>
       <button id="playerEnableNotificationsBtn" type="button" class="primary" style="width:100%;margin-top:10px;min-height:46px">🔔 ATTIVA NOTIFICHE</button>
       <div id="playerNotificationMsg" class="rpl-notify-status"></div>
     </div>
@@ -3424,17 +3425,33 @@ async function loadPublicCalendar(){
     msg.className='msg ok';msg.textContent='✅ Risultato registrato. MVP e Imbattuto calcolati automaticamente.';
     assignedMatch=null;clearResponsible();panel.classList.add('hidden');panel.innerHTML='';await Promise.all([loadPlayerStats(),loadPlayerMatches()]);
   }
+  function rplIsIOS(){return /iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/i.test(navigator.userAgent)&&navigator.maxTouchPoints>1);}
+  function rplIsStandalone(){return window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;}
+  function rplUpdateMobileNotificationHelp(){
+    const box=q('playerMobileNotificationHelp');if(!box)return;
+    if(rplIsIOS()&&!rplIsStandalone()){
+      box.innerHTML='📱 <strong>iPhone:</strong> prima aggiungi RPL alla <strong>Schermata Home</strong> e aprila dalla sua icona. Poi premi <strong>ATTIVA NOTIFICHE</strong>. Su iPhone le Web Push funzionano per l’app web aggiunta alla Home.';
+    }else if(/Android/i.test(navigator.userAgent)){
+      box.innerHTML='📱 <strong>Android:</strong> puoi attivare le notifiche direttamente da questa pagina. Consigliato usare <strong>Chrome</strong> e consentire le notifiche quando richiesto.';
+    }else{
+      box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
+    }
+  }
   async function rplRegisterServiceWorker(){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
-    return await navigator.serviceWorker.register('./sw.js?v=710');
+    return await navigator.serviceWorker.register('./sw.js?v=720');
   }
   async function rplEnablePlayerNotifications(){
     const msg=q('playerNotificationMsg');msg.className='rpl-notify-status';msg.textContent='Attivazione…';
     try{
+      if(!window.isSecureContext) throw new Error('Le notifiche richiedono un collegamento HTTPS.');
       if(!('Notification' in window)) throw new Error('Le notifiche non sono supportate da questo browser.');
-      const permission=await Notification.requestPermission();
-      if(permission!=='granted') throw new Error('Permesso notifiche non concesso.');
+      if(!('serviceWorker' in navigator)||!('PushManager' in window)) throw new Error('Le notifiche Push non sono supportate da questo browser.');
+      if(rplIsIOS()&&!rplIsStandalone()) throw new Error('Su iPhone devi prima aggiungere RPL alla Schermata Home e aprire RPL dalla sua icona.');
       if(!playerUser||!playerAccount||!playerRow?.id) throw new Error('Accedi prima all’Area Giocatori.');
+      let permission=Notification.permission;
+      if(permission==='default') permission=await Notification.requestPermission();
+      if(permission!=='granted') throw new Error('Permesso notifiche non concesso. Se lo hai negato, abilitalo nelle impostazioni del browser/dispositivo.');
       await rplRegisterServiceWorker();
       const reg=await navigator.serviceWorker.ready;
       let sub=await reg.pushManager.getSubscription();
@@ -3446,6 +3463,7 @@ async function loadPublicCalendar(){
       if(error) throw new Error(error.message||'Errore salvataggio dispositivo.');
       localStorage.setItem('rpl_notifications_enabled','1');
       localStorage.setItem('rpl_notifications_player_id',String(playerRow.id));
+      localStorage.setItem('rpl_notifications_endpoint',sub.endpoint||'');
       msg.className='rpl-notify-status ok';msg.textContent='🟢 Notifiche attive: questo dispositivo è collegato al tuo account RPL.';
       q('playerEnableNotificationsBtn').textContent='🟢 NOTIFICHE ATTIVE';
       q('playerEnableNotificationsBtn').disabled=true;
@@ -3519,7 +3537,7 @@ async function loadPublicCalendar(){
   async function playerLogout(){await sb.auth.signOut();playerUser=null;playerAccount=null;playerRow=null;assignedMatch=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden');q('playerPassword').value='';}
   function bind(){
     q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
-    q('playerEnableNotificationsBtn')?.addEventListener('click',rplEnablePlayerNotifications);rplUpdateNotificationButton();
+    q('playerEnableNotificationsBtn')?.addEventListener('click',rplEnablePlayerNotifications);rplUpdateMobileNotificationHelp();rplUpdateNotificationButton();
     ['playerCameraInput','playerGalleryInput'].forEach(id=>q(id)?.addEventListener('change',e=>uploadAvatar(e.target.files?.[0])));
     q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showPlayerArea()},true);
     if(location.hash==='#player')showPlayerArea();
@@ -3528,5 +3546,5 @@ async function loadPublicCalendar(){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bind();rplRegisterServiceWorker().catch(()=>{});});else {bind();rplRegisterServiceWorker().catch(()=>{});}
 })();
 </script>
-<!-- RPL VERSION 7.1 - Notifications panel fixed -->
+<!-- RPL VERSION 7.2 - Smartphone iOS + Android notifications -->
 </body></html>
