@@ -1,4 +1,4 @@
-const CACHE_NAME = "rpl-v7.5";
+const CACHE_NAME = "rpl-v7.6";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest"];
 
 self.addEventListener("install", event => {
@@ -40,7 +40,6 @@ self.addEventListener("notificationclick", event => {
     const target=event.notification?.data?.url || "./index.html#player";
     const absolute=new URL(target,self.location.origin).href;
     const list=await self.clients.matchAll({type:"window",includeUncontrolled:true});
-    // Preferiamo la finestra RPL già aperta: la portiamo direttamente alla destinazione della notifica.
     for(const client of list){
       if("navigate" in client){
         try{await client.navigate(absolute);await client.focus();return;}catch(e){}

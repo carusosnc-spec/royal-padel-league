@@ -236,6 +236,11 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 .rpl-notify-bell{position:relative}
 .rpl-notify-bell .rpl-notify-dot{display:none;position:absolute;top:5px;right:7px;width:8px;height:8px;border-radius:50%;background:#ef4444;border:2px solid #071522}
 @media(max-width:700px){.rpl-notify-grid{grid-template-columns:1fr}}
+.rpl-device-list{display:grid;gap:8px;margin-top:10px}
+.rpl-device-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid rgba(231,185,78,.18);border-radius:11px;background:rgba(255,255,255,.025)}
+.rpl-device-icon{font-size:22px;flex:0 0 28px;text-align:center}
+.rpl-device-main{min-width:0;flex:1}.rpl-device-name{font-weight:900;color:#fff}.rpl-device-meta{font-size:10px;color:#9da8b4;margin-top:2px;word-break:break-word}
+.rpl-device-time{font-size:9px;color:#ffd86a;white-space:nowrap}
 </style>
 
 <style id="rpl-v6537-calendar">
@@ -930,6 +935,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div class="rpl-notify-card">
 <div class="rpl-notify-title">3. Stato dispositivi</div>
 <div id="rplNotifyDeviceStatus" class="muted">Controllo…</div>
+<div id="rplNotifyDeviceList" class="rpl-device-list"></div>
 </div>
 </div>
 </div>
@@ -3197,10 +3203,11 @@ async function loadPublicCalendar(){
         return false;
       };
       let tries=0;
-      const timer=setInterval(()=>{tries++;if(openTarget()||tries>=30)clearInterval(timer);},300);
-      setTimeout(()=>clearInterval(timer),10000);
+      const timer=setInterval(()=>{tries++;if(openTarget()||tries>=40)clearInterval(timer);},300);
+      setTimeout(()=>clearInterval(timer),13000);
     }catch(e){console.warn('Deep link RPL:',e);}
   }
+
 
   function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
   function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
@@ -3496,7 +3503,7 @@ async function loadPublicCalendar(){
   }
   async function rplRegisterServiceWorker(){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
-    return await navigator.serviceWorker.register('./sw.js?v=730');
+    return await navigator.serviceWorker.register('./sw.js?v=760');
   }
   async function rplEnablePlayerNotifications(){
     const msg=q('playerNotificationMsg');msg.className='rpl-notify-status';msg.textContent='Attivazione…';
@@ -3561,11 +3568,32 @@ async function loadPublicCalendar(){
       console.error(e);msg.className='rpl-notify-status err';msg.textContent='❌ Invio non riuscito: '+(e.message||e);
     }
   }
+  function rplDeviceInfo(ua){
+    const u=String(ua||'');
+    let icon='💻',device='Desktop';
+    if(/iPhone/i.test(u)){icon='📱';device='iPhone';}
+    else if(/iPad/i.test(u)){icon='📱';device='iPad';}
+    else if(/Android/i.test(u)){icon='📱';device='Android';}
+    else if(/Macintosh/i.test(u)){icon='💻';device='Mac';}
+    else if(/Windows/i.test(u)){icon='💻';device='Windows';}
+    else if(/Linux/i.test(u)){icon='💻';device='Linux';}
+    let browser='Browser';
+    if(/CriOS/i.test(u)||/Chrome/i.test(u))browser='Chrome';
+    if(/FxiOS/i.test(u)||/Firefox/i.test(u))browser='Firefox';
+    if(/EdgiOS/i.test(u)||/Edg\//i.test(u))browser='Edge';
+    if(/OPiOS/i.test(u)||/OPR\//i.test(u))browser='Opera';
+    if(/Safari/i.test(u)&&!/Chrome|CriOS|Android/i.test(u))browser='Safari';
+    return {icon,label:`${device} · ${browser}`};
+  }
+  function rplFormatDeviceDate(v){
+    if(!v)return '';
+    const d=new Date(v);if(Number.isNaN(d.getTime()))return '';
+    return d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
   async function rplLoadNotifyDeviceStatus(){
-    const box=q('rplNotifyDeviceStatus');
+    const box=q('rplNotifyDeviceStatus'),list=q('rplNotifyDeviceList');
     if(!box)return;
-    box.className='muted';
-    box.textContent='Controllo…';
+    box.className='muted';box.textContent='Controllo…';if(list)list.innerHTML='';
     try{
       const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'status'}});
       if(error)throw new Error(error.message||'Errore lettura stato dispositivi.');
@@ -3573,12 +3601,21 @@ async function loadPublicCalendar(){
       const players=Number(data?.playersWithNotifications||0);
       box.className='rpl-notify-status ok';
       box.innerHTML=`🟢 <strong>${devices}</strong> dispositivo/i attivo/i collegato/i a <strong>${players}</strong> giocatore/i.`;
+      if(list){
+        const rows=Array.isArray(data?.devices)?data.devices:[];
+        list.innerHTML=rows.length?rows.map(d=>{
+          const info=rplDeviceInfo(d.user_agent);
+          const name=esc(d.player_name||'Giocatore');
+          const nick=d.player_nickname?` <small style="color:#9aa9b8">“${esc(d.player_nickname)}”</small>`:'';
+          const when=rplFormatDeviceDate(d.updated_at||d.created_at);
+          return `<div class="rpl-device-row"><div class="rpl-device-icon">${info.icon}</div><div class="rpl-device-main"><div class="rpl-device-name">${name}${nick}</div><div class="rpl-device-meta">${esc(info.label)}${when?' · ultimo collegamento '+esc(when):''}</div></div><div class="rpl-device-time">🟢 ATTIVO</div></div>`;
+        }).join(''):'<div class="muted">Nessun dispositivo registrato.</div>';
+      }
     }catch(e){
-      console.error(e);
-      box.className='rpl-notify-status err';
-      box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
+      console.error(e);box.className='rpl-notify-status err';box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
     }
   }
+
   function rplUpdateNotificationButton(){
     const b=q('playerEnableNotificationsBtn');if(!b)return;
     if('Notification' in window && Notification.permission==='granted' && localStorage.getItem('rpl_notifications_enabled')==='1'){b.textContent='🟢 NOTIFICHE ATTIVE';b.disabled=true;}
@@ -3598,11 +3635,13 @@ async function loadPublicCalendar(){
     q('playerEnableNotificationsBtn')?.addEventListener('click',rplEnablePlayerNotifications);rplUpdateMobileNotificationHelp();rplUpdateNotificationButton();
     ['playerCameraInput','playerGalleryInput'].forEach(id=>q(id)?.addEventListener('change',e=>uploadAvatar(e.target.files?.[0])));
     q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showPlayerArea()},true);
-    if(location.hash==='#player')showPlayerArea();
+    const requestedArea=new URLSearchParams(location.search).get('rpl');
+    if(requestedArea==='vote'||requestedArea==='calendar'){showPlayerArea();}
+    else if(location.hash==='#player')showPlayerArea();
   }
   sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'&&location.hash==='#player'){playerUser=null;playerAccount=null;playerRow=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden')}});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bind();rplRegisterServiceWorker().catch(()=>{});});else {bind();rplRegisterServiceWorker().catch(()=>{});}
 })();
 </script>
-<!-- RPL VERSION 7.5 - Automatic notifications + deep links -->
+<!-- RPL VERSION 7.6 - Automatic notifications + deep links + device details -->
 </body></html>
