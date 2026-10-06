@@ -669,7 +669,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 7.4 - Smartphone + notification deep links + poll edit fix -->
+<!-- RPL VERSION 7.6 - Automatic notifications + deep links + poll edit fix -->
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -2836,7 +2836,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v7.4</div>
+<div id="rplVersionBadge">RPL v7.6</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
