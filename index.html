@@ -2767,7 +2767,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v6.5.111</div>
+<div id="rplVersionBadge">RPL v6.5.112</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3375,9 +3375,47 @@ async function loadPublicCalendar(){
     (sr.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);W.forEach(pid=>{const z=all.find(s=>s.id===pid);if(z){z.sets++;z.games+=wg;z.pt+=(snap[x.match_id+'_'+L[0]]?.fascia_value||0)+(snap[x.match_id+'_'+L[1]]?.fascia_value||0)}});L.forEach(pid=>{const z=all.find(s=>s.id===pid);if(z){z.sets++;z.games+=lg}})});
     (ar.data||[]).forEach(x=>{const z=all.find(s=>s.id===x.player_id);if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++}});
     const required=minSetsRequired();const general=all.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb,eligible:required===null||s.sets>=required})).sort((a,b)=>(a.eligible!==b.eligible?(a.eligible?-1:1):b.total-a.total||b.base-a.base||a.name.localeCompare(b.name,'it')));
-    const current=new Date(),first=new Date(current.getFullYear(),current.getMonth(),1),next=new Date(current.getFullYear(),current.getMonth()+1,1);const monthKey=x=>String(x.getMonth()+1).padStart(2,'0');
-    const mid=(matches||[]).filter(m=>new Date(m.played_at)>=first&&new Date(m.played_at)<next);const mids=mid.map(m=>m.id);let partial=0,bonus=0;
-    if(mids.length){const [pm,ps,pa]=await Promise.all([sb.from('match_players').select('*').in('match_id',mids),sb.from('sets').select('*').in('match_id',mids),sb.from('match_awards').select('*').in('match_id',mids)]);if(pm.error||ps.error||pa.error)throw(pm.error||ps.error||pa.error);const pSnap={};(pm.data||[]).forEach(x=>pSnap[x.match_id+'_'+x.player_id]=x);const pst=emptyStats();(ps.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);W.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=wg;z.pt+=(pSnap[x.match_id+'_'+L[0]]?.fascia_value||0)+(pSnap[x.match_id+'_'+L[1]]?.fascia_value||0)}});L.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=lg}})});(pa.data||[]).forEach(x=>{const z=pst.find(s=>s.id===x.player_id);if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++}});const pr=pst.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb})).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,'it'));partial=pr.findIndex(x=>String(x.id)===String(playerId))+1;const bonusPoints=[100,72,60,48,40,32,24,16,8,4];const elig=pr.filter(x=>{const gs=all.find(g=>String(g.id)===String(x.id));return x.sets>0&&gs&&gs.sets>=minSetsRequired()});bonus=elig.findIndex(x=>String(x.id)===String(playerId))+1;if(bonus===0)bonus=0;}
+    const current=new Date(),first=new Date(current.getFullYear(),current.getMonth(),1),next=new Date(current.getFullYear(),current.getMonth()+1,1);let partial=0,bonus=0;
+    const BONUS_POINTS=[100,72,60,48,40,32,24,16,8,4];
+    const BONUS_MONTHS=[
+      {key:'09',start:'2026-09-01',end:'2026-09-30',threshold:5},
+      {key:'10',start:'2026-10-01',end:'2026-10-31',threshold:15},
+      {key:'11',start:'2026-11-01',end:'2026-11-30',threshold:25},
+      {key:'12',start:'2026-12-01',end:'2026-12-31',threshold:35},
+      {key:'01',start:'2027-01-01',end:'2027-01-31',threshold:45},
+      {key:'02',start:'2027-02-01',end:'2027-02-28',threshold:55},
+      {key:'03',start:'2027-03-01',end:'2027-03-31',threshold:65}
+    ];
+    const bonusTotals=emptyStats().map(s=>({...s,bonusTotal:0}));
+    const bonusById=new Map(bonusTotals.map(s=>[String(s.id),s]));
+    const cumulativeSets={};bonusTotals.forEach(s=>cumulativeSets[String(s.id)]=0);
+    const currentThreshold=typeof minSetsRequired==='function'?minSetsRequired():5;
+    for(const bm of BONUS_MONTHS){
+      if(current < new Date(bm.start+'T00:00:00')) continue;
+      const mids=(matches||[]).filter(m=>{const d=String(m.played_at).slice(0,10);return d>=bm.start&&d<=bm.end}).map(m=>m.id);
+      const mst=emptyStats(), snap={};
+      (mpr.data||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
+      const mById=new Map(mst.map(s=>[String(s.id),s]));
+      (sr.data||[]).filter(x=>mids.includes(x.match_id)).forEach(x=>{
+        const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;
+        const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
+        W.forEach(pid=>{const z=mById.get(String(pid));if(z){z.sets++;z.won++;z.games+=wg;z.pt+=(snap[x.match_id+'_'+L[0]]?.fascia_value||0)+(snap[x.match_id+'_'+L[1]]?.fascia_value||0)}});
+        L.forEach(pid=>{const z=mById.get(String(pid));if(z){z.sets++;z.games+=lg}});
+      });
+      (ar.data||[]).filter(x=>mids.includes(x.match_id)).forEach(x=>{const z=mById.get(String(x.player_id));if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++;}});
+      mst.forEach(s=>{const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;s.base=base;s.total=base+s.mvp*1.5+s.imb;s.cumSets=(cumulativeSets[String(s.id)]||0)+s.sets;});
+      const released=current>=new Date(bm.end+'T23:59:59');
+      const threshold=released?bm.threshold:currentThreshold;
+      const eligible=mst.filter(s=>s.sets>0&&s.cumSets>=threshold);
+      eligible.sort((a,b)=>b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it'));
+      eligible.forEach((s,i)=>{const target=bonusById.get(String(s.id));if(target&&i<10)target.bonusTotal+=BONUS_POINTS[i];});
+      mst.forEach(s=>{cumulativeSets[String(s.id)]=(cumulativeSets[String(s.id)]||0)+s.sets;});
+    }
+    const bonusRanking=bonusTotals.sort((a,b)=>b.bonusTotal-a.bonusTotal||a.name.localeCompare(b.name,'it'));
+    const bonusRankIndex=bonusRanking.findIndex(x=>String(x.id)===String(playerId));
+    bonus=bonusRankIndex>=0?bonusRankIndex+1:0;
+    const mid=(matches||[]).filter(m=>new Date(m.played_at)>=first&&new Date(m.played_at)<next);const mids=mid.map(m=>m.id);
+    if(mids.length){const [pm,ps,pa]=await Promise.all([sb.from('match_players').select('*').in('match_id',mids),sb.from('sets').select('*').in('match_id',mids),sb.from('match_awards').select('*').in('match_id',mids)]);if(pm.error||ps.error||pa.error)throw(pm.error||ps.error||pa.error);const pSnap={};(pm.data||[]).forEach(x=>pSnap[x.match_id+'_'+x.player_id]=x);const pst=emptyStats();(ps.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);W.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.won++;z.games+=wg;z.pt+=(pSnap[x.match_id+'_'+L[0]]?.fascia_value||0)+(pSnap[x.match_id+'_'+L[1]]?.fascia_value||0)}});L.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=lg}})});(pa.data||[]).forEach(x=>{const z=pst.find(s=>s.id===x.player_id);if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++}});const pr=pst.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb})).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,'it'));partial=pr.findIndex(x=>String(x.id)===String(playerId))+1;}
     return {general:general.findIndex(x=>String(x.id)===String(playerId))+1,partial,bonus};
   }
   async function openRplPlayerProfile(playerId){
