@@ -1660,7 +1660,7 @@ function showOperatorSection(which){
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
   else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
   else if(which==="confirm"){p?.classList.remove("hidden");pt?.classList.add("primary");loadOperatorPendingMatches();}
-  else if(which==="notifications"){n?.classList.remove("hidden");nt?.classList.add("primary");rplLoadNotifyPlayers();}
+  else if(which==="notifications"){n?.classList.remove("hidden");nt?.classList.add("primary");window.rplLoadNotifyPlayers?.();window.rplLoadNotifyDeviceStatus?.();}
   else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
 function fillCalendarPlayers(){
@@ -2800,7 +2800,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v7.0</div>
+<div id="rplVersionBadge">RPL v7.1</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3426,7 +3426,7 @@ async function loadPublicCalendar(){
   }
   async function rplRegisterServiceWorker(){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
-    return await navigator.serviceWorker.register('./sw.js?v=65115');
+    return await navigator.serviceWorker.register('./sw.js?v=710');
   }
   async function rplEnablePlayerNotifications(){
     const msg=q('playerNotificationMsg');msg.className='rpl-notify-status';msg.textContent='Attivazione…';
@@ -3486,10 +3486,36 @@ async function loadPublicCalendar(){
       console.error(e);msg.className='rpl-notify-status err';msg.textContent='❌ Invio non riuscito: '+(e.message||e);
     }
   }
+  async function rplLoadNotifyDeviceStatus(){
+    const box=q('rplNotifyDeviceStatus');
+    if(!box)return;
+    box.className='muted';
+    box.textContent='Controllo…';
+    try{
+      const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'status'}});
+      if(error)throw new Error(error.message||'Errore lettura stato dispositivi.');
+      const devices=Number(data?.devicesFound||0);
+      const players=Number(data?.playersWithNotifications||0);
+      box.className='rpl-notify-status ok';
+      box.innerHTML=`🟢 <strong>${devices}</strong> dispositivo/i attivo/i collegato/i a <strong>${players}</strong> giocatore/i.`;
+    }catch(e){
+      console.error(e);
+      box.className='rpl-notify-status err';
+      box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
+    }
+  }
   function rplUpdateNotificationButton(){
     const b=q('playerEnableNotificationsBtn');if(!b)return;
     if('Notification' in window && Notification.permission==='granted' && localStorage.getItem('rpl_notifications_enabled')==='1'){b.textContent='🟢 NOTIFICHE ATTIVE';b.disabled=true;}
   }
+
+  // Il pannello operatore è costruito fuori da questo blocco JavaScript:
+  // rendiamo esplicitamente globali le funzioni richiamate dai pulsanti HTML.
+  window.rplNotifySelectAll=rplNotifySelectAll;
+  window.rplLoadNotifyPlayers=rplLoadNotifyPlayers;
+  window.rplSendNotificationTest=rplSendNotificationTest;
+  window.rplSendNotificationPanel=rplSendNotificationPanel;
+  window.rplLoadNotifyDeviceStatus=rplLoadNotifyDeviceStatus;
   async function playerLogout(){await sb.auth.signOut();playerUser=null;playerAccount=null;playerRow=null;assignedMatch=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden');q('playerPassword').value='';}
   function bind(){
     q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
@@ -3502,5 +3528,5 @@ async function loadPublicCalendar(){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bind();rplRegisterServiceWorker().catch(()=>{});});else {bind();rplRegisterServiceWorker().catch(()=>{});}
 })();
 </script>
-<!-- RPL VERSION 7.0 - Notifications push remote -->
+<!-- RPL VERSION 7.1 - Notifications panel fixed -->
 </body></html>
