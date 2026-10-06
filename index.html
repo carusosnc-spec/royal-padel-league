@@ -3186,15 +3186,19 @@ async function loadPublicCalendar(){
       const p=new URLSearchParams(location.search);
       const target=p.get('rpl');
       if(!target)return;
-      setTimeout(()=>{
+      const openTarget=()=>{
         if(target==='vote'){
           const card=q('playerVotingCard');
-          card?.scrollIntoView({behavior:'smooth',block:'start'});
+          if(card && !card.classList.contains('hidden')){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
         } else if(target==='calendar'){
           const card=q('playerAssignedMatchCard');
-          card?.scrollIntoView({behavior:'smooth',block:'start'});
+          if(card){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
         }
-      },1200);
+        return false;
+      };
+      let tries=0;
+      const timer=setInterval(()=>{tries++;if(openTarget()||tries>=30)clearInterval(timer);},300);
+      setTimeout(()=>clearInterval(timer),10000);
     }catch(e){console.warn('Deep link RPL:',e);}
   }
 
@@ -3600,5 +3604,5 @@ async function loadPublicCalendar(){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bind();rplRegisterServiceWorker().catch(()=>{});});else {bind();rplRegisterServiceWorker().catch(()=>{});}
 })();
 </script>
-<!-- RPL VERSION 7.3 - Automatic notifications -->
+<!-- RPL VERSION 7.5 - Automatic notifications + deep links -->
 </body></html>
