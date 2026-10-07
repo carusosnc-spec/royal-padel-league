@@ -236,6 +236,11 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 .rpl-notify-bell{position:relative}
 .rpl-notify-bell .rpl-notify-dot{display:none;position:absolute;top:5px;right:7px;width:8px;height:8px;border-radius:50%;background:#ef4444;border:2px solid #071522}
 @media(max-width:700px){.rpl-notify-grid{grid-template-columns:1fr}}
+.rpl-device-list{display:grid;gap:8px;margin-top:10px}
+.rpl-device-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid rgba(231,185,78,.18);border-radius:11px;background:rgba(255,255,255,.025)}
+.rpl-device-icon{font-size:22px;flex:0 0 28px;text-align:center}
+.rpl-device-main{min-width:0;flex:1}.rpl-device-name{font-weight:900;color:#fff}.rpl-device-meta{font-size:10px;color:#9da8b4;margin-top:2px;word-break:break-word}
+.rpl-device-time{font-size:9px;color:#ffd86a;white-space:nowrap}
 </style>
 
 <style id="rpl-v6537-calendar">
@@ -963,6 +968,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div class="rpl-notify-card">
 <div class="rpl-notify-title">3. Stato dispositivi</div>
 <div id="rplNotifyDeviceStatus" class="muted">Controllo…</div>
+<div id="rplNotifyDeviceList" class="rpl-device-list"></div>
 </div>
 </div>
 </div>
@@ -1877,16 +1883,26 @@ async function saveCalendarWeek(){
     const dr=await sb.from("calendar_matches").delete().in("id",remove);
     if(dr.error){msg.className="msg err";msg.textContent="Errore aggiornamento settimana: "+dr.error.message;return;}
   }
-  // Notifica automatica: tutti i giocatori coinvolti nella settimana nuova o precedente.
-  const affectedPlayers=new Set();
-  const addMatchPlayers=m=>[1,2,3,4].forEach(i=>{const id=Number(m?.[`player_${i}`]);if(Number.isFinite(id)&&id>0)affectedPlayers.add(id);});
-  oldMatches.forEach(addMatchPlayers);
-  try{
-    const nr=await sb.from("calendar_matches").select("player_1,player_2,player_3,player_4").in("id",keep);
-    (nr.data||[]).forEach(addMatchPlayers);
-  }catch(e){console.warn("Impossibile recuperare i destinatari del calendario:",e);}
-  await rplAutoSendNotification([...affectedPlayers],"📅 Calendario RPL aggiornato","Il calendario della settimana è stato pubblicato o modificato. Controlla le tue partite nell'Area Giocatore.","?rpl=calendar#player");
-  msg.className="msg ok";msg.textContent=`✅ Settimana salvata: ${keep.length} partite. Notifiche automatiche inviate ai giocatori interessati.`;
+  // Notifica automatica calendario: invia a tutti i giocatori attivi/non ospiti.
+  // In questo modo la notifica non dipende dal recupero dei soli giocatori presenti
+  // nelle righe appena salvate e arriva anche quando una settimana viene modificata.
+  const calendarRecipients=await rplGetActivePlayerIds();
+  const notifyResult=await rplAutoSendNotification(
+    calendarRecipients,
+    "📅 Calendario RPL aggiornato",
+    "Il calendario della settimana è stato pubblicato o modificato. Controlla le tue partite nell’Area Giocatore.",
+    "?rpl=calendar#player"
+  );
+  const sent=Number(notifyResult?.sent||0);
+  const missing=Number(notifyResult?.missing||0);
+  const failed=Number(notifyResult?.failed||0);
+  if(notifyResult?.ok===false && notifyResult?.error){
+    msg.className="msg ok";
+    msg.textContent=`✅ Settimana salvata: ${keep.length} partite. ⚠️ Notifica automatica non inviata: ${notifyResult.error}`;
+  }else{
+    msg.className="msg ok";
+    msg.textContent=`✅ Settimana salvata: ${keep.length} partite. 🔔 Notifiche: ${sent} inviate${missing?` · ${missing} senza dispositivo`:''}${failed?` · ${failed} fallite`:''}.`;
+  }
   await loadCalendarWeeks();
 }
 async function loadCalendarWeek(){
@@ -3608,21 +3624,49 @@ async function loadPublicCalendar(){
     const msg=q('rplNotifyMsg');msg.className='rpl-notify-status';
     const ids=[...document.querySelectorAll('#rplNotifyPlayers input[data-rpl-notify-player]:checked')].map(x=>Number(x.dataset.rplNotifyPlayer));
     if(!ids.length){msg.className='rpl-notify-status err';msg.textContent='Seleziona almeno un giocatore.';return;}
-    const title=q('rplNotifyTitle')?.value.trim()||'🔔 Royal Padel League';const body=q('rplNotifyBody')?.value.trim()||'Hai una nuova comunicazione RPL.';
+    const title=q('rplNotifyTitle')?.value.trim()||'🔔 Royal Padel League';
+    const body=q('rplNotifyBody')?.value.trim()||'Hai una nuova comunicazione RPL.';
+    const url=location.origin+location.pathname+'#player';
     msg.className='rpl-notify-status';msg.textContent='Invio notifiche…';
     try{
-      const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'send',player_ids:ids,title,body,url:target ? (target.startsWith('http') ? target : location.origin+location.pathname+target) : location.origin+location.pathname+'#player'}});
+      const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'send',player_ids:ids,title,body,url}});
       if(error) throw new Error(error.message||'Errore invio notifiche.');
-      msg.className='rpl-notify-status ok';msg.textContent=`✅ ${data?.sent||0} notifica/e inviata/e${data?.missing?` · ${data.missing} senza dispositivo attivo`:''}.`;
+      const sent=Number(data?.sent||0),missing=Number(data?.missing||0),failed=Number(data?.failed||0);
+      msg.className='rpl-notify-status '+(failed?'err':'ok');
+      msg.textContent=failed
+        ? `⚠️ ${sent} inviata/e · ${failed} fallita/e${missing?' · '+missing+' senza dispositivo attivo':''}.`
+        : `✅ ${sent} notifica/e inviata/e${missing?' · '+missing+' senza dispositivo attivo':''}.`;
+      await rplLoadNotifyDeviceStatus();
     }catch(e){
       console.error(e);msg.className='rpl-notify-status err';msg.textContent='❌ Invio non riuscito: '+(e.message||e);
     }
   }
+  function rplDeviceInfo(ua){
+    const u=String(ua||'');
+    let icon='💻',device='Desktop';
+    if(/iPhone/i.test(u)){icon='📱';device='iPhone';}
+    else if(/iPad/i.test(u)){icon='📱';device='iPad';}
+    else if(/Android/i.test(u)){icon='📱';device='Android';}
+    else if(/Macintosh/i.test(u)){icon='💻';device='Mac';}
+    else if(/Windows/i.test(u)){icon='💻';device='Windows';}
+    else if(/Linux/i.test(u)){icon='💻';device='Linux';}
+    let browser='Browser';
+    if(/CriOS/i.test(u)||/Chrome/i.test(u))browser='Chrome';
+    if(/FxiOS/i.test(u)||/Firefox/i.test(u))browser='Firefox';
+    if(/EdgiOS/i.test(u)||/Edg\//i.test(u))browser='Edge';
+    if(/OPiOS/i.test(u)||/OPR\//i.test(u))browser='Opera';
+    if(/Safari/i.test(u)&&!/Chrome|CriOS|Android/i.test(u))browser='Safari';
+    return {icon,label:`${device} · ${browser}`};
+  }
+  function rplFormatDeviceDate(v){
+    if(!v)return '';
+    const d=new Date(v);if(Number.isNaN(d.getTime()))return '';
+    return d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
   async function rplLoadNotifyDeviceStatus(){
-    const box=q('rplNotifyDeviceStatus');
+    const box=q('rplNotifyDeviceStatus'),list=q('rplNotifyDeviceList');
     if(!box)return;
-    box.className='muted';
-    box.textContent='Controllo…';
+    box.className='muted';box.textContent='Controllo…';if(list)list.innerHTML='';
     try{
       const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'status'}});
       if(error)throw new Error(error.message||'Errore lettura stato dispositivi.');
@@ -3630,12 +3674,21 @@ async function loadPublicCalendar(){
       const players=Number(data?.playersWithNotifications||0);
       box.className='rpl-notify-status ok';
       box.innerHTML=`🟢 <strong>${devices}</strong> dispositivo/i attivo/i collegato/i a <strong>${players}</strong> giocatore/i.`;
+      if(list){
+        const rows=Array.isArray(data?.devices)?data.devices:[];
+        list.innerHTML=rows.length?rows.map(d=>{
+          const info=rplDeviceInfo(d.user_agent);
+          const name=esc(d.player_name||'Giocatore');
+          const nick=d.player_nickname?` <small style="color:#9aa9b8">“${esc(d.player_nickname)}”</small>`:'';
+          const when=rplFormatDeviceDate(d.updated_at||d.created_at);
+          return `<div class="rpl-device-row"><div class="rpl-device-icon">${info.icon}</div><div class="rpl-device-main"><div class="rpl-device-name">${name}${nick}</div><div class="rpl-device-meta">${esc(info.label)}${when?' · ultimo collegamento '+esc(when):''}</div></div><div class="rpl-device-time">🟢 ATTIVO</div></div>`;
+        }).join(''):'<div class="muted">Nessun dispositivo registrato.</div>';
+      }
     }catch(e){
-      console.error(e);
-      box.className='rpl-notify-status err';
-      box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
+      console.error(e);box.className='rpl-notify-status err';box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
     }
   }
+
   function rplUpdateNotificationButton(){
     const b=q('playerEnableNotificationsBtn');if(!b)return;
     if('Notification' in window && Notification.permission==='granted' && localStorage.getItem('rpl_notifications_enabled')==='1'){b.textContent='🟢 NOTIFICHE ATTIVE';b.disabled=true;}
@@ -3661,5 +3714,5 @@ async function loadPublicCalendar(){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bind();rplRegisterServiceWorker().catch(()=>{});});else {bind();rplRegisterServiceWorker().catch(()=>{});}
 })();
 </script>
-<!-- RPL VERSION 7.5 - Automatic notifications + deep links -->
+<!-- RPL v8.5 - automatic calendar notifications hardened -->
 <!-- RPL v8.3: current-month provisional Bonus is propagated into the final ranking. -->\n</body></html>
