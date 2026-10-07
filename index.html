@@ -674,7 +674,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 8.9 - Passkey / Face ID / Impronta -->
+<!-- RPL VERSION 8.9.1 - Passkey / Face ID / Impronta -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -3545,6 +3545,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     if(assignedMatch)showResponsibleHero(assignedMatch);else clearResponsible();
     await Promise.all([loadPlayerStats(),loadPlayerMatches(),loadPlayerVoting()]);
   }
+  window.loadPlayerSession=loadPlayerSession;
   async function savePlayerProfile(){
     if(!playerUser||!playerRow)return;
     const msg=q('playerProfileMsg');msg.className='msg';msg.textContent='Salvataggio profilo…';
