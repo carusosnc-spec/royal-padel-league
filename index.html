@@ -696,7 +696,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </style>
 
 <style id="rpl-v892-security-compact-style">
-/* RPL v8.9.2 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+/* RPL v8.9.3 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
 #playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
 #playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
 #playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
@@ -742,6 +742,12 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   font-size:11px !important;
 }
 #operatorBox #operatorPasskeyCard.rpl-security-compact .msg{margin:0 !important;font-size:10px !important;}
+</style>
+<style id="rpl-v65108-accounts-style">
+#operatorAccountsSection .rpl-account-row{display:grid;grid-template-columns:1.4fr .8fr .9fr 1fr;gap:8px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:7px;background:rgba(255,255,255,.02)}
+#operatorAccountsSection .rpl-account-status{font-weight:800;font-size:12px}
+#operatorAccountsSection .rpl-account-ok{color:#39d98a}.rpl-account-warn{color:#ffd86a}.rpl-account-err{color:#ff6b6b}
+@media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
 </head>
 <body><main>
@@ -981,6 +987,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <button type="button" id="opVotingTab" onclick="showOperatorSection('voting')">🗳️ Votazioni settimanali</button>
 <button type="button" id="opConfirmTab" onclick="showOperatorSection('confirm')">✅ Partite da confermare</button>
 <button type="button" id="opNotifyTab" onclick="showOperatorSection('notifications')">🔔 Notifiche</button>
+<button type="button" id="opAccountsTab" onclick="showOperatorSection('accounts')">👥 Account giocatori</button>
 </div>
 </div>
 <div id="operatorVotingSection" class="hidden">
@@ -1038,6 +1045,29 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div class="rpl-notify-title">3. Stato dispositivi</div>
 <div id="rplNotifyDeviceStatus" class="muted">Controllo…</div>
 <div id="rplNotifyDeviceList" class="rpl-device-list"></div>
+</div>
+</div>
+</div>
+<div id="operatorAccountsSection" class="hidden">
+<div class="card">
+<h2>👥 Account giocatori</h2>
+<div class="muted">Crea gli account RPL dei giocatori partendo dal file di importazione. La password iniziale viene generata automaticamente e il giocatore dovrà cambiarla al primo accesso.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<label style="display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid rgba(231,185,78,.25);border-radius:10px;cursor:pointer">📥 CARICA FILE ACCOUNT <input id="accountImportFile" type="file" accept=".json,application/json" style="display:none"></label>
+<button type="button" onclick="loadAccountImportTemplate()">🔄 RICARICA ELENCO</button>
+<button type="button" class="primary" onclick="createAllPlayerAccounts()">🚀 CREA ACCOUNT MANCANTI</button>
+<button type="button" onclick="downloadAccountCredentials()">📄 SCARICA CREDENZIALI CREATE</button>
+</div>
+<div id="operatorAccountsMsg" class="msg" style="margin-top:10px"></div>
+<div id="operatorAccountsList" style="margin-top:12px">Nessun file caricato.</div>
+<div style="margin-top:18px;padding:14px;border:1px solid rgba(231,185,78,.25);border-radius:12px;background:rgba(255,255,255,.02)">
+  <div style="font-weight:900;color:#ffd86a;margin-bottom:6px">🔑 RIGENERA PASSWORD TEMPORANEA</div>
+  <div class="muted">Se un giocatore dimentica la password personale, genera una nuova password temporanea. La vecchia password viene invalidata e al prossimo accesso il giocatore dovrà sceglierne una nuova.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:10px">
+    <label style="min-width:260px;flex:1">Giocatore<select id="accountResetPlayer" style="width:100%;margin-top:4px"></select></label>
+    <button type="button" class="primary" onclick="resetSelectedPlayerPassword()">🔄 RIGENERA PASSWORD</button>
+  </div>
+  <div id="accountResetResult" class="msg" style="margin-top:10px"></div>
 </div>
 </div>
 </div>
@@ -1869,17 +1899,124 @@ async function confirmPendingMatch(id){
 }
 window.loadOperatorPendingMatches=loadOperatorPendingMatches;window.openPendingMatch=openPendingMatch;window.closePendingMatch=closePendingMatch;window.deletePendingMatch=deletePendingMatch;window.reactivatePendingMatch=reactivatePendingMatch;window.confirmPendingMatch=confirmPendingMatch;
 
+const accountImportState={rows:[],credentials:[]};
+function normalizeAccountPhone(v){
+  let x=String(v??'').replace(/[^0-9+]/g,'');
+  if(x.startsWith('0039'))x='+'+x.slice(2);
+  if(x.startsWith('39') && !x.startsWith('+39'))x='+'+x;
+  if(/^3\d{9}$/.test(x))x='+39'+x;
+  return x;
+}
+function accountTechnicalEmail(phone){return `rpl.${phone.replace(/^\+39/,'')}@royalpadelleague.it`;}
+function generateTempPassword(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';let out='Rpl-';for(let i=0;i<10;i++)out+=chars[Math.floor(Math.random()*chars.length)];return out;}
+function loadAccountImportTemplate(){
+  const host=$("operatorAccountsList"), msg=$("operatorAccountsMsg");
+  if(!accountImportState.rows.length){
+    host.innerHTML='<div class="muted">Carica il file <b>RPL_account_import.json</b> che ti preparo insieme a questa versione. Il file contiene solo nome giocatore e telefono.</div>';
+    return;
+  }
+  host.innerHTML=accountImportState.rows.map((r,i)=>`<div class="rpl-account-row"><div><b>${escOperator(r.name||'')}</b><div class="muted">${escOperator(r.nickname||'')}</div></div><div>📱 ${escOperator(r.phone||'')}</div><div class="rpl-account-status ${r.status==='CREATO'?'rpl-account-ok':r.status==='ERRORE'?'rpl-account-err':'rpl-account-warn'}">${escOperator(r.status||'DA CREARE')}${r.error?`<div class="muted" style="margin-top:4px;font-size:11px;white-space:normal;word-break:break-word;color:#ff6b6b">${escOperator(r.error)}</div>`:''}</div><div>${r.temporary_password?`<b>Temp:</b> ${escOperator(r.temporary_password)}`:''}</div></div>`).join('');
+  msg.className='msg';msg.textContent=`${accountImportState.rows.length} giocatori caricati.`;
+}
+async function createAllPlayerAccounts(){
+  const msg=$("operatorAccountsMsg");
+  if(!accountImportState.rows.length){msg.className='msg err';msg.textContent='Prima carica il file di importazione.';return;}
+  if(!confirm(`Creare gli account mancanti per ${accountImportState.rows.length} giocatori?`))return;
+  msg.className='msg';msg.textContent='Creazione account in corso…';
+  try{
+    const {data:{session},error:sessionError}=await sb.auth.getSession();
+    if(sessionError||!session)throw new Error('Sessione operatore non valida.');
+    const payload=[];
+    for(const r of accountImportState.rows){
+      const phone=normalizeAccountPhone(r.phone);
+      if(!/^\+39\d{9,10}$/.test(phone)){r.status='ERRORE';r.error='Numero di telefono non valido.';continue;}
+      const p=dbPlayers.find(x=>String(x.name).trim().toLowerCase()===String(r.name).trim().toLowerCase());
+      if(!p){r.status='ERRORE';r.error='Giocatore non trovato nel database RPL.';continue;}
+      r.status='IN CORSO';r.error='';
+      payload.push({player_id:p.id,name:r.name,phone});
+    }
+    loadAccountImportTemplate();
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/rpl-create-player-accounts`,{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({rows:payload})
+    });
+    let out=null;try{out=await response.json();}catch{throw new Error(`Risposta non valida dalla funzione Supabase (HTTP ${response.status}).`);}
+    if(!response.ok)throw new Error(out?.error||`Errore funzione Supabase (HTTP ${response.status}).`);
+    const byId=new Map((out.results||[]).map(x=>[String(x.player_id),x]));
+    for(const r of accountImportState.rows){
+      const p=dbPlayers.find(x=>String(x.name).trim().toLowerCase()===String(r.name).trim().toLowerCase());
+      const x=p?byId.get(String(p.id)):null;
+      if(!x)continue;
+      r.status=x.status;r.error=x.error||'';r.temporary_password=x.temporary_password||'';r.technical_email=x.technical_email||'';
+    }
+    loadAccountImportTemplate();
+    const ok=accountImportState.rows.filter(x=>x.status==='CREATO').length, exists=accountImportState.rows.filter(x=>x.status==='ESISTENTE').length, err=accountImportState.rows.filter(x=>x.status==='ERRORE').length;
+    msg.className=err?'msg err':'msg ok';msg.textContent=`Operazione terminata: ${ok} creati · ${exists} già presenti · ${err} errori.`;
+  }catch(e){msg.className='msg err';msg.textContent='Errore creazione account: '+(e?.message||String(e));loadAccountImportTemplate();}
+}
+function downloadAccountCredentials(){
+  const rows=accountImportState.rows.filter(x=>x.temporary_password);
+  if(!rows.length){alert('Non ci sono nuove credenziali da scaricare.');return;}
+  const text=['ROYAL PADEL LEAGUE – CREDENZIALI TEMPORANEE','Usare queste credenziali solo per il primo accesso. Il giocatore dovrà cambiare la password.','',...rows.map(x=>`${x.name} | Telefono: ${x.phone} | Email tecnica: ${x.technical_email} | Password temporanea: ${x.temporary_password}`)].join('\n');
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='RPL_Credenziali_Temporanee.txt';a.click();URL.revokeObjectURL(url);
+}
+$('accountImportFile')?.addEventListener('change',async e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  try{const obj=JSON.parse(await file.text());if(!Array.isArray(obj))throw new Error('Formato file non valido.');accountImportState.rows=obj.map(x=>({name:x.name,nickname:x.nickname||'',phone:normalizeAccountPhone(x.phone),status:'DA CREARE'}));loadAccountImportTemplate();}
+  catch(err){$('operatorAccountsMsg').className='msg err';$('operatorAccountsMsg').textContent='Errore lettura file: '+(err.message||err);}
+});
+async function loadPlayerAccountResetList(){
+  const sel=$("accountResetPlayer"), out=$("accountResetResult");
+  if(!sel)return;
+  sel.innerHTML='<option value="">Caricamento…</option>';
+  if(!dbPlayers.length){sel.innerHTML='<option value="">Nessun giocatore disponibile</option>';return;}
+  try{
+    const {data:accounts,error}=await sb.from('player_accounts').select('player_id').not('player_id','is',null);
+    if(error)throw error;
+    const ids=new Set((accounts||[]).map(x=>String(x.player_id)));
+    const rows=dbPlayers.filter(p=>ids.has(String(p.id))).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
+    if(!rows.length){sel.innerHTML='<option value="">Nessun account creato</option>';return;}
+    sel.innerHTML='<option value="">Seleziona un giocatore…</option>'+rows.map(p=>`<option value="${escOperator(p.id)}">${escOperator(p.name||'')}${p.nickname?` — ${escOperator(p.nickname)}`:''}</option>`).join('');
+    if(out)out.textContent='';
+  }catch(e){
+    sel.innerHTML='<option value="">Errore caricamento</option>';
+    if(out){out.className='msg err';out.textContent='Errore caricamento account: '+(e?.message||String(e));}
+  }
+}
+async function resetSelectedPlayerPassword(){
+  const sel=$("accountResetPlayer"), out=$("accountResetResult"), playerId=sel?.value;
+  if(!playerId){out.className='msg err';out.textContent='Seleziona prima un giocatore.';return;}
+  const player=dbPlayers.find(p=>String(p.id)===String(playerId));
+  if(!player)return;
+  if(!confirm(`Rigenerare la password temporanea per ${player.name}? La password attuale verrà invalidata.`))return;
+  out.className='msg';out.textContent='Rigenerazione password in corso…';
+  try{
+    const {data:{session},error:sessionError}=await sb.auth.getSession();
+    if(sessionError||!session)throw new Error('Sessione operatore non valida.');
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/rpl-create-player-accounts`,{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},
+      body:JSON.stringify({action:'reset_password',player_id:playerId,name:player.name})
+    });
+    let result=null;try{result=await response.json();}catch{throw new Error(`Risposta non valida dalla funzione Supabase (HTTP ${response.status}).`);}
+    if(!response.ok||result?.status!=='RIGENERATA')throw new Error(result?.error||`Errore funzione Supabase (HTTP ${response.status}).`);
+    out.className='msg ok';out.innerHTML=`✅ Password temporanea rigenerata per <b>${escOperator(player.name)}</b>.<br><br><b>Password temporanea:</b> <span style="font-size:16px;color:#ffd86a">${escOperator(result.temporary_password)}</span><br><span class="muted">Il giocatore dovrà cambiarla al prossimo accesso.</span>`;
+  }catch(e){out.className='msg err';out.textContent='Errore rigenerazione password: '+(e?.message||String(e));}
+}
+window.loadPlayerAccountResetList=loadPlayerAccountResetList;
+window.resetSelectedPlayerPassword=resetSelectedPlayerPassword;
+
 function showOperatorSection(which){
-  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), p=$("operatorConfirmSection"), n=$("operatorNotificationsSection");
-  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), pt=$("opConfirmTab"), nt=$("opNotifyTab");
-  m?.classList.add("hidden"); c?.classList.add("hidden"); v?.classList.add("hidden"); p?.classList.add("hidden"); n?.classList.add("hidden");
-  mt?.classList.remove("primary"); ct?.classList.remove("primary"); vt?.classList.remove("primary"); pt?.classList.remove("primary"); nt?.classList.remove("primary");
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), p=$("operatorConfirmSection"), n=$("operatorNotificationsSection"), a=$("operatorAccountsSection");
+  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), pt=$("opConfirmTab"), nt=$("opNotifyTab"), at=$("opAccountsTab");
+  [m,c,v,p,n,a].forEach(x=>x?.classList.add("hidden"));
+  [mt,ct,vt,pt,nt,at].forEach(x=>x?.classList.remove("primary"));
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
   else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
   else if(which==="confirm"){p?.classList.remove("hidden");pt?.classList.add("primary");loadOperatorPendingMatches();}
   else if(which==="notifications"){n?.classList.remove("hidden");nt?.classList.add("primary");window.rplLoadNotifyPlayers?.();window.rplLoadNotifyDeviceStatus?.();}
+  else if(which==="accounts"){a?.classList.remove("hidden");at?.classList.add("primary");loadAccountImportTemplate();loadPlayerAccountResetList();}
   else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
+
 function fillCalendarPlayers(){
   // Used by the weekly calendar rows. Player options come from the same DB-backed list used for match entry.
 }
@@ -3009,7 +3146,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v8.9.2</div>
+<div id="rplVersionBadge">RPL v8.9.3</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
