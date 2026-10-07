@@ -743,7 +743,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 }
 #operatorBox #operatorPasskeyCard.rpl-security-compact .msg{margin:0 !important;font-size:10px !important;}
 </style>
-<style id="rpl-v65108-accounts-style">
+
+<style id="rpl-v893-accounts-style">
 #operatorAccountsSection .rpl-account-row{display:grid;grid-template-columns:1.4fr .8fr .9fr 1fr;gap:8px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:7px;background:rgba(255,255,255,.02)}
 #operatorAccountsSection .rpl-account-status{font-weight:800;font-size:12px}
 #operatorAccountsSection .rpl-account-ok{color:#39d98a}.rpl-account-warn{color:#ffd86a}.rpl-account-err{color:#ff6b6b}
@@ -1071,6 +1072,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </div>
 </div>
 </div>
+
 <div id="operatorConfirmSection" class="hidden">
 <div class="card">
 <h2>✅ Partite da confermare</h2>
@@ -1899,7 +1901,7 @@ async function confirmPendingMatch(id){
 }
 window.loadOperatorPendingMatches=loadOperatorPendingMatches;window.openPendingMatch=openPendingMatch;window.closePendingMatch=closePendingMatch;window.deletePendingMatch=deletePendingMatch;window.reactivatePendingMatch=reactivatePendingMatch;window.confirmPendingMatch=confirmPendingMatch;
 
-const accountImportState={rows:[],credentials:[]};
+accountImportState={rows:[],credentials:[]};
 function normalizeAccountPhone(v){
   let x=String(v??'').replace(/[^0-9+]/g,'');
   if(x.startsWith('0039'))x='+'+x.slice(2);
