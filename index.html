@@ -236,11 +236,6 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 .rpl-notify-bell{position:relative}
 .rpl-notify-bell .rpl-notify-dot{display:none;position:absolute;top:5px;right:7px;width:8px;height:8px;border-radius:50%;background:#ef4444;border:2px solid #071522}
 @media(max-width:700px){.rpl-notify-grid{grid-template-columns:1fr}}
-.rpl-device-list{display:grid;gap:8px;margin-top:10px}
-.rpl-device-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid rgba(231,185,78,.18);border-radius:11px;background:rgba(255,255,255,.025)}
-.rpl-device-icon{font-size:22px;flex:0 0 28px;text-align:center}
-.rpl-device-main{min-width:0;flex:1}.rpl-device-name{font-weight:900;color:#fff}.rpl-device-meta{font-size:10px;color:#9da8b4;margin-top:2px;word-break:break-word}
-.rpl-device-time{font-size:9px;color:#ffd86a;white-space:nowrap}
 </style>
 
 <style id="rpl-v6537-calendar">
@@ -674,7 +669,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 7.6 - Automatic notifications + deep links + poll edit fix -->
+<!-- RPL VERSION 7.4 - Smartphone + notification deep links + poll edit fix -->
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -935,7 +930,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div class="rpl-notify-card">
 <div class="rpl-notify-title">3. Stato dispositivi</div>
 <div id="rplNotifyDeviceStatus" class="muted">Controllo…</div>
-<div id="rplNotifyDeviceList" class="rpl-device-list"></div>
 </div>
 </div>
 </div>
@@ -1564,7 +1558,7 @@ async function loadOperatorPendingMatches(){
       const scores=sets.map(s=>`${s.games_a}-${s.games_b}`).join(' · ')||'—';
       return `<div class="card rpl-pending-match" style="margin:10px 0;border-color:rgba(231,185,78,.35)">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
-          <div><b>🎾 ${escOperator(fmtDate(m.played_at))} · ore ${escOperator(fmtTime(m.played_at))}</b><div class="muted">📍 ${escOperator(c.court||'Campo')} · ${escOperator(c.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div></div>
+          <div><b>🎾 ${escOperator(fmtOperatorDate(m.played_at))} · ore ${escOperator(fmtOperatorTime(m.played_at))}</b><div class="muted">📍 ${escOperator(c.court||'Campo')} · ${escOperator(c.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div></div>
           <span style="padding:5px 9px;border-radius:999px;border:1px solid rgba(231,185,78,.55);color:#ffd86a;font-weight:900;font-size:11px">⏳ DA CONFERMARE</span>
         </div>
         <div style="margin-top:8px;font-weight:700">${ps.map(escOperator).join(' · ')}</div>
@@ -2018,6 +2012,9 @@ async function loadOperatorHistory(){
 function escOperator(v){
   return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+function fmtOperatorDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
+function fmtOperatorTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+
 async function deleteMatch(id){
   if(!confirm("Eliminare definitivamente questa partita?"))return;
   const {error}=await sb.from("matches").delete().eq("id",id);
@@ -2842,7 +2839,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v7.6</div>
+<div id="rplVersionBadge">RPL v7.7</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3203,11 +3200,10 @@ async function loadPublicCalendar(){
         return false;
       };
       let tries=0;
-      const timer=setInterval(()=>{tries++;if(openTarget()||tries>=40)clearInterval(timer);},300);
-      setTimeout(()=>clearInterval(timer),13000);
+      const timer=setInterval(()=>{tries++;if(openTarget()||tries>=30)clearInterval(timer);},300);
+      setTimeout(()=>clearInterval(timer),10000);
     }catch(e){console.warn('Deep link RPL:',e);}
   }
-
 
   function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
   function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
@@ -3220,9 +3216,9 @@ async function loadPublicCalendar(){
     return cycle[index%3];
   }
   function renderResultSetRow(pair,index){
-    return `<div class="rpl-result-set" data-set-index="${index}" data-a1="${pair[0].id}" data-a2="${pair[1].id}" data-b1="${pair[2].id}" data-b2="${pair[3].id}"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div data-result-set-title style="text-align:center;color:var(--gold2);font-weight:900;flex:1">SET ${index+1}</div><button type="button" class="rpl-remove-result-set" style="padding:5px 8px;font-size:11px">🗑️ Rimuovi</button></div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${index}">${setScoreOptions()}</select><b>–</b><select data-set-b="${index}">${setScoreOptions()}</select></div></div>`;
+    return `<div class="rpl-result-set" data-set-index="${index}" data-a1="${pair[0].id}" data-a2="${pair[1].id}" data-b1="${pair[2].id}" data-b2="${pair[3].id}"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div data-result-set-title style="text-align:center;color:var(--gold2);font-weight:900;flex:1">SET ${index+1}</div><button type="button" class="rpl-remove-result-set" style="padding:7px 9px;font-size:11px;touch-action:manipulation">🗑️ Rimuovi</button></div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${index}">${setScoreOptions()}</select><b>–</b><select data-set-b="${index}">${setScoreOptions()}</select></div></div>`;
   }
-  function renumberResultSets(panel){
+  function renumberResultSets(panel,players,type){
     [...panel.querySelectorAll('.rpl-result-set')].forEach((row,index)=>{
       row.dataset.setIndex=index;
       const title=row.querySelector('[data-result-set-title]');
@@ -3230,12 +3226,21 @@ async function loadPublicCalendar(){
       const a=row.querySelector('[data-set-a]'),b=row.querySelector('[data-set-b]');
       if(a)a.dataset.setA=index;
       if(b)b.dataset.setB=index;
+      // Dopo una cancellazione, riallinea anche la rotazione delle coppie.
+      const pair=resultPairForIndex(players,type,index);
+      if(pair){
+        row.dataset.a1=pair[0].id; row.dataset.a2=pair[1].id;
+        row.dataset.b1=pair[2].id; row.dataset.b2=pair[3].id;
+        const team=row.querySelector('.rpl-team-mini');
+        if(team)team.innerHTML=`<span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span>`;
+      }
     });
   }
   function renderResultSets(cm){
     const players=window.rplDistintaPlayers(cm);
     const type=cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL';
-    const pairs=Array.from({length:type==='ONE_VS_ONE'?4:6},(_,i)=>resultPairForIndex(players,type,i));
+    // Una partita parte da 3 set compilabili. Gli eventuali set 4+ vengono aggiunti manualmente.
+    const pairs=Array.from({length:3},(_,i)=>resultPairForIndex(players,type,i));
     return `<div id="playerResultSets">${pairs.map((pair,i)=>renderResultSetRow(pair,i)).join('')}</div><div style="display:flex;justify-content:center;margin-top:10px"><button type="button" id="addPlayerResultSetBtn">➕ AGGIUNGI SET</button></div>`;
   }
   function bindResultSetControls(cm){
@@ -3252,7 +3257,7 @@ async function loadPublicCalendar(){
       const rows=setsBox.querySelectorAll('.rpl-result-set');
       if(!row || rows.length<=1)return;
       row.remove();
-      renumberResultSets(setsBox);
+      renumberResultSets(setsBox,players,type);
     });
     addBtn?.addEventListener('click',()=>{
       const index=setsBox.querySelectorAll('.rpl-result-set').length;
@@ -3260,7 +3265,7 @@ async function loadPublicCalendar(){
       const pair=resultPairForIndex(players,type,index);
       if(!pair)return;
       setsBox.insertAdjacentHTML('beforeend',renderResultSetRow(pair,index));
-      renumberResultSets(setsBox);
+      renumberResultSets(setsBox,players,type);
     });
   }
   function showResponsibleHero(cm){
@@ -3503,7 +3508,7 @@ async function loadPublicCalendar(){
   }
   async function rplRegisterServiceWorker(){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
-    return await navigator.serviceWorker.register('./sw.js?v=760');
+    return await navigator.serviceWorker.register('./sw.js?v=730');
   }
   async function rplEnablePlayerNotifications(){
     const msg=q('playerNotificationMsg');msg.className='rpl-notify-status';msg.textContent='Attivazione…';
@@ -3568,32 +3573,11 @@ async function loadPublicCalendar(){
       console.error(e);msg.className='rpl-notify-status err';msg.textContent='❌ Invio non riuscito: '+(e.message||e);
     }
   }
-  function rplDeviceInfo(ua){
-    const u=String(ua||'');
-    let icon='💻',device='Desktop';
-    if(/iPhone/i.test(u)){icon='📱';device='iPhone';}
-    else if(/iPad/i.test(u)){icon='📱';device='iPad';}
-    else if(/Android/i.test(u)){icon='📱';device='Android';}
-    else if(/Macintosh/i.test(u)){icon='💻';device='Mac';}
-    else if(/Windows/i.test(u)){icon='💻';device='Windows';}
-    else if(/Linux/i.test(u)){icon='💻';device='Linux';}
-    let browser='Browser';
-    if(/CriOS/i.test(u)||/Chrome/i.test(u))browser='Chrome';
-    if(/FxiOS/i.test(u)||/Firefox/i.test(u))browser='Firefox';
-    if(/EdgiOS/i.test(u)||/Edg\//i.test(u))browser='Edge';
-    if(/OPiOS/i.test(u)||/OPR\//i.test(u))browser='Opera';
-    if(/Safari/i.test(u)&&!/Chrome|CriOS|Android/i.test(u))browser='Safari';
-    return {icon,label:`${device} · ${browser}`};
-  }
-  function rplFormatDeviceDate(v){
-    if(!v)return '';
-    const d=new Date(v);if(Number.isNaN(d.getTime()))return '';
-    return d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  }
   async function rplLoadNotifyDeviceStatus(){
-    const box=q('rplNotifyDeviceStatus'),list=q('rplNotifyDeviceList');
+    const box=q('rplNotifyDeviceStatus');
     if(!box)return;
-    box.className='muted';box.textContent='Controllo…';if(list)list.innerHTML='';
+    box.className='muted';
+    box.textContent='Controllo…';
     try{
       const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'status'}});
       if(error)throw new Error(error.message||'Errore lettura stato dispositivi.');
@@ -3601,21 +3585,12 @@ async function loadPublicCalendar(){
       const players=Number(data?.playersWithNotifications||0);
       box.className='rpl-notify-status ok';
       box.innerHTML=`🟢 <strong>${devices}</strong> dispositivo/i attivo/i collegato/i a <strong>${players}</strong> giocatore/i.`;
-      if(list){
-        const rows=Array.isArray(data?.devices)?data.devices:[];
-        list.innerHTML=rows.length?rows.map(d=>{
-          const info=rplDeviceInfo(d.user_agent);
-          const name=esc(d.player_name||'Giocatore');
-          const nick=d.player_nickname?` <small style="color:#9aa9b8">“${esc(d.player_nickname)}”</small>`:'';
-          const when=rplFormatDeviceDate(d.updated_at||d.created_at);
-          return `<div class="rpl-device-row"><div class="rpl-device-icon">${info.icon}</div><div class="rpl-device-main"><div class="rpl-device-name">${name}${nick}</div><div class="rpl-device-meta">${esc(info.label)}${when?' · ultimo collegamento '+esc(when):''}</div></div><div class="rpl-device-time">🟢 ATTIVO</div></div>`;
-        }).join(''):'<div class="muted">Nessun dispositivo registrato.</div>';
-      }
     }catch(e){
-      console.error(e);box.className='rpl-notify-status err';box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
+      console.error(e);
+      box.className='rpl-notify-status err';
+      box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
     }
   }
-
   function rplUpdateNotificationButton(){
     const b=q('playerEnableNotificationsBtn');if(!b)return;
     if('Notification' in window && Notification.permission==='granted' && localStorage.getItem('rpl_notifications_enabled')==='1'){b.textContent='🟢 NOTIFICHE ATTIVE';b.disabled=true;}
@@ -3635,13 +3610,11 @@ async function loadPublicCalendar(){
     q('playerEnableNotificationsBtn')?.addEventListener('click',rplEnablePlayerNotifications);rplUpdateMobileNotificationHelp();rplUpdateNotificationButton();
     ['playerCameraInput','playerGalleryInput'].forEach(id=>q(id)?.addEventListener('change',e=>uploadAvatar(e.target.files?.[0])));
     q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showPlayerArea()},true);
-    const requestedArea=new URLSearchParams(location.search).get('rpl');
-    if(requestedArea==='vote'||requestedArea==='calendar'){showPlayerArea();}
-    else if(location.hash==='#player')showPlayerArea();
+    if(location.hash==='#player')showPlayerArea();
   }
   sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'&&location.hash==='#player'){playerUser=null;playerAccount=null;playerRow=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden')}});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bind();rplRegisterServiceWorker().catch(()=>{});});else {bind();rplRegisterServiceWorker().catch(()=>{});}
 })();
 </script>
-<!-- RPL VERSION 7.6 - Automatic notifications + deep links + device details -->
+<!-- RPL VERSION 7.5 - Automatic notifications + deep links -->
 </body></html>
