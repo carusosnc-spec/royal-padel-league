@@ -975,7 +975,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </div>
 </div>
 <div id="bonusPreviewAdmin" style="margin-top:12px">
-  <button id="bonusPreviewBtn" type="button">🔎 Anteprima Bonus Settembre</button>
+  <button id="bonusPreviewBtn" type="button">🔎 Anteprima Bonus</button>
   <div id="bonusPreviewPanel" style="display:none">
     <div class="bonus-preview-note">Anteprima provvisoria: risultati del 15–30 settembre 2026, minimo 5 set. Nessun dato viene salvato e nessun Bonus viene assegnato.</div>
     <div id="bonusPreviewContent"></div>
@@ -2886,7 +2886,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v8.0</div>
+<div id="rplVersionBadge">RPL v8.2</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2998,7 +2998,7 @@ async function loadPublicCalendar(){
 })();
 </script>
 
-<script id="bonus-ranking-v6554">
+<script id="bonus-ranking-v6582">
 (function(){
  const $=id=>document.getElementById(id);
  const POINTS=[100,72,60,48,40,32,24,16,8,4];
@@ -3012,97 +3012,71 @@ async function loadPublicCalendar(){
   {key:'03',label:'MAR',start:'2027-03-01',end:'2027-03-31',threshold:65}
  ];
  function empty(){return (window.dbPlayers||[]).filter(p=>!p.is_guest).map(p=>({id:p.id,name:p.name,nick:p.nickname||'',fascia:+p.fascia||4,sets:0,won:0,games:0,pt:0,mvp:0,imb:0,bonus:0,months:{}}));}
- function monthRelease(m){
-   const d=new Date(m.end+'T23:59:59');
-   d.setSeconds(0); d.setMilliseconds(0);
-   d.setDate(d.getDate()+1);
-   d.setMinutes(1);
-   return d;
- }
+ function monthRelease(m){return new Date(m.end+'T23:59:59.999');}
  function monthClosed(m){return new Date()>=monthRelease(m);}
  function logo(name){try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}}
- async function calcMonth(m, allMatches, mp, sets, awards, cumulativeSets){
-   const ids=allMatches.filter(x=>String(x.played_at).slice(0,10)>=m.start && String(x.played_at).slice(0,10)<=m.end).map(x=>x.id);
-   const stats=empty(); const snap={}; (mp||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
-   const byId=new Map(stats.map(s=>[s.id,s]));
-   const cumulative={}; Object.keys(cumulativeSets).forEach(k=>cumulative[k]=cumulativeSets[k]);
+ function buildStats(players,mp,sets,aw,ids){
+   const stats=players.map(p=>({id:p.id,name:p.name,nick:p.nickname||'',fascia:+p.fascia||4,sets:0,won:0,games:0,pt:0,mvp:0,imb:0,bonus:0,months:{}}));
+   const byId=new Map(stats.map(s=>[s.id,s])), snap={};
+   (mp||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
    (sets||[]).filter(x=>ids.includes(x.match_id)).forEach(x=>{
      const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
-     const ga=+x.games_a,gb=+x.games_b, win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
-     win.forEach(pid=>{const s=byId.get(pid);if(!s)return;s.sets++;s.won++;s.games+=wg;s.pt+=(snap[x.match_id+'_'+lose[0]]?.fascia_value||0)+(snap[x.match_id+'_'+lose[1]]?.fascia_value||0)});
-     lose.forEach(pid=>{const s=byId.get(pid);if(s){s.sets++;s.games+=lg}});
+     const ga=+x.games_a,gb=+x.games_b;if(!Number.isFinite(ga)||!Number.isFinite(gb)||ga===gb)return;
+     const win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
+     win.forEach(pid=>{const z=byId.get(pid);if(z){z.sets++;z.won++;z.games+=wg;z.pt+=(snap[x.match_id+'_'+lose[0]]?.fascia_value||0)+(snap[x.match_id+'_'+lose[1]]?.fascia_value||0)}});
+     lose.forEach(pid=>{const z=byId.get(pid);if(z){z.sets++;z.games+=lg}});
    });
-   (awards||[]).filter(x=>ids.includes(x.match_id)).forEach(x=>{const s=byId.get(x.player_id);if(!s)return;if(x.award_type==='MVP')s.mvp++;if(x.award_type==='IMBATTUTO')s.imb++});
-   stats.forEach(s=>{const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;s.base=base;s.total=base+s.mvp*1.5+s.imb;s.cumSets=(cumulativeSets[s.id]||0)+s.sets;s.fascia=+((window.dbPlayers||[]).find(p=>p.id===s.id)?.fascia||4)});
-   const eligible=stats.filter(s=>s.cumSets>=m.threshold && s.sets>0);
-   eligible.sort((a,b)=>b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it'));
-   const released=monthClosed(m);
-   eligible.forEach((s,i)=>{
-     s.provisionalBonus=i<10?POINTS[i]:0;
-     s.bonus=released?s.provisionalBonus:0;
-     s.months[m.key]=released?s.bonus:null;
-     s.provisionalMonths=s.provisionalMonths||{};
-     s.provisionalMonths[m.key]=s.provisionalBonus;
-   });
-   return {stats,eligible};
+   (aw||[]).filter(x=>ids.includes(x.match_id)).forEach(x=>{const z=byId.get(x.player_id);if(z){const t=String(x.award_type||'').toUpperCase();if(t==='MVP')z.mvp++;if(t==='IMBATTUTO')z.imb++;}});
+   stats.forEach(z=>{z.base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;z.total=z.base+z.mvp*1.5+z.imb;});
+   return stats;
  }
+ function sortStats(a,b){return b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it');}
  async function loadBonus(){
-   const summary=$('bonusSummary'), body=$('bonusRanking'); if(!summary||!body)return;
+   const summary=$('bonusSummary'),body=$('bonusRanking');if(!summary||!body)return;
    summary.textContent='Calcolo Classifica Bonus…';
    try{
      const [mr,mpr,sr,ar]=await Promise.all([
        window.sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true}),
-       window.sb.from('match_players').select('*'),
-       window.sb.from('sets').select('*').order('set_number'),
-       window.sb.from('match_awards').select('*')
+       window.sb.from('match_players').select('*'),window.sb.from('sets').select('*').order('set_number'),window.sb.from('match_awards').select('*')
      ]);
      if(mr.error||mpr.error||sr.error||ar.error)throw(mr.error||mpr.error||sr.error||ar.error);
-     const matches=mr.data||[], mp=mpr.data||[], sets=sr.data||[], awards=ar.data||[];
-     const global=empty(); const cumulativeSets={}; global.forEach(s=>cumulativeSets[s.id]=0);
-     const monthRows={}; let lastClosed='';
+     const matches=mr.data||[],mp=mpr.data||[],sets=sr.data||[],awards=ar.data||[],players=(window.dbPlayers||[]).filter(p=>!p.is_guest);
+     const global=empty(), cumulativeSets={};global.forEach(s=>cumulativeSets[s.id]=0);
+     const monthRows={};let lastClosed='';
+     const now=new Date();
      for(const m of MONTHS){
-       if(new Date()<new Date(m.start+'T00:00:00'))continue;
-       const result=await calcMonth(m,matches,mp,sets,awards,cumulativeSets);
-       result.stats.forEach(s=>{cumulativeSets[s.id]=(cumulativeSets[s.id]||0)+s.sets;});
-       monthRows[m.key]=result;
-       if(monthClosed(m))lastClosed=m.label;
+       if(now<new Date(m.start+'T00:00:00'))continue;
+       const ids=matches.filter(x=>{const d=String(x.played_at).slice(0,10);return d>=m.start&&d<=m.end}).map(x=>x.id);
+       let stats=buildStats(players,mp,sets,awards,ids);
+       stats.forEach(s=>s.cumSets=(cumulativeSets[s.id]||0)+s.sets);
+       const closed=monthClosed(m);
+       // IMPORTANT: the open month uses the exact same data and ranking logic as the current-month Partial Ranking.
+       // The end-of-month threshold is NOT applied before the month closes.
+       const threshold=closed?m.threshold:(typeof minSetsRequired==='function'?minSetsRequired():5);
+       const eligible=stats.filter(s=>s.sets>0&&s.cumSets>=threshold).sort(sortStats);
+       eligible.forEach((s,i)=>{s.provisionalBonus=i<10?POINTS[i]:0;s.bonus=closed?s.provisionalBonus:0;s.months[m.key]=closed?s.bonus:null;s.provisionalMonths=s.provisionalMonths||{};s.provisionalMonths[m.key]=s.provisionalBonus;});
+       stats.forEach(s=>cumulativeSets[s.id]=(cumulativeSets[s.id]||0)+s.sets);
+       monthRows[m.key]={stats,eligible};
+       if(closed)lastClosed=m.label;
      }
-     const final=empty(); const byId=new Map(final.map(s=>[s.id,s]));
+     const final=empty(),byId=new Map(final.map(s=>[s.id,s]));
      Object.entries(monthRows).forEach(([key,r])=>r.stats.forEach(s=>{
-       const f=byId.get(s.id); if(!f)return;
-       const m=MONTHS.find(x=>x.key===key);
-       const released=!!m && monthClosed(m);
-       const official=Number(s.bonus||0);
-       const provisional=Number(s.provisionalBonus||0);
-       f.months[key]=released?official:provisional;
-       f.provisionalMonths=f.provisionalMonths||{};
-       f.provisionalMonths[key]=provisional;
-       f.bonus+=(released?official:provisional);
+       const f=byId.get(s.id);if(!f)return;const m=MONTHS.find(x=>x.key===key),closed=!!m&&monthClosed(m);const official=Number(s.bonus||0),provisional=Number(s.provisionalBonus||0);
+       f.months[key]=closed?official:provisional;f.provisionalMonths=f.provisionalMonths||{};f.provisionalMonths[key]=provisional;f.bonus+=(closed?official:provisional);
      }));
      final.sort((a,b)=>b.bonus-a.bonus||a.name.localeCompare(b.name,'it'));
      body.innerHTML=final.map((s,i)=>{
-       const months=MONTHS.map(m=>{
-         if(monthClosed(m)) return `<td>${s.months[m.key]??'—'}</td>`;
-         const prov=s.provisionalMonths?.[m.key];
-         return `<td>${prov!==undefined&&prov!==null&&prov>0?`<b>${prov}</b> <span class="bonus-provisional">prov.</span>`:'—'}</td>`;
-       }).join('');
-       const hasCurrentProv=MONTHS.some(m=>!monthClosed(m)&&Number(s.provisionalMonths?.[m.key]||0)>0);
-       const totalLabel=hasCurrentProv?`<b>${s.bonus}</b> <span class="bonus-provisional">prov.</span>`:`<b>${s.bonus}</b>`;
-       return `<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer"><div><b style="color:#fff;cursor:pointer" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td>${totalLabel}</td>${months}</tr>`;
+       const months=MONTHS.map(m=>{if(monthClosed(m))return `<td>${s.months[m.key]??'—'}</td>`;const prov=s.provisionalMonths?.[m.key];return `<td>${prov>0?`<b>${prov}</b> <span class="bonus-provisional">prov.</span>`:'—'}</td>`}).join('');
+       const hasProv=MONTHS.some(m=>!monthClosed(m)&&Number(s.provisionalMonths?.[m.key]||0)>0);
+       return `<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer"><div><b style="color:#fff;cursor:pointer" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b>${s.bonus}</b>${hasProv?' <span class="bonus-provisional">prov.</span>':''}</td>${months}</tr>`;
      }).join('');
-
-     summary.textContent=`Bonus mensile: primi 10 classificati dopo il controllo dei set minimi. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'.':''} Il mese in corso mostra i punti provvisori (prov.) e viene ricalcolato automaticamente a ogni nuovo risultato.`;
+     const current=MONTHS.find(m=>now>=new Date(m.start+'T00:00:00')&&now<=monthRelease(m));
+     summary.textContent=`Bonus mensile: primi 10 classificati. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'. ':''}${current?'I dati provvisori di '+current.label+' sono presi con la stessa logica della Classifica Parziale del mese in corso.':''}`;
    }catch(e){console.error(e);summary.textContent='Errore nel calcolo della Classifica Bonus: '+(e.message||e);body.innerHTML='';}
  }
- function showBonus(){
-   ['publicPage','partialPage','adminPage'].forEach(id=>$(id)?.classList.add('hidden')); $('historyView')?.style.setProperty('display','none'); $('publicCalendarPage')?.classList.add('hidden'); $('bonusPage')?.classList.remove('hidden');
-   ['publicBtn','partialBtn','historyBtn','adminBtn','calendarPublicBtn'].forEach(id=>$(id)?.classList.remove('primary')); $('bonusBtn')?.classList.add('primary'); location.hash='bonus'; loadBonus(); window.scrollTo(0,0);
- }
- window.showBonus=showBonus; window.loadBonus=loadBonus;
- document.addEventListener('DOMContentLoaded',()=>{
-   $('bonusBtn')?.addEventListener('click',()=>showBonus());
-   if(location.hash==='#bonus')showBonus();
- });
+ function showBonus(){['publicPage','partialPage','adminPage'].forEach(id=>$(id)?.classList.add('hidden'));$('historyView')?.style.setProperty('display','none');$('publicCalendarPage')?.classList.add('hidden');$('bonusPage')?.classList.remove('hidden');['publicBtn','partialBtn','historyBtn','adminBtn','calendarPublicBtn'].forEach(id=>$(id)?.classList.remove('primary'));$('bonusBtn')?.classList.add('primary');location.hash='bonus';loadBonus();window.scrollTo(0,0);}
+ window.showBonus=showBonus;window.loadBonus=loadBonus;
+ document.addEventListener('DOMContentLoaded',()=>{if(location.hash==='#bonus')showBonus();});
 })();
 </script>
 
@@ -3239,6 +3213,36 @@ async function loadPublicCalendar(){
 .rpl-vote-option.rpl-vote-full{opacity:.72;border-color:rgba(255,255,255,.15)}
 .rpl-vote-date{font-size:16px;font-weight:900;color:#fff}.rpl-vote-meta{font-size:12px;color:#aebccc;margin-top:4px}.rpl-vote-players{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.rpl-vote-player{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(231,185,78,.10);border:1px solid rgba(231,185,78,.24);color:#f7e3a0}.rpl-vote-btn{width:100%;margin-top:10px;min-height:44px}.rpl-vote-btn:disabled{opacity:.5;cursor:not-allowed}
 </style>
+<script id="rpl-v6582-profile-helpers">
+(function(){
+  function rplProfileDate(v){
+    if(!v)return '';
+    const d=new Date(String(v).slice(0,10)+'T00:00:00');
+    if(Number.isNaN(d.getTime()))return '';
+    return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+  function rplProfileAge(v){
+    if(!v)return '';
+    const raw=String(v).slice(0,10), d=new Date(raw+'T00:00:00');
+    if(Number.isNaN(d.getTime()))return '';
+    const now=new Date(); let age=now.getFullYear()-d.getFullYear();
+    const m=now.getMonth()-d.getMonth();
+    if(m<0 || (m===0 && now.getDate()<d.getDate())) age--;
+    return age>=0&&age<130?age:'';
+  }
+  function rplProfileSide(v){
+    return ({DESTRA:'Destra',SINISTRA:'Sinistra',ENTRAMBI:'Entrambi'})[String(v||'').toUpperCase()]||'';
+  }
+  function rplProfileStyle(v){
+    return ({ATTACCANTE:'Attaccante',DIFENSORE:'Difensore',EQUILIBRATO:'Equilibrato'})[String(v||'').toUpperCase()]||'';
+  }
+  window.rplProfileDate=rplProfileDate;
+  window.rplProfileAge=rplProfileAge;
+  window.rplProfileSide=rplProfileSide;
+  window.rplProfileStyle=rplProfileStyle;
+})();
+</script>
+
 <script id="rpl-v6576-player-area">
 (function(){
   const q=id=>document.getElementById(id);
@@ -3246,6 +3250,7 @@ async function loadPublicCalendar(){
   let playerUser=null, playerAccount=null, playerRow=null, assignedMatch=null;
   const normalizePhone=v=>{let x=String(v||'').replace(/[^\d+]/g,'');if(x.startsWith('00'))x='+'+x.slice(2);if(x.startsWith('+'))return x;if(x.startsWith('39'))return '+'+x;return '+39'+x.replace(/^0/,'');};
   const playerLogo=name=>{try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}};
+  const rplProfileDate=window.rplProfileDate, rplProfileAge=window.rplProfileAge, rplProfileSide=window.rplProfileSide, rplProfileStyle=window.rplProfileStyle;
   function hidePublicSections(){['publicPage','partialPage','adminPage','publicCalendarPage','bonusPage'].forEach(id=>{const el=q(id);if(el){el.classList.add('hidden');el.style.setProperty('display','none','important')}});const h=q('historyView');if(h)h.style.setProperty('display','none','important');}
   function hidePlayerArea(){const p=q('playerAreaPage');if(p){p.classList.add('hidden');p.style.setProperty('display','none','important');}}
   function playerNavActive(){['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn','playerAreaBtn'].forEach(id=>q(id)?.classList.remove('primary'));q('playerAreaBtn')?.classList.add('primary');}
@@ -3769,4 +3774,4 @@ async function loadPublicCalendar(){
 })();
 </script>
 <!-- RPL VERSION 7.5 - Automatic notifications + deep links -->
-<!-- RPL v8.0: current-month provisional Bonus is propagated into the final ranking. -->\n</body></html>
+<!-- RPL v8.2: current-month provisional Bonus is propagated into the final ranking. -->\n</body></html>
