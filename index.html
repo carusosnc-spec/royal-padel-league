@@ -841,7 +841,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
       <th>#</th><th>Giocatore</th><th>TOTALE</th><th>SET</th><th>OTT</th><th>NOV</th><th>DIC</th><th>GEN</th><th>FEB</th><th>MAR</th>
     </tr></thead><tbody id="bonusRanking"></tbody></table>
   </div>
-  <div class="muted" style="margin-top:10px;font-size:11px">I primi 10 del mese ricevono 100, 72, 60, 48, 40, 32, 24, 16, 8 e 4 punti. Prima della chiusura mensile il mese corrente è indicato come provvisorio.</div>
+  <div class="muted" style="margin-top:10px;font-size:11px">I primi 10 del mese ricevono 100, 72, 60, 48, 40, 32, 24, 16, 8 e 4 punti. Prima della chiusura mensile il mese corrente mostra la classifica <b>provvisoria</b>: i punti si aggiornano automaticamente ogni volta che viene registrato un nuovo risultato e non sono ancora ufficiali.</div>
 </div>
 </section>
 
@@ -1072,6 +1072,16 @@ function scoreValue(row, prefix){
   const a=row.querySelector("."+prefix+"GameA")?.value||"";
   const b=row.querySelector("."+prefix+"GameB")?.value||"";
   return (a!==""&&b!=="")?`${a}-${b}`:"";
+}
+function isValidPadelSetScore(ga,gb){
+  ga=Number(ga); gb=Number(gb);
+  if(!Number.isInteger(ga)||!Number.isInteger(gb)||ga<0||gb<0||ga>7||gb>7||ga===gb)return false;
+  const a=(ga===6 && gb>=0 && gb<=4)||(ga===7 && (gb===5||gb===6));
+  const b=(gb===6 && ga>=0 && ga<=4)||(gb===7 && (ga===5||ga===6));
+  return a||b;
+}
+function validScoreMessage(ga,gb,n){
+  return `Set ${n}: risultato non valido (${ga}-${gb}). Sono ammessi solo 6-0, 6-1, 6-2, 6-3, 6-4, 7-5, 7-6 e i rispettivi risultati al contrario.`;
 }
 function setScoreValue(row, prefix, value){
   const m=String(value||"").match(/^\s*([0-7])\s*[-:]\s*([0-7])\s*$/);
@@ -1320,7 +1330,8 @@ async function saveMatch(){
     if(!m){$("msg").className="msg err";$("msg").textContent=`Set ${n+1}: inserisci ad esempio 6-4.`;return}
     let v=["a1","a2","b1","b2"].map(c=>+r.querySelector("."+c).value);
     if(v.some(Number.isNaN)||new Set(v).size!==4){$("msg").className="msg err";$("msg").textContent=`Completa le coppie del set ${n+1}.`;return}
-    let ga=+m[1],gb=+m[2];if(ga===gb){$("msg").className="msg err";$("msg").textContent="Un set non può finire in parità.";return}
+    let ga=+m[1],gb=+m[2];
+    if(!isValidPadelSetScore(ga,gb)){ $("msg").className="msg err"; $("msg").textContent=validScoreMessage(ga,gb,n+1); return; }
     parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga,gb});
   }
   if(!parsed.length){$("msg").className="msg err";$("msg").textContent="Inserisci almeno un set.";return}
@@ -2065,7 +2076,7 @@ async function updateMatch(){
   const ids=["ep1","ep2","ep3","ep4"].map(x=>+$(x).value);
   if(new Set(ids).size<4){$("editMsg").className="msg err";$("editMsg").textContent="Scegli quattro giocatori diversi.";return}
   const rows=[...document.querySelectorAll("#editSets .set")],parsed=[];
-  for(let n=0;n<rows.length;n++){let r=rows[n],t=scoreValue(r,"escore").trim();if(!t)continue;let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);if(!m){$("editMsg").className="msg err";$("editMsg").textContent=`Set ${n+1}: formato non valido.`;return}let v=["ea1","ea2","eb1","eb2"].map(c=>+r.querySelector("."+c).value);if(v.some(Number.isNaN)||new Set(v).size!==4){$("editMsg").className="msg err";$("editMsg").textContent=`Completa le coppie del set ${n+1}.`;return}if(+m[1]===+m[2]){ $("editMsg").className="msg err";$("editMsg").textContent="Un set non può finire in parità.";return}parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga:+m[1],gb:+m[2]})}
+  for(let n=0;n<rows.length;n++){let r=rows[n],t=scoreValue(r,"escore").trim();if(!t)continue;let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);if(!m){$("editMsg").className="msg err";$("editMsg").textContent=`Set ${n+1}: formato non valido.`;return}let v=["ea1","ea2","eb1","eb2"].map(c=>+r.querySelector("."+c).value);if(v.some(Number.isNaN)||new Set(v).size!==4){$("editMsg").className="msg err";$("editMsg").textContent=`Completa le coppie del set ${n+1}.`;return}let ga=+m[1],gb=+m[2];if(!isValidPadelSetScore(ga,gb)){ $("editMsg").className="msg err";$("editMsg").textContent=validScoreMessage(ga,gb,n+1);return}parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga,gb})}
   if(!parsed.length){$("editMsg").className="msg err";$("editMsg").textContent="Inserisci almeno un set.";return}
   const {error:me}=await sb.from("matches").update({played_at:new Date($("editDate").value).toISOString()}).eq("id",id);if(me){$("editMsg").className="msg err";$("editMsg").textContent=me.message;return}
   const {data:oldMp}=await sb.from("match_players").select("*").eq("match_id",id);
@@ -2841,7 +2852,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v7.8</div>
+<div id="rplVersionBadge">RPL v7.9</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2993,8 +3004,11 @@ async function loadPublicCalendar(){
    eligible.sort((a,b)=>b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it'));
    const released=monthClosed(m);
    eligible.forEach((s,i)=>{
-     s.bonus=released&&i<10?POINTS[i]:0;
-     s.months[m.key]=s.bonus;
+     s.provisionalBonus=i<10?POINTS[i]:0;
+     s.bonus=released?s.provisionalBonus:0;
+     s.months[m.key]=released?s.bonus:null;
+     s.provisionalMonths=s.provisionalMonths||{};
+     s.provisionalMonths[m.key]=s.provisionalBonus;
    });
    return {stats,eligible};
  }
@@ -3023,10 +3037,14 @@ async function loadPublicCalendar(){
      Object.entries(monthRows).forEach(([key,r])=>r.stats.forEach(s=>{const f=byId.get(s.id);if(!f)return;f.months[key]=s.bonus||0;f.bonus+=(s.bonus||0)}));
      final.sort((a,b)=>b.bonus-a.bonus||a.name.localeCompare(b.name,'it'));
      body.innerHTML=final.map((s,i)=>{
-       const months=MONTHS.map(m=>`<td>${monthClosed(m)?(s.months[m.key]||'—'):'—'}${(!monthClosed(m)&&s.sets!==undefined)?'<span class="bonus-provisional">prov.</span>':''}</td>`).join('');
+       const months=MONTHS.map(m=>{
+         if(monthClosed(m)) return `<td>${s.months[m.key]??'—'}</td>`;
+         const prov=s.provisionalMonths?.[m.key];
+         return `<td>${prov?`<b>${prov}</b> <span class="bonus-provisional">prov.</span>`:'—'}</td>`;
+       }).join('');
        return `<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b>${s.bonus}</b></td>${months}</tr>`;
      }).join('');
-     summary.textContent=`Bonus mensile: primi 10 classificati dopo il controllo dei set minimi. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'.':'Nessun mese ancora chiuso: SET è provvisorio.'}`;
+     summary.textContent=`Bonus mensile: primi 10 classificati dopo il controllo dei set minimi. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'.':''} Il mese in corso mostra i punti provvisori (prov.) e viene ricalcolato automaticamente a ogni nuovo risultato.`;
    }catch(e){console.error(e);summary.textContent='Errore nel calcolo della Classifica Bonus: '+(e.message||e);body.innerHTML='';}
  }
  function showBonus(){
@@ -3471,7 +3489,8 @@ async function loadPublicCalendar(){
   async function submitPlayerResult(cm){
     const msg=q('playerResultMsg'),rows=scoreRowsFromPanel();msg.className='msg';msg.textContent='Controllo risultati…';
     if(rows.some(x=>x.ga===null||x.gb===null)){msg.className='msg err';msg.textContent='Inserisci il punteggio di tutti i set.';return}
-    if(rows.some(x=>x.ga===x.gb)){msg.className='msg err';msg.textContent='Un set non può finire in parità.';return}
+    const bad=rows.findIndex(x=>!isValidPadelSetScore(x.ga,x.gb));
+    if(bad>=0){const x=rows[bad];msg.className='msg err';msg.textContent=validScoreMessage(x.ga,x.gb,bad+1);return}
     const ids=[1,2,3,4].map(i=>Number(cm['player_'+i]));
     if(ids.some(Number.isNaN)||new Set(ids).size!==4){msg.className='msg err';msg.textContent='La partita del calendario non ha quattro giocatori validi.';return}
     const players=window.rplDistintaPlayers(cm);
