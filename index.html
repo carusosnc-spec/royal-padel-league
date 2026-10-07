@@ -694,6 +694,55 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 .rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.15)}
 @media(max-width:600px){.rpl-player-extra-grid{grid-template-columns:1fr}.rpl-profile-ranks{grid-template-columns:1fr 1fr}.rpl-profile-rank.main{grid-column:1/-1}.rpl-profile-stat-grid{grid-template-columns:repeat(2,1fr)}.rpl-profile-modal-head{align-items:flex-start}.rpl-profile-modal-photo{width:96px;height:96px;flex-basis:96px}.rpl-profile-modal-logo{width:58px;height:58px;flex-basis:58px}.rpl-profile-modal-title{font-size:21px}}
 </style>
+
+<style id="rpl-v892-security-compact-style">
+/* RPL v8.9.2 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+#playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
+#playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
+#playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
+  order:999;
+  padding:8px 10px !important;
+  margin-top:8px !important;
+  margin-bottom:0 !important;
+  border-radius:10px;
+  background:rgba(255,255,255,.018);
+}
+#playerDashboard #playerPasskeyCard.rpl-security-compact > div:first-child,
+#playerDashboard #playerNotificationCard.rpl-security-compact .muted,
+#playerDashboard #playerNotificationCard.rpl-security-compact .rpl-notify-mobile-help{display:none !important;}
+#playerDashboard #playerPasskeyCard.rpl-security-compact{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#playerDashboard #playerPasskeyCard.rpl-security-compact button,
+#playerDashboard #playerNotificationCard.rpl-security-compact button{
+  width:auto !important;
+  min-height:32px !important;
+  margin:0 !important;
+  padding:6px 10px !important;
+  font-size:11px !important;
+}
+#playerDashboard #playerPasskeyCard.rpl-security-compact .msg,
+#playerDashboard #playerNotificationCard.rpl-security-compact .rpl-notify-status{
+  margin:0 !important;
+  font-size:10px !important;
+}
+#playerDashboard #playerNotificationCard.rpl-security-compact{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#operatorBox > #operatorPasskeyCard.rpl-security-compact{
+  order:999;
+  padding:8px 10px !important;
+  margin:10px 0 0 !important;
+  border-radius:10px;
+  background:rgba(255,255,255,.018);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+#operatorBox #operatorPasskeyCard.rpl-security-compact > div:first-child{display:none !important;}
+#operatorBox #operatorPasskeyCard.rpl-security-compact button{
+  width:auto !important;
+  min-height:32px !important;
+  margin:0 !important;
+  padding:6px 10px !important;
+  font-size:11px !important;
+}
+#operatorBox #operatorPasskeyCard.rpl-security-compact .msg{margin:0 !important;font-size:10px !important;}
+</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1281,6 +1330,7 @@ async function rplRegisterPasskeyForCurrentUser(msgId){
     const {data,error}=await sb.auth.registerPasskey();
     if(error) throw error;
     if(msg){msg.className='msg ok';msg.textContent='✅ Accesso biometrico attivato su questo dispositivo.';}
+    rplMarkPasskeyActive(msgId==='playerPasskeyMsg'?'player':'operator');
     return data;
   }catch(e){
     console.error('RPL Passkey register',e);
@@ -1298,10 +1348,12 @@ async function rplSignInWithPasskey(target){
     if(!data?.user) throw new Error('Accesso biometrico non completato.');
     if(target==='player'){
       playerUser=data.user;
+      rplMarkPasskeyActive('player');
       await loadPlayerSession();
       window.scrollTo(0,0);
     }else{
       currentUser=data.user;
+      rplMarkPasskeyActive('operator');
       if(!(await isOperator())){await sb.auth.signOut();throw new Error('Questo account non è autorizzato come operatore RPL.');}
       $("loginBox").classList.add('hidden');$("operatorBox").classList.remove('hidden');
       $("operatorMatchSection")?.classList.add('hidden');$("operatorCalendarSection")?.classList.add('hidden');$("operatorVotingSection")?.classList.add('hidden');$("operatorConfirmSection")?.classList.add('hidden');$("operatorNotificationsSection")?.classList.add('hidden');
@@ -1314,6 +1366,41 @@ async function rplSignInWithPasskey(target){
   }
 }
 
+function rplApplySecurityCompact(scope){
+  if(scope==='player'){
+    const dash=document.getElementById('playerDashboard');
+    const pk=document.getElementById('playerPasskeyCard');
+    const nt=document.getElementById('playerNotificationCard');
+    if(!dash)return;
+    dash.classList.add('rpl-security-layout');
+    if(pk){pk.classList.add('rpl-security-compact');dash.appendChild(pk);}
+    if(nt){nt.classList.add('rpl-security-compact');dash.appendChild(nt);}
+  }else if(scope==='operator'){
+    const box=document.getElementById('operatorBox');
+    const pk=document.getElementById('operatorPasskeyCard');
+    if(box&&pk){pk.classList.add('rpl-security-compact');box.appendChild(pk);}
+  }
+}
+function rplRestoreSecurityLayout(scope){
+  if(scope==='player'){
+    const dash=document.getElementById('playerDashboard');
+    const pk=document.getElementById('playerPasskeyCard');
+    const nt=document.getElementById('playerNotificationCard');
+    if(dash){dash.classList.add('rpl-security-layout');}
+    if(pk)pk.classList.remove('rpl-security-compact');
+    if(nt)nt.classList.remove('rpl-security-compact');
+  }else if(scope==='operator'){
+    document.getElementById('operatorPasskeyCard')?.classList.remove('rpl-security-compact');
+  }
+}
+function rplMarkPasskeyActive(scope){
+  localStorage.setItem(scope==='player'?'rpl_passkey_player_active':'rpl_passkey_operator_active','1');
+  rplApplySecurityCompact(scope);
+}
+function rplApplySavedSecurityState(scope){
+  const key=scope==='player'?'rpl_passkey_player_active':'rpl_passkey_operator_active';
+  if(localStorage.getItem(key)==='1')rplApplySecurityCompact(scope);
+}
 async function isOperator(){
   const {data,error}=await sb.from("operators").select("user_id").eq("user_id",currentUser.id).maybeSingle();
   return !error && !!data;
@@ -1325,6 +1412,7 @@ async function login(){
   currentUser=data.user;
   if(!(await isOperator())){await sb.auth.signOut();$("loginMsg").className="msg err";$("loginMsg").textContent="Account non autorizzato come operatore.";return}
   $("loginBox").classList.add("hidden");$("operatorBox").classList.remove("hidden");
+  rplApplySavedSecurityState('operator');
   $("operatorMatchSection")?.classList.add("hidden");
   $("operatorCalendarSection")?.classList.add("hidden");
   $("operatorVotingSection")?.classList.add("hidden");
@@ -2278,6 +2366,7 @@ $("publicBtn").onclick=()=>{hidePlayerArea?.();location.hash="";const cal=$("pub
 $("adminBtn").onclick=async()=>{hidePlayerArea?.();location.hash="";$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.add("hidden");$("adminPage").classList.remove("hidden");const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;if(await isOperator()){
   $("loginBox").classList.add("hidden");
   $("operatorBox").classList.remove("hidden");
+  rplApplySavedSecurityState('operator');
   $("operatorMatchSection")?.classList.add("hidden");
   $("operatorCalendarSection")?.classList.add("hidden");
   $("operatorSubmenu")?.classList.remove("hidden");
@@ -2920,7 +3009,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v8.8</div>
+<div id="rplVersionBadge">RPL v8.9.2</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3538,6 +3627,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     playerAccount=r.data;playerRow=playerById(playerAccount.player_id);
     if(!playerRow){q('playerLoginCard')?.classList.remove('hidden');q('playerDashboard')?.classList.add('hidden');q('playerLoginMsg').textContent='Giocatore non trovato.';return;}
     q('playerDashboard')?.classList.remove('hidden');
+    rplApplySavedSecurityState('player');
     rplOpenRequestedPlayerArea();
     renderPlayerProfile();
     if(playerAccount.force_password_change){q('playerPasswordPanel')?.classList.remove('hidden');}else q('playerPasswordPanel')?.classList.add('hidden');
@@ -3913,7 +4003,9 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
 
   function rplUpdateNotificationButton(){
     const b=q('playerEnableNotificationsBtn');if(!b)return;
-    if('Notification' in window && Notification.permission==='granted' && localStorage.getItem('rpl_notifications_enabled')==='1'){b.textContent='🟢 NOTIFICHE ATTIVE';b.disabled=true;}
+    if('Notification' in window && Notification.permission==='granted' && localStorage.getItem('rpl_notifications_enabled')==='1'){
+      b.textContent='🟢 NOTIFICHE ATTIVE';b.disabled=true;rplApplySecurityCompact('player');
+    }
   }
 
   // Il pannello operatore è costruito fuori da questo blocco JavaScript:
