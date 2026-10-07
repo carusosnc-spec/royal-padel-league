@@ -236,11 +236,6 @@ nav[style*="justify-content:center"]{display:flex!important;align-items:center!i
 .rpl-notify-bell{position:relative}
 .rpl-notify-bell .rpl-notify-dot{display:none;position:absolute;top:5px;right:7px;width:8px;height:8px;border-radius:50%;background:#ef4444;border:2px solid #071522}
 @media(max-width:700px){.rpl-notify-grid{grid-template-columns:1fr}}
-.rpl-device-list{display:grid;gap:8px;margin-top:10px}
-.rpl-device-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid rgba(231,185,78,.18);border-radius:11px;background:rgba(255,255,255,.025)}
-.rpl-device-icon{font-size:22px;flex:0 0 28px;text-align:center}
-.rpl-device-main{min-width:0;flex:1}.rpl-device-name{font-weight:900;color:#fff}.rpl-device-meta{font-size:10px;color:#9da8b4;margin-top:2px;word-break:break-word}
-.rpl-device-time{font-size:9px;color:#ffd86a;white-space:nowrap}
 </style>
 
 <style id="rpl-v6537-calendar">
@@ -675,25 +670,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
 <!-- RPL VERSION 7.4 - Smartphone + notification deep links + poll edit fix -->
-<style id="rpl-v65104-player-profile-style">
-.rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
-.rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
-.rpl-player-extra-grid input,.rpl-player-extra-grid select{min-height:40px}
-.rpl-profile-ranks{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:9px;margin-top:14px}
-.rpl-profile-rank{border:1px solid rgba(231,185,78,.28);border-radius:12px;padding:10px;background:rgba(255,255,255,.025);text-align:center}
-.rpl-profile-rank.main{border-color:var(--gold);background:linear-gradient(180deg,rgba(231,185,78,.16),rgba(255,255,255,.025));padding:14px}
-.rpl-profile-rank b{display:block;font-size:24px;color:var(--gold2);line-height:1.05}.rpl-profile-rank.main b{font-size:36px;color:#fff}.rpl-profile-rank span{display:block;font-size:9px;color:#9da8b4;margin-top:4px;font-weight:800;letter-spacing:.08em}
-.rpl-public-profile-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:13px}
-.rpl-public-profile-meta>div{padding:9px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08)}
-.rpl-public-profile-meta b{display:block;color:#fff;font-size:12px}.rpl-public-profile-meta span{font-size:9px;color:#9da8b4}
-.rpl-profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:60;padding:16px;overflow:auto;display:flex;align-items:flex-start;justify-content:center}.rpl-profile-modal.hidden{display:none!important}
-.rpl-profile-modal-card{width:min(620px,100%);margin:20px auto;background:linear-gradient(180deg,#091725,#06111c);border:1px solid rgba(231,185,78,.55);border-radius:18px;padding:16px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
-.rpl-profile-modal-head{display:flex;align-items:center;gap:14px}.rpl-profile-modal-photo{width:150px;height:150px;flex:0 0 150px;border-radius:50%;object-fit:cover;image-rendering:auto;border:2px solid var(--gold);background:#07121e}.rpl-profile-modal-logo{width:70px;height:70px;flex:0 0 70px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e}
-.rpl-profile-modal-title{font-size:25px;font-weight:900;line-height:1.05}.rpl-profile-modal-nick{color:var(--gold2);font-weight:800;margin-top:4px}.rpl-profile-close{padding:6px 10px;font-size:18px;line-height:1}
-.rpl-profile-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.rpl-profile-stat{border:1px solid rgba(231,185,78,.2);border-radius:10px;padding:9px;text-align:center;background:rgba(255,255,255,.02)}.rpl-profile-stat b{display:block;font-size:18px;color:#fff}.rpl-profile-stat span{font-size:8px;color:#9da8b4}
-.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.15)}
-@media(max-width:600px){.rpl-player-extra-grid{grid-template-columns:1fr}.rpl-profile-ranks{grid-template-columns:1fr 1fr}.rpl-profile-rank.main{grid-column:1/-1}.rpl-profile-stat-grid{grid-template-columns:repeat(2,1fr)}.rpl-profile-modal-head{align-items:flex-start}.rpl-profile-modal-photo{width:96px;height:96px;flex-basis:96px}.rpl-profile-modal-logo{width:58px;height:58px;flex-basis:58px}.rpl-profile-modal-title{font-size:21px}}
-</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -790,14 +766,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
         <label class="rpl-photo-btn">🖼️ SCEGLI DALLA GALLERIA<input id="playerGalleryInput" type="file" accept="image/*" hidden></label>
       </div>
       <div id="playerPhotoMsg" class="msg"></div>
-      <div class="rpl-player-extra-grid">
-        <label>🎂 DATA DI NASCITA *<input id="playerBirthDate" type="date" required></label>
-        <label>🎾 LATO PREFERITO *<select id="playerPreferredSide" required><option value="">Seleziona</option><option value="DESTRA">Destra</option><option value="SINISTRA">Sinistra</option><option value="ENTRAMBI">Entrambi</option></select></label>
-        <label>🏓 RACCHETTA <input id="playerRacket" type="text" maxlength="120" placeholder="Facoltativa"></label>
-        <label>🎯 STILE DI GIOCO <select id="playerPlayStyle"><option value="">Facoltativo</option><option value="ATTACCANTE">Attaccante</option><option value="DIFENSORE">Difensore</option><option value="EQUILIBRATO">Equilibrato</option></select></label>
-      </div>
-      <button type="button" id="savePlayerProfileBtn" class="primary" style="width:100%;margin-top:12px">💾 SALVA PROFILO</button>
-      <div id="playerProfileMsg" class="msg"></div>
     </div>
 
     <div class="card">
@@ -815,12 +783,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 
 </section>
 
-<div id="rplPlayerProfileModal" class="rpl-profile-modal hidden" aria-hidden="true">
-  <div class="rpl-profile-modal-card">
-    <div style="display:flex;justify-content:flex-end"><button type="button" class="rpl-profile-close" onclick="closeRplPlayerProfile()">✕</button></div>
-    <div id="rplPlayerProfileModalBody"></div>
-  </div>
-</div>
 <section id="publicCalendarPage" class="hidden">
   <div class="rpl-public-cal-hero">
     <div class="rpl-public-cal-kicker">ROYAL PADEL LEAGUE</div>
@@ -879,7 +841,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
       <th>#</th><th>Giocatore</th><th>TOTALE</th><th>SET</th><th>OTT</th><th>NOV</th><th>DIC</th><th>GEN</th><th>FEB</th><th>MAR</th>
     </tr></thead><tbody id="bonusRanking"></tbody></table>
   </div>
-  <div class="muted" style="margin-top:10px;font-size:11px">I primi 10 del mese ricevono 100, 72, 60, 48, 40, 32, 24, 16, 8 e 4 punti. Prima della chiusura mensile il mese corrente mostra la classifica <b>provvisoria</b>: i punti si aggiornano automaticamente ogni volta che viene registrato un nuovo risultato e non sono ancora ufficiali.</div>
+  <div class="muted" style="margin-top:10px;font-size:11px">I primi 10 del mese ricevono 100, 72, 60, 48, 40, 32, 24, 16, 8 e 4 punti. Prima della chiusura mensile il mese corrente è indicato come provvisorio.</div>
 </div>
 </section>
 
@@ -968,7 +930,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div class="rpl-notify-card">
 <div class="rpl-notify-title">3. Stato dispositivi</div>
 <div id="rplNotifyDeviceStatus" class="muted">Controllo…</div>
-<div id="rplNotifyDeviceList" class="rpl-device-list"></div>
 </div>
 </div>
 </div>
@@ -981,7 +942,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </div>
 </div>
 <div id="bonusPreviewAdmin" style="margin-top:12px">
-  <button id="bonusPreviewBtn" type="button">🔎 Anteprima Bonus</button>
+  <button id="bonusPreviewBtn" type="button">🔎 Anteprima Bonus Settembre</button>
   <div id="bonusPreviewPanel" style="display:none">
     <div class="bonus-preview-note">Anteprima provvisoria: risultati del 15–30 settembre 2026, minimo 5 set. Nessun dato viene salvato e nessun Bonus viene assegnato.</div>
     <div id="bonusPreviewContent"></div>
@@ -1050,10 +1011,9 @@ function playerVisual(label){
   const name=raw.split(" — ")[0].trim();
   const nick=raw.includes(" — ") ? raw.split(" — ").slice(1).join(" — ") : "";
   const src=logoFile(name);
-  const pid=(dbPlayers.find(p=>String(p.name)===String(name))||{}).id||0;
   const fallback=`<div class="history-player-fallback">${esc(name)}</div>`;
-  if(!src) return `<div class="history-player rpl-profile-click" onclick="openRplPlayerProfile(${pid});event.stopPropagation()"><div class="history-logo-wrap">${fallback}</div><div class="history-player-name">${esc(name)}${nick?`<small>${esc(nick)}</small>`:""}</div></div>`;
-  return `<div class="history-player rpl-profile-click" onclick="openRplPlayerProfile(${pid});event.stopPropagation()"><div class="history-logo-wrap"><img src="${src}" alt="${esc(name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="history-player-fallback" style="display:none">${esc(name)}</div></div><div class="history-player-name">${esc(name)}${nick?`<small>${esc(nick)}</small>`:""}</div></div>`;
+  if(!src) return `<div class="history-player"><div class="history-logo-wrap">${fallback}</div><div class="history-player-name">${esc(name)}${nick?`<small>${esc(nick)}</small>`:""}</div></div>`;
+  return `<div class="history-player"><div class="history-logo-wrap"><img src="${src}" alt="${esc(name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="history-player-fallback" style="display:none">${esc(name)}</div></div><div class="history-player-name">${esc(name)}${nick?`<small>${esc(nick)}</small>`:""}</div></div>`;
 }
 
 function playerNick(id){let p=dbPlayers.find(x=>x.id===id);return p?p.nickname:"";}
@@ -1112,16 +1072,6 @@ function scoreValue(row, prefix){
   const a=row.querySelector("."+prefix+"GameA")?.value||"";
   const b=row.querySelector("."+prefix+"GameB")?.value||"";
   return (a!==""&&b!=="")?`${a}-${b}`:"";
-}
-function isValidPadelSetScore(ga,gb){
-  ga=Number(ga); gb=Number(gb);
-  if(!Number.isInteger(ga)||!Number.isInteger(gb)||ga<0||gb<0||ga>7||gb>7||ga===gb)return false;
-  const a=(ga===6 && gb>=0 && gb<=4)||(ga===7 && (gb===5||gb===6));
-  const b=(gb===6 && ga>=0 && ga<=4)||(gb===7 && (ga===5||ga===6));
-  return a||b;
-}
-function validScoreMessage(ga,gb,n){
-  return `Set ${n}: risultato non valido (${ga}-${gb}). Sono ammessi solo 6-0, 6-1, 6-2, 6-3, 6-4, 7-5, 7-6 e i rispettivi risultati al contrario.`;
 }
 function setScoreValue(row, prefix, value){
   const m=String(value||"").match(/^\s*([0-7])\s*[-:]\s*([0-7])\s*$/);
@@ -1209,8 +1159,8 @@ function render(){
     return `<tr class="${s.eligible?"":"rpl-ineligible"}">
       <td><b>${i+1}</b></td>
       <td><div style="display:flex;align-items:center;gap:9px">
-        <img src="${logoFile(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
-        <div><b style="color:#fff;cursor:pointer" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span>${status}</div>
+        <img src="${logoFile(s.name)}" alt="${s.name}" data-player-name="${s.name}" ${s.name==="Gianni Caruso"?'onclick="openGianniCard();event.stopPropagation()"':''} style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
+        <div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span>${status}</div>
       </div></td>
       <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
       <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
@@ -1370,8 +1320,7 @@ async function saveMatch(){
     if(!m){$("msg").className="msg err";$("msg").textContent=`Set ${n+1}: inserisci ad esempio 6-4.`;return}
     let v=["a1","a2","b1","b2"].map(c=>+r.querySelector("."+c).value);
     if(v.some(Number.isNaN)||new Set(v).size!==4){$("msg").className="msg err";$("msg").textContent=`Completa le coppie del set ${n+1}.`;return}
-    let ga=+m[1],gb=+m[2];
-    if(!isValidPadelSetScore(ga,gb)){ $("msg").className="msg err"; $("msg").textContent=validScoreMessage(ga,gb,n+1); return; }
+    let ga=+m[1],gb=+m[2];if(ga===gb){$("msg").className="msg err";$("msg").textContent="Un set non può finire in parità.";return}
     parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga,gb});
   }
   if(!parsed.length){$("msg").className="msg err";$("msg").textContent="Inserisci almeno un set.";return}
@@ -1609,7 +1558,7 @@ async function loadOperatorPendingMatches(){
       const scores=sets.map(s=>`${s.games_a}-${s.games_b}`).join(' · ')||'—';
       return `<div class="card rpl-pending-match" style="margin:10px 0;border-color:rgba(231,185,78,.35)">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
-          <div><b>🎾 ${escOperator(fmtOperatorDate(m.played_at))} · ore ${escOperator(fmtOperatorTime(m.played_at))}</b><div class="muted">📍 ${escOperator(c.court||'Campo')} · ${escOperator(c.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div></div>
+          <div><b>🎾 ${escOperator(fmtDate(m.played_at))} · ore ${escOperator(fmtTime(m.played_at))}</b><div class="muted">📍 ${escOperator(c.court||'Campo')} · ${escOperator(c.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div></div>
           <span style="padding:5px 9px;border-radius:999px;border:1px solid rgba(231,185,78,.55);color:#ffd86a;font-weight:900;font-size:11px">⏳ DA CONFERMARE</span>
         </div>
         <div style="margin-top:8px;font-weight:700">${ps.map(escOperator).join(' · ')}</div>
@@ -1883,26 +1832,16 @@ async function saveCalendarWeek(){
     const dr=await sb.from("calendar_matches").delete().in("id",remove);
     if(dr.error){msg.className="msg err";msg.textContent="Errore aggiornamento settimana: "+dr.error.message;return;}
   }
-  // Notifica automatica calendario: invia a tutti i giocatori attivi/non ospiti.
-  // In questo modo la notifica non dipende dal recupero dei soli giocatori presenti
-  // nelle righe appena salvate e arriva anche quando una settimana viene modificata.
-  const calendarRecipients=await rplGetActivePlayerIds();
-  const notifyResult=await rplAutoSendNotification(
-    calendarRecipients,
-    "📅 Calendario RPL aggiornato",
-    "Il calendario della settimana è stato pubblicato o modificato. Controlla le tue partite nell’Area Giocatore.",
-    "?rpl=calendar#player"
-  );
-  const sent=Number(notifyResult?.sent||0);
-  const missing=Number(notifyResult?.missing||0);
-  const failed=Number(notifyResult?.failed||0);
-  if(notifyResult?.ok===false && notifyResult?.error){
-    msg.className="msg ok";
-    msg.textContent=`✅ Settimana salvata: ${keep.length} partite. ⚠️ Notifica automatica non inviata: ${notifyResult.error}`;
-  }else{
-    msg.className="msg ok";
-    msg.textContent=`✅ Settimana salvata: ${keep.length} partite. 🔔 Notifiche: ${sent} inviate${missing?` · ${missing} senza dispositivo`:''}${failed?` · ${failed} fallite`:''}.`;
-  }
+  // Notifica automatica: tutti i giocatori coinvolti nella settimana nuova o precedente.
+  const affectedPlayers=new Set();
+  const addMatchPlayers=m=>[1,2,3,4].forEach(i=>{const id=Number(m?.[`player_${i}`]);if(Number.isFinite(id)&&id>0)affectedPlayers.add(id);});
+  oldMatches.forEach(addMatchPlayers);
+  try{
+    const nr=await sb.from("calendar_matches").select("player_1,player_2,player_3,player_4").in("id",keep);
+    (nr.data||[]).forEach(addMatchPlayers);
+  }catch(e){console.warn("Impossibile recuperare i destinatari del calendario:",e);}
+  await rplAutoSendNotification([...affectedPlayers],"📅 Calendario RPL aggiornato","Il calendario della settimana è stato pubblicato o modificato. Controlla le tue partite nell'Area Giocatore.","?rpl=calendar#player");
+  msg.className="msg ok";msg.textContent=`✅ Settimana salvata: ${keep.length} partite. Notifiche automatiche inviate ai giocatori interessati.`;
   await loadCalendarWeeks();
 }
 async function loadCalendarWeek(){
@@ -2070,14 +2009,9 @@ async function loadOperatorHistory(){
     box.innerHTML=`<div class="msg err">Errore caricamento storico: ${escOperator(e.message||e)}<br><button type="button" onclick="loadOperatorHistory()">🔄 Riprova</button></div>`;
   }
 }
-function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
-function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
 function escOperator(v){
   return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
-function fmtOperatorDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
-function fmtOperatorTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
-
 async function deleteMatch(id){
   if(!confirm("Eliminare definitivamente questa partita?"))return;
   const {error}=await sb.from("matches").delete().eq("id",id);
@@ -2126,7 +2060,7 @@ async function updateMatch(){
   const ids=["ep1","ep2","ep3","ep4"].map(x=>+$(x).value);
   if(new Set(ids).size<4){$("editMsg").className="msg err";$("editMsg").textContent="Scegli quattro giocatori diversi.";return}
   const rows=[...document.querySelectorAll("#editSets .set")],parsed=[];
-  for(let n=0;n<rows.length;n++){let r=rows[n],t=scoreValue(r,"escore").trim();if(!t)continue;let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);if(!m){$("editMsg").className="msg err";$("editMsg").textContent=`Set ${n+1}: formato non valido.`;return}let v=["ea1","ea2","eb1","eb2"].map(c=>+r.querySelector("."+c).value);if(v.some(Number.isNaN)||new Set(v).size!==4){$("editMsg").className="msg err";$("editMsg").textContent=`Completa le coppie del set ${n+1}.`;return}let ga=+m[1],gb=+m[2];if(!isValidPadelSetScore(ga,gb)){ $("editMsg").className="msg err";$("editMsg").textContent=validScoreMessage(ga,gb,n+1);return}parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga,gb})}
+  for(let n=0;n<rows.length;n++){let r=rows[n],t=scoreValue(r,"escore").trim();if(!t)continue;let m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);if(!m){$("editMsg").className="msg err";$("editMsg").textContent=`Set ${n+1}: formato non valido.`;return}let v=["ea1","ea2","eb1","eb2"].map(c=>+r.querySelector("."+c).value);if(v.some(Number.isNaN)||new Set(v).size!==4){$("editMsg").className="msg err";$("editMsg").textContent=`Completa le coppie del set ${n+1}.`;return}if(+m[1]===+m[2]){ $("editMsg").className="msg err";$("editMsg").textContent="Un set non può finire in parità.";return}parsed.push({n:n+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga:+m[1],gb:+m[2]})}
   if(!parsed.length){$("editMsg").className="msg err";$("editMsg").textContent="Inserisci almeno un set.";return}
   const {error:me}=await sb.from("matches").update({played_at:new Date($("editDate").value).toISOString()}).eq("id",id);if(me){$("editMsg").className="msg err";$("editMsg").textContent=me.message;return}
   const {data:oldMp}=await sb.from("match_players").select("*").eq("match_id",id);
@@ -2234,8 +2168,8 @@ $("date").value=new Date().toISOString().slice(0,16);
       return `<tr>
         <td><b>${i+1}</b></td>
         <td><div style="display:flex;align-items:center;gap:9px">
-          <img src="${logoFor(s.name)}" alt="${escp(s.name)}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
-          <div><b style="color:#fff;cursor:pointer" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${escp(s.name)}</b><br><span style="color:#ffd86a;font-size:11px">${escp(s.nick)}</span></div>
+          <img src="${logoFor(s.name)}" alt="${escp(s.name)}" data-player-name="${escp(s.name)}" ${s.name==="Gianni Caruso"?'onclick="openGianniCard();event.stopPropagation()"':''} style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
+          <div><b style="color:#fff">${escp(s.name)}</b><br><span style="color:#ffd86a;font-size:11px">${escp(s.nick)}</span></div>
         </div></td>
         <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
         <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
@@ -2513,6 +2447,118 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   });
 })();
 </script>
+<!-- RPL PLAYER CARD PROTOTYPE: GIANNI CARUSO -->
+<div id="rplPlayerCardGianni" class="rpl-player-card-overlay" aria-hidden="true">
+  <div class="rpl-player-card-backdrop" data-close-player-card></div>
+  <div class="rpl-player-card-modal" role="dialog" aria-modal="true" aria-label="Scheda Gianni Caruso">
+    <button class="rpl-player-card-close" type="button" data-close-player-card aria-label="Chiudi">×</button>
+    <div class="rpl-player-card">
+      <div class="rpl-card-corner">
+        <div class="rpl-card-ovr">75</div>
+        <div class="rpl-card-label">OVR</div>
+        <div class="rpl-card-fascia">F1</div>
+      </div>
+      <div class="rpl-card-brand">ROYAL PADEL LEAGUE</div>
+      <div class="rpl-card-hero">
+        <img id="rplGianniLogo" alt="Gianni Caruso — The Golden President">
+      </div>
+      <div class="rpl-card-name">GIANNI CARUSO</div>
+      <div class="rpl-card-nick">THE GOLDEN PRESIDENT</div>
+      <div class="rpl-card-stats">
+        <div class="rpl-stat"><b>60</b><span>VELOCITÀ</span></div>
+        <div class="rpl-stat"><b>70</b><span>POTENZA</span></div>
+        <div class="rpl-stat"><b>95</b><span>PRECISIONE</span></div>
+        <div class="rpl-stat"><b>90</b><span>TATTICA</span></div>
+        <div class="rpl-stat"><b>85</b><span>DIFESA</span></div>
+        <div class="rpl-stat"><b>50</b><span>RESISTENZA</span></div>
+      </div>
+      <div class="rpl-card-footer">
+        <span>ROYAL PADEL LEAGUE</span>
+        <span>WHERE LEGENDS PLAY</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style id="rpl-player-card-style">
+.rpl-player-card-overlay{display:none;position:fixed;inset:0;z-index:99999}
+.rpl-player-card-overlay.open{display:block}
+.rpl-player-card-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px)}
+.rpl-player-card-modal{position:relative;z-index:2;width:min(92vw,390px);margin:3vh auto 0}
+.rpl-player-card-close{position:absolute;right:-7px;top:-10px;width:40px;height:40px;border:2px solid #fff;border-radius:50%;background:#111;color:#fff;font-size:28px;line-height:32px;cursor:pointer;z-index:4}
+.rpl-player-card{position:relative;overflow:hidden;border-radius:26px;padding:17px 18px 18px;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(255,255,255,.72),transparent 27%),
+    linear-gradient(145deg,#fff4bd 0%,#e4c35b 28%,#b88922 52%,#f5df91 76%,#9c701b 100%);
+  border:3px solid #fff2a5;box-shadow:0 28px 80px rgba(0,0,0,.65);color:#111}
+.rpl-player-card:before{content:"";position:absolute;inset:8px;border:1px solid rgba(255,255,255,.7);border-radius:20px;pointer-events:none}
+.rpl-card-brand{text-align:center;font-weight:900;font-size:11px;letter-spacing:2.3px;margin:2px 0 2px;position:relative}
+.rpl-card-corner{position:absolute;left:20px;top:34px;z-index:2;text-align:center}
+.rpl-card-ovr{font-size:48px;font-weight:950;line-height:.86}
+.rpl-card-label{font-size:9px;font-weight:900;letter-spacing:1.6px;margin-top:4px}
+.rpl-card-fascia{font-size:12px;font-weight:950;margin-top:7px;border-top:1px solid rgba(0,0,0,.35);padding-top:5px}
+.rpl-card-hero{height:235px;margin-top:2px;display:flex;align-items:center;justify-content:center;position:relative}
+.rpl-card-hero img{width:210px;height:210px;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.28))}
+.rpl-card-name{text-align:center;font-size:25px;font-weight:950;letter-spacing:.4px;position:relative}
+.rpl-card-nick{text-align:center;font-size:11px;font-weight:900;letter-spacing:2px;margin-top:3px;position:relative}
+.rpl-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:11px 25px;margin:17px 8px 0;padding:13px 0 12px;border-top:1px solid rgba(0,0,0,.3);border-bottom:1px solid rgba(0,0,0,.25);position:relative}
+.rpl-stat{display:flex;align-items:center;gap:9px}
+.rpl-stat b{font-size:25px;line-height:1;min-width:36px}
+.rpl-stat span{font-size:9px;font-weight:950;letter-spacing:.5px}
+.rpl-card-footer{display:flex;justify-content:space-between;gap:10px;margin:11px 7px 0;font-size:7px;font-weight:900;letter-spacing:1.1px;opacity:.85;position:relative}
+.rpl-player-logo-clickable{cursor:pointer!important}
+@media(max-width:430px){.rpl-player-card-modal{margin-top:2vh}.rpl-card-hero{height:215px}.rpl-card-hero img{width:185px;height:185px}.rpl-card-name{font-size:22px}}
+</style>
+
+<script id="rpl-player-card-script">
+(function(){
+  const overlay=document.getElementById("rplPlayerCardGianni");
+  const logo=document.getElementById("rplGianniLogo");
+  function gianniLogo(){
+    try{return typeof window.logoFile==="function" ? window.logoFile("Gianni Caruso") : "";}catch(e){return "";}
+  }
+  function openGianniCard(){
+    const src=gianniLogo();
+    if(src) logo.src=src;
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+  }
+  function closeCard(){
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+  }
+  window.openGianniCard=openGianniCard;
+  window.closeGianniCard=closeCard;
+
+  document.addEventListener("click",function(e){
+    const close=e.target.closest("[data-close-player-card]");
+    if(close){closeCard();return;}
+    const img=e.target.closest("img");
+    if(!img)return;
+    const player=(img.getAttribute("data-player-name")||img.alt||"").trim();
+    const src=gianniLogo();
+    if(player==="Gianni Caruso" || (src && img.currentSrc===src)){
+      img.classList.add("rpl-player-logo-clickable");
+      openGianniCard();
+    }
+  },true);
+
+  document.addEventListener("touchend",function(e){
+    const img=e.target.closest && e.target.closest("img[data-player-name='Gianni Caruso']");
+    if(img){
+      e.preventDefault();
+      openGianniCard();
+    }
+  },{passive:false});
+
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape" && overlay.classList.contains("open")) closeCard();
+  });
+})();
+</script>
+
 <style id="rpl-score-select-style">
 .rpl-score-selects{display:flex;align-items:center;justify-content:center;gap:7px}
 .rpl-score-selects select{width:62px;min-width:62px;padding:9px 8px;border:1px solid #ccc;border-radius:10px;font-size:17px;font-weight:800;text-align:center;background:#fff}
@@ -2790,7 +2836,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v8.3</div>
+<div id="rplVersionBadge">RPL v7.4</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -2902,7 +2948,7 @@ async function loadPublicCalendar(){
 })();
 </script>
 
-<script id="bonus-ranking-v6582">
+<script id="bonus-ranking-v6554">
 (function(){
  const $=id=>document.getElementById(id);
  const POINTS=[100,72,60,48,40,32,24,16,8,4];
@@ -2916,71 +2962,77 @@ async function loadPublicCalendar(){
   {key:'03',label:'MAR',start:'2027-03-01',end:'2027-03-31',threshold:65}
  ];
  function empty(){return (window.dbPlayers||[]).filter(p=>!p.is_guest).map(p=>({id:p.id,name:p.name,nick:p.nickname||'',fascia:+p.fascia||4,sets:0,won:0,games:0,pt:0,mvp:0,imb:0,bonus:0,months:{}}));}
- function monthRelease(m){return new Date(m.end+'T23:59:59.999');}
+ function monthRelease(m){
+   const d=new Date(m.end+'T23:59:59');
+   d.setSeconds(0); d.setMilliseconds(0);
+   d.setDate(d.getDate()+1);
+   d.setMinutes(1);
+   return d;
+ }
  function monthClosed(m){return new Date()>=monthRelease(m);}
  function logo(name){try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}}
- function buildStats(players,mp,sets,aw,ids){
-   const stats=players.map(p=>({id:p.id,name:p.name,nick:p.nickname||'',fascia:+p.fascia||4,sets:0,won:0,games:0,pt:0,mvp:0,imb:0,bonus:0,months:{}}));
-   const byId=new Map(stats.map(s=>[s.id,s])), snap={};
-   (mp||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
+ async function calcMonth(m, allMatches, mp, sets, awards, cumulativeSets){
+   const ids=allMatches.filter(x=>String(x.played_at).slice(0,10)>=m.start && String(x.played_at).slice(0,10)<=m.end).map(x=>x.id);
+   const stats=empty(); const snap={}; (mp||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
+   const byId=new Map(stats.map(s=>[s.id,s]));
+   const cumulative={}; Object.keys(cumulativeSets).forEach(k=>cumulative[k]=cumulativeSets[k]);
    (sets||[]).filter(x=>ids.includes(x.match_id)).forEach(x=>{
      const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
-     const ga=+x.games_a,gb=+x.games_b;if(!Number.isFinite(ga)||!Number.isFinite(gb)||ga===gb)return;
-     const win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
-     win.forEach(pid=>{const z=byId.get(pid);if(z){z.sets++;z.won++;z.games+=wg;z.pt+=(snap[x.match_id+'_'+lose[0]]?.fascia_value||0)+(snap[x.match_id+'_'+lose[1]]?.fascia_value||0)}});
-     lose.forEach(pid=>{const z=byId.get(pid);if(z){z.sets++;z.games+=lg}});
+     const ga=+x.games_a,gb=+x.games_b, win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
+     win.forEach(pid=>{const s=byId.get(pid);if(!s)return;s.sets++;s.won++;s.games+=wg;s.pt+=(snap[x.match_id+'_'+lose[0]]?.fascia_value||0)+(snap[x.match_id+'_'+lose[1]]?.fascia_value||0)});
+     lose.forEach(pid=>{const s=byId.get(pid);if(s){s.sets++;s.games+=lg}});
    });
-   (aw||[]).filter(x=>ids.includes(x.match_id)).forEach(x=>{const z=byId.get(x.player_id);if(z){const t=String(x.award_type||'').toUpperCase();if(t==='MVP')z.mvp++;if(t==='IMBATTUTO')z.imb++;}});
-   stats.forEach(z=>{z.base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;z.total=z.base+z.mvp*1.5+z.imb;});
-   return stats;
+   (awards||[]).filter(x=>ids.includes(x.match_id)).forEach(x=>{const s=byId.get(x.player_id);if(!s)return;if(x.award_type==='MVP')s.mvp++;if(x.award_type==='IMBATTUTO')s.imb++});
+   stats.forEach(s=>{const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;s.base=base;s.total=base+s.mvp*1.5+s.imb;s.cumSets=(cumulativeSets[s.id]||0)+s.sets;s.fascia=+((window.dbPlayers||[]).find(p=>p.id===s.id)?.fascia||4)});
+   const eligible=stats.filter(s=>s.cumSets>=m.threshold && s.sets>0);
+   eligible.sort((a,b)=>b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it'));
+   const released=monthClosed(m);
+   eligible.forEach((s,i)=>{
+     s.bonus=released&&i<10?POINTS[i]:0;
+     s.months[m.key]=s.bonus;
+   });
+   return {stats,eligible};
  }
- function sortStats(a,b){return b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it');}
  async function loadBonus(){
-   const summary=$('bonusSummary'),body=$('bonusRanking');if(!summary||!body)return;
+   const summary=$('bonusSummary'), body=$('bonusRanking'); if(!summary||!body)return;
    summary.textContent='Calcolo Classifica Bonus…';
    try{
      const [mr,mpr,sr,ar]=await Promise.all([
        window.sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true}),
-       window.sb.from('match_players').select('*'),window.sb.from('sets').select('*').order('set_number'),window.sb.from('match_awards').select('*')
+       window.sb.from('match_players').select('*'),
+       window.sb.from('sets').select('*').order('set_number'),
+       window.sb.from('match_awards').select('*')
      ]);
      if(mr.error||mpr.error||sr.error||ar.error)throw(mr.error||mpr.error||sr.error||ar.error);
-     const matches=mr.data||[],mp=mpr.data||[],sets=sr.data||[],awards=ar.data||[],players=(window.dbPlayers||[]).filter(p=>!p.is_guest);
-     const global=empty(), cumulativeSets={};global.forEach(s=>cumulativeSets[s.id]=0);
-     const monthRows={};let lastClosed='';
-     const now=new Date();
+     const matches=mr.data||[], mp=mpr.data||[], sets=sr.data||[], awards=ar.data||[];
+     const global=empty(); const cumulativeSets={}; global.forEach(s=>cumulativeSets[s.id]=0);
+     const monthRows={}; let lastClosed='';
      for(const m of MONTHS){
-       if(now<new Date(m.start+'T00:00:00'))continue;
-       const ids=matches.filter(x=>{const d=String(x.played_at).slice(0,10);return d>=m.start&&d<=m.end}).map(x=>x.id);
-       let stats=buildStats(players,mp,sets,awards,ids);
-       stats.forEach(s=>s.cumSets=(cumulativeSets[s.id]||0)+s.sets);
-       const closed=monthClosed(m);
-       // IMPORTANT: the open month uses the exact same data and ranking logic as the current-month Partial Ranking.
-       // The end-of-month threshold is NOT applied before the month closes.
-       const threshold=closed?m.threshold:(typeof minSetsRequired==='function'?minSetsRequired():5);
-       const eligible=stats.filter(s=>s.sets>0&&s.cumSets>=threshold).sort(sortStats);
-       eligible.forEach((s,i)=>{s.provisionalBonus=i<10?POINTS[i]:0;s.bonus=closed?s.provisionalBonus:0;s.months[m.key]=closed?s.bonus:null;s.provisionalMonths=s.provisionalMonths||{};s.provisionalMonths[m.key]=s.provisionalBonus;});
-       stats.forEach(s=>cumulativeSets[s.id]=(cumulativeSets[s.id]||0)+s.sets);
-       monthRows[m.key]={stats,eligible};
-       if(closed)lastClosed=m.label;
+       if(new Date()<new Date(m.start+'T00:00:00'))continue;
+       const result=await calcMonth(m,matches,mp,sets,awards,cumulativeSets);
+       result.stats.forEach(s=>{cumulativeSets[s.id]=(cumulativeSets[s.id]||0)+s.sets;});
+       monthRows[m.key]=result;
+       if(monthClosed(m))lastClosed=m.label;
      }
-     const final=empty(),byId=new Map(final.map(s=>[s.id,s]));
-     Object.entries(monthRows).forEach(([key,r])=>r.stats.forEach(s=>{
-       const f=byId.get(s.id);if(!f)return;const m=MONTHS.find(x=>x.key===key),closed=!!m&&monthClosed(m);const official=Number(s.bonus||0),provisional=Number(s.provisionalBonus||0);
-       f.months[key]=closed?official:provisional;f.provisionalMonths=f.provisionalMonths||{};f.provisionalMonths[key]=provisional;f.bonus+=(closed?official:provisional);
-     }));
+     const final=empty(); const byId=new Map(final.map(s=>[s.id,s]));
+     Object.entries(monthRows).forEach(([key,r])=>r.stats.forEach(s=>{const f=byId.get(s.id);if(!f)return;f.months[key]=s.bonus||0;f.bonus+=(s.bonus||0)}));
      final.sort((a,b)=>b.bonus-a.bonus||a.name.localeCompare(b.name,'it'));
      body.innerHTML=final.map((s,i)=>{
-       const months=MONTHS.map(m=>{if(monthClosed(m))return `<td>${s.months[m.key]??'—'}</td>`;const prov=s.provisionalMonths?.[m.key];return `<td>${prov>0?`<b>${prov}</b> <span class="bonus-provisional">prov.</span>`:'—'}</td>`}).join('');
-       const hasProv=MONTHS.some(m=>!monthClosed(m)&&Number(s.provisionalMonths?.[m.key]||0)>0);
-       return `<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer"><div><b style="color:#fff;cursor:pointer" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b>${s.bonus}</b>${hasProv?' <span class="bonus-provisional">prov.</span>':''}</td>${months}</tr>`;
+       const months=MONTHS.map(m=>`<td>${monthClosed(m)?(s.months[m.key]||'—'):'—'}${(!monthClosed(m)&&s.sets!==undefined)?'<span class="bonus-provisional">prov.</span>':''}</td>`).join('');
+       return `<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e"><div><b style="color:#fff">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b>${s.bonus}</b></td>${months}</tr>`;
      }).join('');
-     const current=MONTHS.find(m=>now>=new Date(m.start+'T00:00:00')&&now<=monthRelease(m));
-     summary.textContent=`Bonus mensile: primi 10 classificati. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'. ':''}${current?'I dati provvisori di '+current.label+' sono presi con la stessa logica della Classifica Parziale del mese in corso.':''}`;
+     summary.textContent=`Bonus mensile: primi 10 classificati dopo il controllo dei set minimi. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'.':'Nessun mese ancora chiuso: SET è provvisorio.'}`;
    }catch(e){console.error(e);summary.textContent='Errore nel calcolo della Classifica Bonus: '+(e.message||e);body.innerHTML='';}
  }
- function showBonus(){['publicPage','partialPage','adminPage'].forEach(id=>$(id)?.classList.add('hidden'));$('historyView')?.style.setProperty('display','none');$('publicCalendarPage')?.classList.add('hidden');$('bonusPage')?.classList.remove('hidden');['publicBtn','partialBtn','historyBtn','adminBtn','calendarPublicBtn'].forEach(id=>$(id)?.classList.remove('primary'));$('bonusBtn')?.classList.add('primary');location.hash='bonus';loadBonus();window.scrollTo(0,0);}
- window.showBonus=showBonus;window.loadBonus=loadBonus;
- document.addEventListener('DOMContentLoaded',()=>{if(location.hash==='#bonus')showBonus();});
+ function showBonus(){
+   ['publicPage','partialPage','adminPage'].forEach(id=>$(id)?.classList.add('hidden')); $('historyView')?.style.setProperty('display','none'); $('publicCalendarPage')?.classList.add('hidden'); $('bonusPage')?.classList.remove('hidden');
+   ['publicBtn','partialBtn','historyBtn','adminBtn','calendarPublicBtn'].forEach(id=>$(id)?.classList.remove('primary')); $('bonusBtn')?.classList.add('primary'); location.hash='bonus'; loadBonus(); window.scrollTo(0,0);
+ }
+ window.showBonus=showBonus; window.loadBonus=loadBonus;
+ document.addEventListener('DOMContentLoaded',()=>{
+   $('bonusBtn')?.addEventListener('click',()=>showBonus());
+   if(location.hash==='#bonus')showBonus();
+ });
 })();
 </script>
 
@@ -3117,36 +3169,6 @@ async function loadPublicCalendar(){
 .rpl-vote-option.rpl-vote-full{opacity:.72;border-color:rgba(255,255,255,.15)}
 .rpl-vote-date{font-size:16px;font-weight:900;color:#fff}.rpl-vote-meta{font-size:12px;color:#aebccc;margin-top:4px}.rpl-vote-players{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.rpl-vote-player{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(231,185,78,.10);border:1px solid rgba(231,185,78,.24);color:#f7e3a0}.rpl-vote-btn{width:100%;margin-top:10px;min-height:44px}.rpl-vote-btn:disabled{opacity:.5;cursor:not-allowed}
 </style>
-<script id="rpl-v6582-profile-helpers">
-(function(){
-  function rplProfileDate(v){
-    if(!v)return '';
-    const d=new Date(String(v).slice(0,10)+'T00:00:00');
-    if(Number.isNaN(d.getTime()))return '';
-    return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
-  }
-  function rplProfileAge(v){
-    if(!v)return '';
-    const raw=String(v).slice(0,10), d=new Date(raw+'T00:00:00');
-    if(Number.isNaN(d.getTime()))return '';
-    const now=new Date(); let age=now.getFullYear()-d.getFullYear();
-    const m=now.getMonth()-d.getMonth();
-    if(m<0 || (m===0 && now.getDate()<d.getDate())) age--;
-    return age>=0&&age<130?age:'';
-  }
-  function rplProfileSide(v){
-    return ({DESTRA:'Destra',SINISTRA:'Sinistra',ENTRAMBI:'Entrambi'})[String(v||'').toUpperCase()]||'';
-  }
-  function rplProfileStyle(v){
-    return ({ATTACCANTE:'Attaccante',DIFENSORE:'Difensore',EQUILIBRATO:'Equilibrato'})[String(v||'').toUpperCase()]||'';
-  }
-  window.rplProfileDate=rplProfileDate;
-  window.rplProfileAge=rplProfileAge;
-  window.rplProfileSide=rplProfileSide;
-  window.rplProfileStyle=rplProfileStyle;
-})();
-</script>
-
 <script id="rpl-v6576-player-area">
 (function(){
   const q=id=>document.getElementById(id);
@@ -3154,7 +3176,6 @@ async function loadPublicCalendar(){
   let playerUser=null, playerAccount=null, playerRow=null, assignedMatch=null;
   const normalizePhone=v=>{let x=String(v||'').replace(/[^\d+]/g,'');if(x.startsWith('00'))x='+'+x.slice(2);if(x.startsWith('+'))return x;if(x.startsWith('39'))return '+'+x;return '+39'+x.replace(/^0/,'');};
   const playerLogo=name=>{try{return typeof window.logoFile==='function'?window.logoFile(name):''}catch(e){return ''}};
-  const rplProfileDate=window.rplProfileDate, rplProfileAge=window.rplProfileAge, rplProfileSide=window.rplProfileSide, rplProfileStyle=window.rplProfileStyle;
   function hidePublicSections(){['publicPage','partialPage','adminPage','publicCalendarPage','bonusPage'].forEach(id=>{const el=q(id);if(el){el.classList.add('hidden');el.style.setProperty('display','none','important')}});const h=q('historyView');if(h)h.style.setProperty('display','none','important');}
   function hidePlayerArea(){const p=q('playerAreaPage');if(p){p.classList.add('hidden');p.style.setProperty('display','none','important');}}
   function playerNavActive(){['calendarPublicBtn','partialBtn','publicBtn','historyBtn','bonusBtn','adminBtn','playerAreaBtn'].forEach(id=>q(id)?.classList.remove('primary'));q('playerAreaBtn')?.classList.add('primary');}
@@ -3192,9 +3213,9 @@ async function loadPublicCalendar(){
     return cycle[index%3];
   }
   function renderResultSetRow(pair,index){
-    return `<div class="rpl-result-set" data-set-index="${index}" data-a1="${pair[0].id}" data-a2="${pair[1].id}" data-b1="${pair[2].id}" data-b2="${pair[3].id}"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div data-result-set-title style="text-align:center;color:var(--gold2);font-weight:900;flex:1">SET ${index+1}</div><button type="button" class="rpl-remove-result-set" style="padding:7px 9px;font-size:11px;touch-action:manipulation">🗑️ Rimuovi</button></div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${index}">${setScoreOptions()}</select><b>–</b><select data-set-b="${index}">${setScoreOptions()}</select></div></div>`;
+    return `<div class="rpl-result-set" data-set-index="${index}" data-a1="${pair[0].id}" data-a2="${pair[1].id}" data-b1="${pair[2].id}" data-b2="${pair[3].id}"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div data-result-set-title style="text-align:center;color:var(--gold2);font-weight:900;flex:1">SET ${index+1}</div><button type="button" class="rpl-remove-result-set" style="padding:5px 8px;font-size:11px">🗑️ Rimuovi</button></div><div class="rpl-team-mini"><span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span></div><div class="rpl-result-score"><select data-set-a="${index}">${setScoreOptions()}</select><b>–</b><select data-set-b="${index}">${setScoreOptions()}</select></div></div>`;
   }
-  function renumberResultSets(panel,players,type){
+  function renumberResultSets(panel){
     [...panel.querySelectorAll('.rpl-result-set')].forEach((row,index)=>{
       row.dataset.setIndex=index;
       const title=row.querySelector('[data-result-set-title]');
@@ -3202,21 +3223,12 @@ async function loadPublicCalendar(){
       const a=row.querySelector('[data-set-a]'),b=row.querySelector('[data-set-b]');
       if(a)a.dataset.setA=index;
       if(b)b.dataset.setB=index;
-      // Dopo una cancellazione, riallinea anche la rotazione delle coppie.
-      const pair=resultPairForIndex(players,type,index);
-      if(pair){
-        row.dataset.a1=pair[0].id; row.dataset.a2=pair[1].id;
-        row.dataset.b1=pair[2].id; row.dataset.b2=pair[3].id;
-        const team=row.querySelector('.rpl-team-mini');
-        if(team)team.innerHTML=`<span>${escP(pair[0].name)}</span> + <span>${escP(pair[1].name)}</span><b> VS </b><span>${escP(pair[2].name)}</span> + <span>${escP(pair[3].name)}</span>`;
-      }
     });
   }
   function renderResultSets(cm){
     const players=window.rplDistintaPlayers(cm);
     const type=cm.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL';
-    // Una partita parte da 3 set compilabili. Gli eventuali set 4+ vengono aggiunti manualmente.
-    const pairs=Array.from({length:3},(_,i)=>resultPairForIndex(players,type,i));
+    const pairs=Array.from({length:type==='ONE_VS_ONE'?4:6},(_,i)=>resultPairForIndex(players,type,i));
     return `<div id="playerResultSets">${pairs.map((pair,i)=>renderResultSetRow(pair,i)).join('')}</div><div style="display:flex;justify-content:center;margin-top:10px"><button type="button" id="addPlayerResultSetBtn">➕ AGGIUNGI SET</button></div>`;
   }
   function bindResultSetControls(cm){
@@ -3233,7 +3245,7 @@ async function loadPublicCalendar(){
       const rows=setsBox.querySelectorAll('.rpl-result-set');
       if(!row || rows.length<=1)return;
       row.remove();
-      renumberResultSets(setsBox,players,type);
+      renumberResultSets(setsBox);
     });
     addBtn?.addEventListener('click',()=>{
       const index=setsBox.querySelectorAll('.rpl-result-set').length;
@@ -3241,7 +3253,7 @@ async function loadPublicCalendar(){
       const pair=resultPairForIndex(players,type,index);
       if(!pair)return;
       setsBox.insertAdjacentHTML('beforeend',renderResultSetRow(pair,index));
-      renumberResultSets(setsBox,players,type);
+      renumberResultSets(setsBox);
     });
   }
   function showResponsibleHero(cm){
@@ -3363,102 +3375,18 @@ async function loadPublicCalendar(){
     if(assignedMatch)showResponsibleHero(assignedMatch);else clearResponsible();
     await Promise.all([loadPlayerStats(),loadPlayerMatches(),loadPlayerVoting()]);
   }
-  async function savePlayerProfile(){
-    if(!playerUser||!playerRow)return;
-    const msg=q('playerProfileMsg');msg.className='msg';msg.textContent='Salvataggio profilo…';
-    const birth=q('playerBirthDate')?.value||'',side=q('playerPreferredSide')?.value||'';
-    if(!birth||!side){msg.className='msg err';msg.textContent='Data di nascita e lato preferito sono obbligatori.';return;}
-    const payload={player_id:playerRow.id,birth_date:birth,preferred_side:side,racket:(q('playerRacket')?.value||'').trim()||null,play_style:q('playerPlayStyle')?.value||null,avatar_path:playerAccount.avatar_path||playerAccount._profile?.avatar_path||null,updated_at:new Date().toISOString()};
-    const {error}=await sb.from('player_profiles').upsert(payload,{onConflict:'player_id'});
-    if(error){msg.className='msg err';msg.textContent='Profilo non salvato: '+error.message;return;}
-    playerAccount._profile=payload;msg.className='msg ok';msg.textContent='✅ Profilo aggiornato.';renderPlayerProfile();
-  }
-  async function loadPlayerProfileData(playerId){
-    const {data,error}=await sb.from('player_profiles').select('player_id,birth_date,preferred_side,racket,play_style,avatar_path').eq('player_id',playerId).maybeSingle();
-    if(error){console.error('RPL profile',error);return null;}return data||null;
-  }
-  async function renderPlayerProfile(){
+  function renderPlayerProfile(){
     q('playerNameTitle').textContent=playerRow.name||'';q('playerNickTitle').textContent=playerRow.nickname?`“${playerRow.nickname}”`:'';q('playerFasciaTitle').textContent=`Fascia ${playerRow.fascia||'—'} · ${playerRow.fascia_value||'—'} punti`;
     const src=playerAccount.avatar_path?sb.storage.from('avatars').getPublicUrl(playerAccount.avatar_path).data.publicUrl:'';
-    const img=q('playerAvatar'), box=img?.parentElement;
-    if(src){img.src=src+'?v='+Date.now();box?.classList.add('has-image')}else{img?.removeAttribute('src');box?.classList.remove('has-image')}
-    const logoSrc=logoFile(playerRow.name),logoImg=q('playerLogo'),logoBox=logoImg?.parentElement;
-    if(logoImg&&logoBox){if(logoSrc){logoImg.src=logoSrc;logoImg.alt=(playerRow.name||'')+' — logo';logoBox.classList.add('has-image')}else{logoImg.removeAttribute('src');logoBox.classList.remove('has-image')}}
-    const prof=playerAccount._profile||await loadPlayerProfileData(playerRow.id);playerAccount._profile=prof;
-    if(q('playerBirthDate'))q('playerBirthDate').value=prof?.birth_date||'';
-    if(q('playerPreferredSide'))q('playerPreferredSide').value=prof?.preferred_side||'';
-    if(q('playerRacket'))q('playerRacket').value=prof?.racket||'';
-    if(q('playerPlayStyle'))q('playerPlayStyle').value=prof?.play_style||'';
-  }
-  async function rplCalcPlayerStats(playerId,from,to){
-    let mq=sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true});
-    if(from)mq=mq.gte('played_at',from+'T00:00:00');if(to)mq=mq.lte('played_at',to+'T23:59:59');
-    const {data:matches,error:me}=await mq;if(me)throw me;
-    const ids=(matches||[]).map(m=>m.id),st={sets:0,won:0,games:0,pt:0,mvp:0,imb:0};if(!ids.length)return {st,total:0,base:0};
-    const [mpr,sr,ar]=await Promise.all([sb.from('match_players').select('*').in('match_id',ids),sb.from('sets').select('*').in('match_id',ids),sb.from('match_awards').select('*').in('match_id',ids)]);if(mpr.error||sr.error||ar.error)throw(mpr.error||sr.error||ar.error);
-    const snap={};(mpr.data||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
-    (sr.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);if(W.includes(playerId)){st.sets++;st.won++;st.games+=wg;st.pt+=(snap[x.match_id+'_'+L[0]]?.fascia_value||0)+(snap[x.match_id+'_'+L[1]]?.fascia_value||0)}else if(L.includes(playerId)){st.sets++;st.games+=lg}});
-    (ar.data||[]).forEach(x=>{if(x.player_id===playerId){if(x.award_type==='MVP')st.mvp++;if(x.award_type==='IMBATTUTO')st.imb++}});const base=st.sets?((st.pt+st.games*.30+st.sets*.10)/st.sets)*10:0;return {st,base,total:base+st.mvp*1.5+st.imb};
-  }
-  async function rplGetRankingsForProfile(playerId){
-    const {data:matches,error:me}=await sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true});if(me)throw me;
-    const ids=(matches||[]).map(m=>m.id);const all=emptyStats();if(!ids.length)return {general:0,partial:0,bonus:0};
-    const [mpr,sr,ar]=await Promise.all([sb.from('match_players').select('*').in('match_id',ids),sb.from('sets').select('*').in('match_id',ids),sb.from('match_awards').select('*').in('match_id',ids)]);if(mpr.error||sr.error||ar.error)throw(mpr.error||sr.error||ar.error);
-    const snap={};(mpr.data||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
-    (sr.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);W.forEach(pid=>{const z=all.find(s=>s.id===pid);if(z){z.sets++;z.games+=wg;z.pt+=(snap[x.match_id+'_'+L[0]]?.fascia_value||0)+(snap[x.match_id+'_'+L[1]]?.fascia_value||0)}});L.forEach(pid=>{const z=all.find(s=>s.id===pid);if(z){z.sets++;z.games+=lg}})});
-    (ar.data||[]).forEach(x=>{const z=all.find(s=>s.id===x.player_id);if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++}});
-    const required=minSetsRequired();const general=all.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb,eligible:required===null||s.sets>=required})).sort((a,b)=>(a.eligible!==b.eligible?(a.eligible?-1:1):b.total-a.total||b.base-a.base||a.name.localeCompare(b.name,'it')));
-    const current=new Date(),first=new Date(current.getFullYear(),current.getMonth(),1),next=new Date(current.getFullYear(),current.getMonth()+1,1);let partial=0,bonus=0;
-    const BONUS_POINTS=[100,72,60,48,40,32,24,16,8,4];
-    const BONUS_MONTHS=[
-      {key:'09',start:'2026-09-01',end:'2026-09-30',threshold:5},
-      {key:'10',start:'2026-10-01',end:'2026-10-31',threshold:15},
-      {key:'11',start:'2026-11-01',end:'2026-11-30',threshold:25},
-      {key:'12',start:'2026-12-01',end:'2026-12-31',threshold:35},
-      {key:'01',start:'2027-01-01',end:'2027-01-31',threshold:45},
-      {key:'02',start:'2027-02-01',end:'2027-02-28',threshold:55},
-      {key:'03',start:'2027-03-01',end:'2027-03-31',threshold:65}
-    ];
-    const bonusTotals=emptyStats().map(s=>({...s,bonusTotal:0}));
-    const bonusById=new Map(bonusTotals.map(s=>[String(s.id),s]));
-    const cumulativeSets={};bonusTotals.forEach(s=>cumulativeSets[String(s.id)]=0);
-    const currentThreshold=typeof minSetsRequired==='function'?minSetsRequired():5;
-    for(const bm of BONUS_MONTHS){
-      if(current < new Date(bm.start+'T00:00:00')) continue;
-      const mids=(matches||[]).filter(m=>{const d=String(m.played_at).slice(0,10);return d>=bm.start&&d<=bm.end}).map(m=>m.id);
-      const mst=emptyStats(), snap={};
-      (mpr.data||[]).forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
-      const mById=new Map(mst.map(s=>[String(s.id),s]));
-      (sr.data||[]).filter(x=>mids.includes(x.match_id)).forEach(x=>{
-        const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;
-        const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
-        W.forEach(pid=>{const z=mById.get(String(pid));if(z){z.sets++;z.won++;z.games+=wg;z.pt+=(snap[x.match_id+'_'+L[0]]?.fascia_value||0)+(snap[x.match_id+'_'+L[1]]?.fascia_value||0)}});
-        L.forEach(pid=>{const z=mById.get(String(pid));if(z){z.sets++;z.games+=lg}});
-      });
-      (ar.data||[]).filter(x=>mids.includes(x.match_id)).forEach(x=>{const z=mById.get(String(x.player_id));if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++;}});
-      mst.forEach(s=>{const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;s.base=base;s.total=base+s.mvp*1.5+s.imb;s.cumSets=(cumulativeSets[String(s.id)]||0)+s.sets;});
-      const released=current>=new Date(bm.end+'T23:59:59');
-      const threshold=released?bm.threshold:currentThreshold;
-      const eligible=mst.filter(s=>s.sets>0&&s.cumSets>=threshold);
-      eligible.sort((a,b)=>b.total-a.total||b.won-a.won||b.sets-a.sets||b.mvp-a.mvp||b.imb-a.imb||b.games-a.games||a.fascia-b.fascia||a.name.localeCompare(b.name,'it'));
-      eligible.forEach((s,i)=>{const target=bonusById.get(String(s.id));if(target&&i<10)target.bonusTotal+=BONUS_POINTS[i];});
-      mst.forEach(s=>{cumulativeSets[String(s.id)]=(cumulativeSets[String(s.id)]||0)+s.sets;});
+    const img=q('playerAvatar'), box=q('playerAvatar').parentElement;
+    if(src){img.src=src+'?v='+Date.now();box.classList.add('has-image')}else{img.removeAttribute('src');box.classList.remove('has-image')}
+    const logoSrc=playerLogo(playerRow.name);
+    const logoImg=q('playerLogo'), logoBox=logoImg?.parentElement;
+    if(logoImg&&logoBox){
+      if(logoSrc){logoImg.src=logoSrc;logoImg.alt=(playerRow.name||'')+' — logo';logoBox.classList.add('has-image')}
+      else{logoImg.removeAttribute('src');logoBox.classList.remove('has-image')}
     }
-    const bonusRanking=bonusTotals.sort((a,b)=>b.bonusTotal-a.bonusTotal||a.name.localeCompare(b.name,'it'));
-    const bonusRankIndex=bonusRanking.findIndex(x=>String(x.id)===String(playerId));
-    bonus=bonusRankIndex>=0?bonusRankIndex+1:0;
-    const mid=(matches||[]).filter(m=>new Date(m.played_at)>=first&&new Date(m.played_at)<next);const mids=mid.map(m=>m.id);
-    if(mids.length){const [pm,ps,pa]=await Promise.all([sb.from('match_players').select('*').in('match_id',mids),sb.from('sets').select('*').in('match_id',mids),sb.from('match_awards').select('*').in('match_id',mids)]);if(pm.error||ps.error||pa.error)throw(pm.error||ps.error||pa.error);const pSnap={};(pm.data||[]).forEach(x=>pSnap[x.match_id+'_'+x.player_id]=x);const pst=emptyStats();(ps.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);W.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.won++;z.games+=wg;z.pt+=(pSnap[x.match_id+'_'+L[0]]?.fascia_value||0)+(pSnap[x.match_id+'_'+L[1]]?.fascia_value||0)}});L.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=lg}})});(pa.data||[]).forEach(x=>{const z=pst.find(s=>s.id===x.player_id);if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++}});const pr=pst.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb})).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,'it'));partial=pr.findIndex(x=>String(x.id)===String(playerId))+1;}
-    return {general:general.findIndex(x=>String(x.id)===String(playerId))+1,partial,bonus};
   }
-  async function openRplPlayerProfile(playerId){
-    const modal=q('rplPlayerProfileModal'),body=q('rplPlayerProfileModalBody');if(!modal||!body)return;modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');body.innerHTML='<div class="muted" style="text-align:center;padding:25px">Caricamento scheda giocatore…</div>';
-    try{const p=playerById(playerId);if(!p)throw new Error('Giocatore non trovato.');const [prof,ranks,st]=await Promise.all([loadPlayerProfileData(playerId),rplGetRankingsForProfile(playerId),rplCalcPlayerStats(playerId)]);const photo=prof?.avatar_path?sb.storage.from('avatars').getPublicUrl(prof.avatar_path).data.publicUrl:'';const logo=logoFile(p.name);const age=rplProfileAge(prof?.birth_date);const side=rplProfileSide(prof?.preferred_side);const style=rplProfileStyle(prof?.play_style);const stats=[['SET',st.st.sets],['VINTI',st.st.won],['GAME',st.st.games],['PT.SET',st.st.pt.toFixed(1)],['BASE',st.base.toFixed(2)],['MVP',st.st.mvp],['IMBATTUTO',st.st.imb],['TOTALE',st.total.toFixed(2)]];body.innerHTML=`<div class="rpl-profile-modal-head"><img class="rpl-profile-modal-photo" src="${photo||''}" ${photo?'':'style="display:none"'}><div class="rpl-profile-modal-logo" style="${logo?`background-image:url('${logo}');background-size:cover;background-position:center`:''}">${logo?'':'🏆'}</div><div style="flex:1"><div class="rpl-player-kicker">ROYAL PADEL LEAGUE</div><div class="rpl-profile-modal-title">${escP(p.name||'')}</div><div class="rpl-profile-modal-nick">${p.nickname?`“${escP(p.nickname)}”`:''}</div><div class="muted">Fascia ${p.fascia||'—'} · ${p.fascia_value||'—'} punti</div></div></div><div class="rpl-profile-ranks"><div class="rpl-profile-rank main"><b>${ranks.general||'—'}</b><span>CLASSIFICA GENERALE</span></div><div class="rpl-profile-rank"><b>${ranks.partial||'—'}</b><span>PARZIALE MESE</span></div><div class="rpl-profile-rank"><b>${ranks.bonus||'—'}</b><span>CLASSIFICA BONUS</span></div></div><div class="rpl-public-profile-meta">${prof?.birth_date?`<div><b>${rplProfileDate(prof.birth_date)}${age!==''?' · '+age+' anni':''}</b><span>DATA DI NASCITA</span></div>`:''}${side?`<div><b>${side}</b><span>LATO PREFERITO</span></div>`:''}${prof?.racket?`<div><b>${escP(prof.racket)}</b><span>RACCHETTA</span></div>`:''}${style?`<div><b>${style}</b><span>STILE DI GIOCO</span></div>`:''}</div><div class="rpl-profile-stat-grid">${stats.map(x=>`<div class="rpl-profile-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>`;}catch(e){body.innerHTML=`<div class="msg err">Errore caricamento scheda: ${escP(e.message||e)}</div>`;}
-  }
-  function closeRplPlayerProfile(){const m=q('rplPlayerProfileModal');if(m){m.classList.add('hidden');m.setAttribute('aria-hidden','true')}}
-  window.openRplPlayerProfile=openRplPlayerProfile;window.closeRplPlayerProfile=closeRplPlayerProfile;
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRplPlayerProfile()});
-
   async function loadPlayerStats(){
     const out=q('playerStatsGrid');if(!out)return;
     const {data:matches,error:me}=await sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true});if(me){out.innerHTML='<div class="msg err">Errore caricamento statistiche.</div>';return}
@@ -3529,8 +3457,7 @@ async function loadPublicCalendar(){
   async function submitPlayerResult(cm){
     const msg=q('playerResultMsg'),rows=scoreRowsFromPanel();msg.className='msg';msg.textContent='Controllo risultati…';
     if(rows.some(x=>x.ga===null||x.gb===null)){msg.className='msg err';msg.textContent='Inserisci il punteggio di tutti i set.';return}
-    const bad=rows.findIndex(x=>!isValidPadelSetScore(x.ga,x.gb));
-    if(bad>=0){const x=rows[bad];msg.className='msg err';msg.textContent=validScoreMessage(x.ga,x.gb,bad+1);return}
+    if(rows.some(x=>x.ga===x.gb)){msg.className='msg err';msg.textContent='Un set non può finire in parità.';return}
     const ids=[1,2,3,4].map(i=>Number(cm['player_'+i]));
     if(ids.some(Number.isNaN)||new Set(ids).size!==4){msg.className='msg err';msg.textContent='La partita del calendario non ha quattro giocatori validi.';return}
     const players=window.rplDistintaPlayers(cm);
@@ -3567,12 +3494,31 @@ async function loadPublicCalendar(){
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(){
+  async function rplRegisterServiceWorker(cacheVersion=731){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
-    return await navigator.serviceWorker.register('./sw.js?v=730');
+    return await navigator.serviceWorker.register(`./sw.js?v=${cacheVersion}`);
+  }
+  function rplPushErrorMessage(step,e){
+    const raw=String(e?.message||e||'Errore sconosciuto');
+    console.error('RPL notifiche — errore',{step,message:raw,name:e?.name||'',error:e});
+    if(step==='subscribe' && /push service error|registration failed/i.test(raw)){
+      return "Il telefono non riesce a collegarsi al servizio Push di Chrome. Controlla che Chrome sia aggiornato, che Google Play Services siano attivi e che le notifiche di Chrome non siano bloccate, poi riprova.";
+    }
+    if(step==='serviceworker') return "Impossibile registrare il servizio notifiche del sito. Ricarica la pagina e riprova.";
+    if(step==='vapid') return "Errore nella chiave di registrazione delle notifiche.";
+    return raw;
+  }
+  function rplVapidKeyToUint8Array(base64String){
+    const padding='='.repeat((4-base64String.length%4)%4);
+    const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+    const raw=atob(base64);
+    const out=new Uint8Array(raw.length);
+    for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
+    return out;
   }
   async function rplEnablePlayerNotifications(){
     const msg=q('playerNotificationMsg');msg.className='rpl-notify-status';msg.textContent='Attivazione…';
+    let step='inizio';
     try{
       if(!window.isSecureContext) throw new Error('Le notifiche richiedono un collegamento HTTPS.');
       if(!('Notification' in window)) throw new Error('Le notifiche non sono supportate da questo browser.');
@@ -3582,13 +3528,30 @@ async function loadPublicCalendar(){
       let permission=Notification.permission;
       if(permission==='default') permission=await Notification.requestPermission();
       if(permission!=='granted') throw new Error('Permesso notifiche non concesso. Se lo hai negato, abilitalo nelle impostazioni del browser/dispositivo.');
-      await rplRegisterServiceWorker();
-      const reg=await navigator.serviceWorker.ready;
+
+      step='serviceworker';
+      let reg=await rplRegisterServiceWorker(731);
+      await navigator.serviceWorker.ready;
+      reg=await navigator.serviceWorker.ready;
+
       let sub=await reg.pushManager.getSubscription();
       if(!sub){
-        const raw=Uint8Array.from(atob(RPL_VAPID_PUBLIC_KEY.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-RPL_VAPID_PUBLIC_KEY.length%4)%4)),c=>c.charCodeAt(0));
-        sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:raw});
+        step='vapid';
+        const raw=rplVapidKeyToUint8Array(RPL_VAPID_PUBLIC_KEY);
+        step='subscribe';
+        try{
+          sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:raw});
+        }catch(firstError){
+          console.warn('RPL: prima registrazione Push fallita, provo a rinnovare il Service Worker.',firstError);
+          try{await reg.unregister();}catch(unregError){console.warn('RPL: unregister SW non riuscito',unregError);}
+          reg=await rplRegisterServiceWorker(732);
+          await navigator.serviceWorker.ready;
+          reg=await navigator.serviceWorker.ready;
+          sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:raw});
+        }
       }
+
+      step='salvataggio';
       const {error}=await sb.functions.invoke('rpl-notifications',{body:{action:'subscribe',player_id:Number(playerRow.id),subscription:sub.toJSON(),user_agent:navigator.userAgent}});
       if(error) throw new Error(error.message||'Errore salvataggio dispositivo.');
       localStorage.setItem('rpl_notifications_enabled','1');
@@ -3598,7 +3561,10 @@ async function loadPublicCalendar(){
       q('playerEnableNotificationsBtn').textContent='🟢 NOTIFICHE ATTIVE';
       q('playerEnableNotificationsBtn').disabled=true;
       return reg;
-    }catch(e){msg.className='rpl-notify-status err';msg.textContent='❌ '+(e.message||e);}
+    }catch(e){
+      msg.className='rpl-notify-status err';
+      msg.textContent='❌ '+rplPushErrorMessage(step,e);
+    }
   }
   async function rplShowLocalNotification(title,body){
     try{
@@ -3624,49 +3590,21 @@ async function loadPublicCalendar(){
     const msg=q('rplNotifyMsg');msg.className='rpl-notify-status';
     const ids=[...document.querySelectorAll('#rplNotifyPlayers input[data-rpl-notify-player]:checked')].map(x=>Number(x.dataset.rplNotifyPlayer));
     if(!ids.length){msg.className='rpl-notify-status err';msg.textContent='Seleziona almeno un giocatore.';return;}
-    const title=q('rplNotifyTitle')?.value.trim()||'🔔 Royal Padel League';
-    const body=q('rplNotifyBody')?.value.trim()||'Hai una nuova comunicazione RPL.';
-    const url=location.origin+location.pathname+'#player';
+    const title=q('rplNotifyTitle')?.value.trim()||'🔔 Royal Padel League';const body=q('rplNotifyBody')?.value.trim()||'Hai una nuova comunicazione RPL.';
     msg.className='rpl-notify-status';msg.textContent='Invio notifiche…';
     try{
-      const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'send',player_ids:ids,title,body,url}});
+      const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'send',player_ids:ids,title,body,url:target ? (target.startsWith('http') ? target : location.origin+location.pathname+target) : location.origin+location.pathname+'#player'}});
       if(error) throw new Error(error.message||'Errore invio notifiche.');
-      const sent=Number(data?.sent||0),missing=Number(data?.missing||0),failed=Number(data?.failed||0);
-      msg.className='rpl-notify-status '+(failed?'err':'ok');
-      msg.textContent=failed
-        ? `⚠️ ${sent} inviata/e · ${failed} fallita/e${missing?' · '+missing+' senza dispositivo attivo':''}.`
-        : `✅ ${sent} notifica/e inviata/e${missing?' · '+missing+' senza dispositivo attivo':''}.`;
-      await rplLoadNotifyDeviceStatus();
+      msg.className='rpl-notify-status ok';msg.textContent=`✅ ${data?.sent||0} notifica/e inviata/e${data?.missing?` · ${data.missing} senza dispositivo attivo`:''}.`;
     }catch(e){
       console.error(e);msg.className='rpl-notify-status err';msg.textContent='❌ Invio non riuscito: '+(e.message||e);
     }
   }
-  function rplDeviceInfo(ua){
-    const u=String(ua||'');
-    let icon='💻',device='Desktop';
-    if(/iPhone/i.test(u)){icon='📱';device='iPhone';}
-    else if(/iPad/i.test(u)){icon='📱';device='iPad';}
-    else if(/Android/i.test(u)){icon='📱';device='Android';}
-    else if(/Macintosh/i.test(u)){icon='💻';device='Mac';}
-    else if(/Windows/i.test(u)){icon='💻';device='Windows';}
-    else if(/Linux/i.test(u)){icon='💻';device='Linux';}
-    let browser='Browser';
-    if(/CriOS/i.test(u)||/Chrome/i.test(u))browser='Chrome';
-    if(/FxiOS/i.test(u)||/Firefox/i.test(u))browser='Firefox';
-    if(/EdgiOS/i.test(u)||/Edg\//i.test(u))browser='Edge';
-    if(/OPiOS/i.test(u)||/OPR\//i.test(u))browser='Opera';
-    if(/Safari/i.test(u)&&!/Chrome|CriOS|Android/i.test(u))browser='Safari';
-    return {icon,label:`${device} · ${browser}`};
-  }
-  function rplFormatDeviceDate(v){
-    if(!v)return '';
-    const d=new Date(v);if(Number.isNaN(d.getTime()))return '';
-    return d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  }
   async function rplLoadNotifyDeviceStatus(){
-    const box=q('rplNotifyDeviceStatus'),list=q('rplNotifyDeviceList');
+    const box=q('rplNotifyDeviceStatus');
     if(!box)return;
-    box.className='muted';box.textContent='Controllo…';if(list)list.innerHTML='';
+    box.className='muted';
+    box.textContent='Controllo…';
     try{
       const {data,error}=await sb.functions.invoke('rpl-notifications',{body:{action:'status'}});
       if(error)throw new Error(error.message||'Errore lettura stato dispositivi.');
@@ -3674,21 +3612,12 @@ async function loadPublicCalendar(){
       const players=Number(data?.playersWithNotifications||0);
       box.className='rpl-notify-status ok';
       box.innerHTML=`🟢 <strong>${devices}</strong> dispositivo/i attivo/i collegato/i a <strong>${players}</strong> giocatore/i.`;
-      if(list){
-        const rows=Array.isArray(data?.devices)?data.devices:[];
-        list.innerHTML=rows.length?rows.map(d=>{
-          const info=rplDeviceInfo(d.user_agent);
-          const name=esc(d.player_name||'Giocatore');
-          const nick=d.player_nickname?` <small style="color:#9aa9b8">“${esc(d.player_nickname)}”</small>`:'';
-          const when=rplFormatDeviceDate(d.updated_at||d.created_at);
-          return `<div class="rpl-device-row"><div class="rpl-device-icon">${info.icon}</div><div class="rpl-device-main"><div class="rpl-device-name">${name}${nick}</div><div class="rpl-device-meta">${esc(info.label)}${when?' · ultimo collegamento '+esc(when):''}</div></div><div class="rpl-device-time">🟢 ATTIVO</div></div>`;
-        }).join(''):'<div class="muted">Nessun dispositivo registrato.</div>';
-      }
     }catch(e){
-      console.error(e);box.className='rpl-notify-status err';box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
+      console.error(e);
+      box.className='rpl-notify-status err';
+      box.textContent='❌ Impossibile controllare i dispositivi: '+(e.message||e);
     }
   }
-
   function rplUpdateNotificationButton(){
     const b=q('playerEnableNotificationsBtn');if(!b)return;
     if('Notification' in window && Notification.permission==='granted' && localStorage.getItem('rpl_notifications_enabled')==='1'){b.textContent='🟢 NOTIFICHE ATTIVE';b.disabled=true;}
@@ -3704,7 +3633,7 @@ async function loadPublicCalendar(){
   window.rplAutoSendNotification=rplAutoSendNotification;window.rplGetActivePlayerIds=rplGetActivePlayerIds;
   async function playerLogout(){await sb.auth.signOut();playerUser=null;playerAccount=null;playerRow=null;assignedMatch=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden');q('playerPassword').value='';}
   function bind(){
-    q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('savePlayerProfileBtn')?.addEventListener('click',savePlayerProfile);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
+    q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
     q('playerEnableNotificationsBtn')?.addEventListener('click',rplEnablePlayerNotifications);rplUpdateMobileNotificationHelp();rplUpdateNotificationButton();
     ['playerCameraInput','playerGalleryInput'].forEach(id=>q(id)?.addEventListener('change',e=>uploadAvatar(e.target.files?.[0])));
     q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showPlayerArea()},true);
@@ -3714,5 +3643,5 @@ async function loadPublicCalendar(){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bind();rplRegisterServiceWorker().catch(()=>{});});else {bind();rplRegisterServiceWorker().catch(()=>{});}
 })();
 </script>
-<!-- RPL v8.5 - automatic calendar notifications hardened -->
-<!-- RPL v8.3: current-month provisional Bonus is propagated into the final ranking. -->\n</body></html>
+<!-- RPL VERSION 7.5 - Automatic notifications + deep links -->
+</body></html>
