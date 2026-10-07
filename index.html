@@ -903,7 +903,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </div>
 <div id="sets"></div><button type="button" id="add-set-btn" onclick="addSet(false)" style="margin:10px 0;padding:10px 14px;border-radius:8px;cursor:pointer">➕ AGGIUNGI SET</button><button type="button" onclick="addSet(false)">➕ AGGIUNGI SET</button><div class="muted" style="margin-top:6px">Tutti i set giocati possono essere inseriti e saranno conteggiati in classifica.</div>
 <div class="two"><div><label>MVP — anche multipli</label><div id="mvp" class="checklist"></div></div><div><label>Imbattuto — anche multipli</label><div id="imb" class="checklist"></div></div></div>
-<button class="primary" id="save">SALVA PARTITA</button><button id="logout">ESCI</button><div id="msg" class="msg"></div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="primary" id="save">SALVA PARTITA</button><button type="button" onclick="copyNewMatchPosterText()">📋 TESTO POSTER PARTITA</button><button id="logout">ESCI</button></div><div id="msg" class="msg"></div></div>
 </div>
 <div class="card" id="operatorSubmenu">
 <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1357,6 +1357,106 @@ async function loadLastCalendarMatch(){
   msg.textContent=`✅ Caricata: ${dt.toLocaleDateString("it-IT")} alle ${dt.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})} · ${selected.court||"Campo non indicato"} · ${type}. Ora inserisci solo i punteggi e gli eventuali premi.`;
 }
 
+function rplPosterPlayerLabel(pid, snapshotMap){
+  const p=dbPlayers.find(x=>Number(x.id)===Number(pid));
+  if(!p)return `Giocatore ${pid}`;
+  const snap=snapshotMap?.[pid]||{};
+  const fascia=snap.fascia??p.fascia??"—";
+  const val=snap.fascia_value??p.fascia_value??"—";
+  return `${p.name}${p.nickname?` — ${p.nickname}`:""} · Fascia ${fascia} · ${val} punti`;
+}
+function rplPosterName(pid){
+  const p=dbPlayers.find(x=>Number(x.id)===Number(pid));
+  return p ? `${p.name}${p.nickname?` — ${p.nickname}`:""}` : `Giocatore ${pid}`;
+}
+function rplPosterAutomaticAwards(parsed, snapshotMap){
+  const ids=[...new Set(parsed.flatMap(x=>[x.a1,x.a2,x.b1,x.b2]).map(Number))].filter(Boolean);
+  const st={}; ids.forEach(id=>{st[id]={sets:0,won:0,games:0,pt:0};});
+  parsed.forEach(x=>{
+    const A=[x.a1,x.a2],B=[x.b1,x.b2],ga=Number(x.ga),gb=Number(x.gb);
+    if(ga===gb)return;
+    const win=ga>gb?A:B,lose=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
+    win.forEach(pid=>{if(!st[pid])return;st[pid].sets++;st[pid].won++;st[pid].games+=wg;st[pid].pt+=(snapshotMap?.[lose[0]]?.fascia_value||0)+(snapshotMap?.[lose[1]]?.fascia_value||0);});
+    lose.forEach(pid=>{if(!st[pid])return;st[pid].sets++;st[pid].games+=lg;});
+  });
+  Object.values(st).forEach(x=>{x.base=x.sets?((x.pt+x.games*.30+x.sets*.10)/x.sets)*10:0;});
+  const eligible=ids.filter(id=>!dbPlayers.find(p=>Number(p.id)===id)?.is_guest&&st[id]?.sets>0);
+  const maxBase=Math.max(...eligible.map(id=>st[id].base),-Infinity);
+  const mvp=eligible.filter(id=>Math.abs(st[id].base-maxBase)<0.0001);
+  const imb=eligible.filter(id=>st[id].sets>=3&&st[id].won===st[id].sets);
+  return {st,mvp,imb};
+}
+function rplPosterTextFromParsed({playedAt,court,players,parsed,snapshotMap={},responsible=""}){
+  const awards=rplPosterAutomaticAwards(parsed,snapshotMap);
+  const out=[
+    "━━━━━━━━━━━━━━━━━━",
+    "🎾 ROYAL PADEL LEAGUE",
+    "📋 DATI POSTER PARTITA",
+    "━━━━━━━━━━━━━━━━━━",
+    "",
+    `📅 ${new Date(playedAt).toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})}`,
+    `⏰ ORE ${new Date(playedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}`,
+    `📍 ${court||"Campo non specificato"}`,
+    "",
+    "👥 GIOCATORI"
+  ];
+  players.forEach((pid,i)=>out.push(`${i+1}. ${rplPosterPlayerLabel(pid,snapshotMap)}`));
+  if(responsible)out.push(`👤 Responsabile partita: ${responsible}`);
+  out.push("","🏆 RISULTATO SET PER SET");
+  parsed.forEach((x,i)=>out.push(`SET ${i+1}: ${rplPosterName(x.a1)} + ${rplPosterName(x.a2)}  ${x.ga}-${x.gb}  ${rplPosterName(x.b1)} + ${rplPosterName(x.b2)}`));
+  out.push("","📊 STATISTICHE INDIVIDUALI");
+  players.forEach(pid=>{
+    const z=awards.st[pid]||{sets:0,won:0,games:0,base:0};
+    out.push(`${rplPosterName(pid)} — ${z.won} set vinti / ${z.sets} giocati · ${z.games} game vinti · Base ${z.base.toFixed(2)}`);
+  });
+  out.push("",`🏅 MVP: ${awards.mvp.length?awards.mvp.map(rplPosterName).join(" · "):"Nessuno"}`,`🛡️ IMBATTUTO: ${awards.imb.length?awards.imb.map(rplPosterName).join(" · "):"Nessuno"}`,"","ROYAL PADEL LEAGUE","WHERE LEGENDS PLAY");
+  return out.join("\n");
+}
+function rplReadNewMatchForm(){
+  const playedAt=new Date($("date").value).toISOString();
+  const players=["p1","p2","p3","p4"].map(id=>Number($(id).value));
+  const parsed=[];
+  document.querySelectorAll("#sets .set").forEach((r,i)=>{
+    const t=scoreValue(r,"score").trim(),m=t.match(/^(\d+)\s*[-:]\s*(\d+)$/);
+    if(!m)return;
+    const v=["a1","a2","b1","b2"].map(c=>Number(r.querySelector("."+c).value));
+    if(v.some(Number.isNaN)||v.some(x=>!x))return;
+    parsed.push({n:i+1,a1:v[0],a2:v[1],b1:v[2],b2:v[3],ga:Number(m[1]),gb:Number(m[2])});
+  });
+  const snapshot={};players.forEach(pid=>{const p=dbPlayers.find(x=>Number(x.id)===pid);if(p)snapshot[pid]={fascia:p.fascia,fascia_value:Number(p.fascia_value||0)};});
+  return {playedAt,players,parsed,snapshot};
+}
+async function copyNewMatchPosterText(){
+  try{
+    const x=rplReadNewMatchForm();
+    if(x.players.some(x=>!x)||new Set(x.players).size!==4)throw new Error("Seleziona prima i 4 giocatori.");
+    if(!x.parsed.length)throw new Error("Inserisci almeno un set completo con coppie e punteggio.");
+    const t=rplPosterTextFromParsed({playedAt:x.playedAt,court:"",players:x.players,parsed:x.parsed,snapshotMap:x.snapshot});
+    await navigator.clipboard.writeText(t);$("msg").className="msg ok";$("msg").textContent="✅ Testo poster copiato negli appunti. Ora incollalo qui in ChatGPT.";
+  }catch(e){
+    const msg=e.message||String(e);if(msg.startsWith("Seleziona")||msg.startsWith("Inserisci")){alert(msg);return;}
+    try{prompt("Copia questo testo:",msg)}catch(_){alert(msg)}
+  }
+}
+async function copyPendingMatchPosterText(id){
+  try{
+    const [{data:m,error:me},{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
+      sb.from("matches").select("*").eq("id",id).single(),
+      sb.from("match_players").select("*").eq("match_id",id).order("id"),
+      sb.from("sets").select("*").eq("match_id",id).order("set_number"),
+      sb.from("match_awards").select("*").eq("match_id",id)
+    ]);
+    if(me)throw me;if(mpe)throw mpe;if(se)throw se;if(ae)throw ae;
+    const pids=[...(mp||[]).map(x=>Number(x.player_id))];
+    const {data:cal,error:ce}=m.calendar_match_id?await sb.from("calendar_matches").select("*").eq("id",m.calendar_match_id).maybeSingle():{data:null,error:null};
+    if(ce)throw ce;
+    const snapshot={};(mp||[]).forEach(x=>{snapshot[x.player_id]={fascia:x.fascia,fascia_value:x.fascia_value};});
+    const t=rplPosterTextFromParsed({playedAt:m.played_at,court:cal?.court||"",players:pids,parsed:sets||[],snapshotMap:snapshot,responsible:cal?.responsible_player_name||""});
+    await navigator.clipboard.writeText(t);
+    alert("✅ Testo poster copiato negli appunti. Ora incollalo qui in ChatGPT.");
+  }catch(e){alert("Errore generazione testo poster: "+(e.message||e));}
+}
+
 async function saveMatch(){
   $("msg").className="msg";$("msg").textContent="Salvataggio…";
   const ids=["p1","p2","p3","p4"].map(id=>+$(id).value);
@@ -1617,6 +1717,7 @@ async function loadOperatorPendingMatches(){
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
           <button type="button" class="smallbtn" onclick="openPendingMatch(${JSON.stringify(m.id)})">🔎 APRI / CONTROLLA</button>
           <button type="button" class="smallbtn edit" onclick="openEdit(${JSON.stringify(m.id)})">✏️ MODIFICA</button>
+          <button type="button" class="smallbtn" onclick="copyPendingMatchPosterText(${JSON.stringify(m.id)})">📋 TESTO POSTER</button>
           <button type="button" class="smallbtn danger" onclick="deletePendingMatch(${JSON.stringify(m.id)})">🗑️ CANCELLA</button>
           <button type="button" class="smallbtn" onclick="reactivatePendingMatch(${JSON.stringify(m.id)})">↩️ RIATTIVA PARTITA</button>
           <button type="button" class="smallbtn primary" onclick="confirmPendingMatch(${JSON.stringify(m.id)})">✅ CONFERMA PARTITA</button>
@@ -1655,6 +1756,7 @@ async function openPendingMatch(id){
         <button type="button" class="smallbtn edit" onclick="closePendingMatch();openEdit(${JSON.stringify(id)})">✏️ MODIFICA</button>
         <button type="button" class="smallbtn danger" onclick="closePendingMatch();deletePendingMatch(${JSON.stringify(id)})">🗑️ CANCELLA</button>
         <button type="button" class="smallbtn" onclick="closePendingMatch();reactivatePendingMatch(${JSON.stringify(id)})">↩️ RIATTIVA PARTITA</button>
+        <button type="button" class="smallbtn" onclick="copyPendingMatchPosterText(${JSON.stringify(id)})">📋 TESTO POSTER</button>
         <button type="button" class="smallbtn primary" onclick="closePendingMatch();confirmPendingMatch(${JSON.stringify(id)})">✅ CONFERMA PARTITA</button>
       </div>`;
   }catch(e){body.innerHTML=`<div class="msg err">Errore apertura partita: ${escOperator(e.message||e)}</div>`;}
