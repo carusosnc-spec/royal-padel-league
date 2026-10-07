@@ -674,7 +674,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 7.4 - Smartphone + notification deep links + poll edit fix -->
+<!-- RPL VERSION 8.9 - Passkey / Face ID / Impronta -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -735,6 +735,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
     <label>Password</label>
     <input id="playerPassword" type="password" autocomplete="current-password" placeholder="Password">
     <button id="playerLoginBtn" type="button" class="primary rpl-player-login-btn">ACCEDI ALL'AREA GIOCATORI</button>
+    <button id="playerPasskeyLoginBtn" type="button" style="width:100%;margin-top:8px;min-height:44px">🔐 ACCEDI CON FACE ID / IMPRONTA</button>
     <div id="playerLoginMsg" class="msg"></div>
   </div>
 
@@ -749,6 +750,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
     </div>
 
     <div id="playerResponsibleHero" class="card hidden"></div>
+
+    <div id="playerPasskeyCard" class="card" style="border:1px solid rgba(231,185,78,.28)">
+      <div style="text-align:center">
+        <div style="color:var(--gold2);font-size:19px;font-weight:900">🔐 ACCESSO SICURO RPL</div>
+        <div class="muted" style="margin-top:5px">Configura Face ID, impronta, PIN del dispositivo o Windows Hello per accedere più velocemente.</div>
+      </div>
+      <button id="playerRegisterPasskeyBtn" type="button" class="primary" style="width:100%;margin-top:10px;min-height:46px">➕ ATTIVA FACE ID / IMPRONTA</button>
+      <div id="playerPasskeyMsg" class="msg"></div>
+    </div>
 
     <div id="playerNotificationCard" class="card rpl-notify-card">
       <div class="rpl-notify-title">🔔 NOTIFICHE RPL</div>
@@ -887,9 +897,19 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <div id="loginBox" class="card login"><h2>🔐 Area riservata</h2><div class="muted">Accesso riservato agli operatori RPL autorizzati.</div>
 <label>Email</label><input id="email" type="email" autocomplete="username" placeholder="operatore@email.it">
 <label>Password</label><input id="password" type="password" autocomplete="current-password">
-<button class="primary" id="login">ACCEDI</button><div id="loginMsg" class="msg"></div></div>
+<button class="primary" id="login">ACCEDI</button>
+<button type="button" id="operatorPasskeyLoginBtn" style="width:100%;margin-top:8px;min-height:44px">🔐 ACCEDI CON FACE ID / IMPRONTA</button>
+<div id="loginMsg" class="msg"></div></div>
 
 <div id="operatorBox" class="hidden">
+<div id="operatorPasskeyCard" class="card" style="border:1px solid rgba(231,185,78,.28);margin-bottom:12px">
+  <div style="text-align:center">
+    <div style="color:var(--gold2);font-size:19px;font-weight:900">🔐 ACCESSO SICURO OPERATORE</div>
+    <div class="muted" style="margin-top:5px">Associa questo dispositivo a Face ID, impronta, PIN o Windows Hello.</div>
+  </div>
+  <button id="operatorRegisterPasskeyBtn" type="button" class="primary" style="width:100%;margin-top:10px;min-height:46px">➕ ATTIVA FACE ID / IMPRONTA</button>
+  <div id="operatorPasskeyMsg" class="msg"></div>
+</div>
 <div id="operatorMatchSection" class="hidden"><div class="card"><h2>➕ Inserisci partita</h2>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px">
 <button type="button" id="loadLastMatchBtn" class="primary">📋 CARICA ULTIMA PARTITA</button>
@@ -1030,7 +1050,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 const SUPABASE_URL="https://vanbadzkxvextdvnqwtr.supabase.co";
 const SUPABASE_KEY="sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs";
 const RPL_VAPID_PUBLIC_KEY="BBnDg3GBNrM0rK17CUHivSHPbH-7tPfNQ8n8gk0aKtt_-h9q37GnSUQJYqp659248XtSZg13jLgSKDnqX6HToJE";
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY); window.sb=sb;
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{experimental:{passkey:true}}}); window.sb=sb;
 
 const players=[
 ["Filippo Di Dio","El D10s",1,5],["Luigi Cacciato","Il Pistone",1,5],["Gianni Caruso","The Golden President",1,5],["Salvatore Bertuccio","Il Calcolatore",1,5],
@@ -1249,6 +1269,51 @@ async function loadRanking(){
   render();
 }
 function resetForm(){["p1","p2","p3","p4"].forEach((id,i)=>{if(dbPlayers[i])$(id).value=dbPlayers[i].id});refreshSets();document.querySelectorAll(".scoreA,.scoreB").forEach(x=>x.value="");document.querySelectorAll("#mvp input,#imb input").forEach(x=>x.checked=false);$("date").value=new Date().toISOString().slice(0,16)}
+function rplPasskeyAvailable(){
+  return !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext && sb?.auth?.registerPasskey && sb?.auth?.signInWithPasskey);
+}
+async function rplRegisterPasskeyForCurrentUser(msgId){
+  const msg=$(msgId); if(msg){msg.className='msg';msg.textContent='Attivazione…';}
+  try{
+    if(!rplPasskeyAvailable()) throw new Error('Questo dispositivo/browser non supporta l’accesso con Face ID, impronta o passkey, oppure la pagina non è in HTTPS.');
+    const {data:sessionData}=await sb.auth.getSession();
+    if(!sessionData?.session?.user) throw new Error('Devi essere già autenticato per attivare l’accesso biometrico.');
+    const {data,error}=await sb.auth.registerPasskey();
+    if(error) throw error;
+    if(msg){msg.className='msg ok';msg.textContent='✅ Accesso biometrico attivato su questo dispositivo.';}
+    return data;
+  }catch(e){
+    console.error('RPL Passkey register',e);
+    if(msg){msg.className='msg err';msg.textContent='❌ '+(e?.message||'Attivazione non riuscita.');}
+    return null;
+  }
+}
+async function rplSignInWithPasskey(target){
+  const msg=$(target==='player'?'playerLoginMsg':'loginMsg');
+  if(msg){msg.className='msg';msg.textContent='Verifica Face ID / impronta…';}
+  try{
+    if(!rplPasskeyAvailable()) throw new Error('Questo dispositivo/browser non supporta Face ID, impronta o passkey, oppure la pagina non è in HTTPS.');
+    const {data,error}=await sb.auth.signInWithPasskey();
+    if(error) throw error;
+    if(!data?.user) throw new Error('Accesso biometrico non completato.');
+    if(target==='player'){
+      playerUser=data.user;
+      await loadPlayerSession();
+      window.scrollTo(0,0);
+    }else{
+      currentUser=data.user;
+      if(!(await isOperator())){await sb.auth.signOut();throw new Error('Questo account non è autorizzato come operatore RPL.');}
+      $("loginBox").classList.add('hidden');$("operatorBox").classList.remove('hidden');
+      $("operatorMatchSection")?.classList.add('hidden');$("operatorCalendarSection")?.classList.add('hidden');$("operatorVotingSection")?.classList.add('hidden');$("operatorConfirmSection")?.classList.add('hidden');$("operatorNotificationsSection")?.classList.add('hidden');
+      $("operatorSubmenu")?.classList.remove('hidden');
+      await loadOperatorHistory();
+    }
+  }catch(e){
+    console.error('RPL Passkey sign-in',e);
+    if(msg){msg.className='msg err';msg.textContent='❌ '+(e?.message||'Accesso biometrico non riuscito.');}
+  }
+}
+
 async function isOperator(){
   const {data,error}=await sb.from("operators").select("user_id").eq("user_id",currentUser.id).maybeSingle();
   return !error && !!data;
@@ -2039,7 +2104,7 @@ async function loadOperatorHistory(){
     const [mpR,setsR,plR]=await Promise.all([
       sb.from("match_players").select("match_id,player_id,fascia,fascia_value").in("match_id",ids),
       sb.from("sets").select("match_id,set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b").in("match_id",ids).order("set_number"),
-      sb.from("players").select("id,name,nickname")
+      sb.from("players").select("id,name,nickname,fascia,fascia_value")
     ]);
     if(mpR.error)throw mpR.error;
     if(setsR.error)throw setsR.error;
@@ -2071,7 +2136,7 @@ async function loadOperatorHistory(){
           <span class="badge">${escOperator(scores)}</span>
         </div>
         <div class="actions">
-          <button class="smallbtn" type="button" onclick="copyHistoryPoster(${JSON.stringify(m.id)})">📋 Testo poster</button>
+          <button class="smallbtn" type="button" onclick="copyHistoryMatchPoster(${JSON.stringify(m.id)})">📋 Testo poster</button>
           <button class="smallbtn edit" type="button" onclick="openEdit(${JSON.stringify(m.id)})">✏️ Modifica</button>
           <button class="smallbtn danger" type="button" onclick="deleteMatch(${JSON.stringify(m.id)})">🗑️ Elimina</button>
         </div>
@@ -2082,69 +2147,57 @@ async function loadOperatorHistory(){
     box.innerHTML=`<div class="msg err">Errore caricamento storico: ${escOperator(e.message||e)}<br><button type="button" onclick="loadOperatorHistory()">🔄 Riprova</button></div>`;
   }
 }
-function rplPosterPlayerLine(p, snap){
-  const s=snap[String(p.id)]||{};
-  const fas=s.fascia?`Fascia ${s.fascia} • ${s.fascia_value||0} pt`:
-    (s.fascia_value?`${s.fascia_value} pt fascia`:'');
-  return `${p.name}${p.nickname?' — '+p.nickname:''}${fas?' • '+fas:''}`;
-}
-function rplCopyText(t){
-  if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);
-  const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();return Promise.resolve();
-}
-async function copyHistoryPoster(matchId){
+async function copyHistoryMatchPoster(matchId){
   try{
-    const [mr,mpr,sr,pr,ar]=await Promise.all([
-      sb.from('matches').select('id,played_at,approval_status').eq('id',matchId).single(),
-      sb.from('match_players').select('*').eq('match_id',matchId),
-      sb.from('sets').select('*').eq('match_id',matchId).order('set_number'),
-      sb.from('players').select('id,name,nickname,is_guest,active'),
-      sb.from('match_awards').select('*').eq('match_id',matchId)
+    const [mR,mpR,setsR,plR]=await Promise.all([
+      sb.from("matches").select("id,played_at,approval_status").eq("id",matchId).single(),
+      sb.from("match_players").select("player_id,fascia,fascia_value").eq("match_id",matchId),
+      sb.from("sets").select("set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b").eq("match_id",matchId).order("set_number"),
+      sb.from("players").select("id,name,nickname,fascia,fascia_value")
     ]);
-    if(mr.error)throw mr.error;if(mpr.error)throw mpr.error;if(sr.error)throw sr.error;if(pr.error)throw pr.error;if(ar.error)throw ar.error;
-    const match=mr.data, rows=mpr.data||[], sets=sr.data||[], players=pr.data||[], awards=ar.data||[];
-    const byId={};players.forEach(p=>byId[String(p.id)]=p);
-    const snap={};rows.forEach(x=>snap[String(x.player_id)]=x);
-    const ids=[...new Set(rows.map(x=>Number(x.player_id)))];
-    const stats={};ids.forEach(id=>stats[id]={id,sets:0,wins:0,losses:0,games:0,setPts:0});
-    sets.forEach(x=>{
-      const A=[x.pair_a_player_1,x.pair_a_player_2].filter(Boolean),B=[x.pair_b_player_1,x.pair_b_player_2].filter(Boolean);
-      const ga=Number(x.games_a),gb=Number(x.games_b);if(ga===gb)return;
-      const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
-      W.forEach(pid=>{const z=stats[pid];if(z){z.sets++;z.wins++;z.games+=wg;z.setPts+=(snap[String(L[0])]?.fascia_value||0)+(snap[String(L[1])]?.fascia_value||0)+wg*.30+.10;}});
-      L.forEach(pid=>{const z=stats[pid];if(z){z.sets++;z.losses++;z.games+=lg;z.setPts+=lg*.30+.10;}});
-    });
-    let best=-Infinity,mvps=[];
-    Object.values(stats).forEach(z=>{if(z.setPts>best){best=z.setPts;mvps=[z.id];}else if(Math.abs(z.setPts-best)<0.0001)mvps.push(z.id);});
-    const imb=Object.values(stats).filter(z=>z.sets>=3&&z.losses===0).map(z=>z.id);
-    const d=new Date(match.played_at);
-    const date=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
-    const time=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    if(mR.error)throw mR.error;if(mpR.error)throw mpR.error;if(setsR.error)throw setsR.error;if(plR.error)throw plR.error;
+    const players=new Map((plR.data||[]).map(p=>[Number(p.id),p]));
+    const snap=new Map((mpR.data||[]).map(x=>[Number(x.player_id),x]));
+    const sets=setsR.data||[];
+    const ids=[...new Set((mpR.data||[]).map(x=>Number(x.player_id)))];
+    const stats={};ids.forEach(id=>stats[id]={wins:0,losses:0,games:0,sets:0});
+    const nameOf=id=>players.get(Number(id))?.name||'Giocatore';
+    const nickOf=id=>players.get(Number(id))?.nickname||'';
+    const labelOf=id=>nickOf(id)?`${nameOf(id)} “${nickOf(id)}”`:nameOf(id);
+    const pairText=(a,b)=>[a,b].filter(Boolean).map(labelOf).join(' + ');
     const out=[
-      '🏆 ROYAL PADEL LEAGUE 🏆','',
-      `🎾 PARTITA DEL ${date.toUpperCase()}`,
-      `🕐 Ore ${time}`,'',
-      '👥 GIOCATORI:'
+      '🏆 ROYAL PADEL LEAGUE 🏆',
+      '🎾 RISULTATO PARTITA',
+      '',
+      `📅 ${fmtOperatorDate(mR.data.played_at)} — ⏰ ${fmtOperatorTime(mR.data.played_at)}`,
+      ''
     ];
-    ids.forEach(id=>{const p=byId[String(id)];if(p)out.push(`• ${rplPosterPlayerLine(p,snap)}`);});
-    out.push('','🎾 RISULTATI SET:');
-    sets.forEach((x,i)=>{
-      const a1=byId[String(x.pair_a_player_1)],a2=byId[String(x.pair_a_player_2)],b1=byId[String(x.pair_b_player_1)],b2=byId[String(x.pair_b_player_2)];
-      const left=[a1?.name,a2?.name].filter(Boolean).join(' + '),right=[b1?.name,b2?.name].filter(Boolean).join(' + ');
-      out.push(`SET ${i+1}: ${left}  🆚  ${right}  →  ${x.games_a}-${x.games_b}`);
+    ids.forEach(id=>{
+      const p=players.get(id)||{};const x=snap.get(id)||{};
+      const fascia=x.fascia||p.fascia||'';const fp=x.fascia_value||p.fascia_value||'';
+      out.push(`👤 ${labelOf(id)}${fascia?` — Fascia ${fascia}${fp?` (${fp} pt)`:''}`:''}`);
     });
-    out.push('');
-    out.push(mvps.length?`👑 MVP: ${mvps.map(id=>byId[String(id)]?.name||'').filter(Boolean).join(' • ')}`:'👑 MVP: —');
-    out.push(imb.length?`🛡️ IMBATTUTO: ${imb.map(id=>byId[String(id)]?.name||'').filter(Boolean).join(' • ')}`:'🛡️ IMBATTUTO: Nessuno');
-    out.push('','👑 ROYAL PADEL LEAGUE','WHERE LEGENDS PLAY');
+    out.push('','📊 SET DELLA PARTITA');
+    sets.forEach((x,i)=>{
+      const A=[Number(x.pair_a_player_1),Number(x.pair_a_player_2)],B=[Number(x.pair_b_player_1),Number(x.pair_b_player_2)];
+      const ga=Number(x.games_a),gb=Number(x.games_b);
+      A.concat(B).forEach(id=>{if(stats[id]){stats[id].sets++;stats[id].games+=A.includes(id)?ga:gb;}});
+      if(ga>gb){A.forEach(id=>stats[id].wins++);B.forEach(id=>stats[id].losses++);} else if(gb>ga){B.forEach(id=>stats[id].wins++);A.forEach(id=>stats[id].losses++);}
+      out.push(`SET ${i+1}: ${pairText(A[0],A[1])}  ${ga}-${gb}  ${pairText(B[0],B[1])}`);
+    });
+    const bestWins=Math.max(0,...ids.map(id=>stats[id].wins));
+    const bestGames=Math.max(0,...ids.filter(id=>stats[id].wins===bestWins).map(id=>stats[id].games));
+    const mvps=ids.filter(id=>stats[id].wins===bestWins&&stats[id].games===bestGames);
+    const imbs=ids.filter(id=>stats[id].sets>=3&&stats[id].losses===0);
+    out.push('','👑 MVP DELLA SERATA');
+    out.push(mvps.length?mvps.map(labelOf).map(x=>`⭐ ${x}`).join('\n'):'—');
+    out.push('','🛡️ IMBATTUTO');
+    out.push(imbs.length?imbs.map(labelOf).map(x=>`💪 ${x}`).join('\n'):'Nessun imbattuto');
+    out.push('','━━━━━━━━━━━━━━━━━━','ROYAL PADEL LEAGUE','WHERE LEGENDS PLAY');
     const text=out.join('\n');
-    await rplCopyText(text);
-    const msg=$('history');
-    const note=document.createElement('div');note.className='msg ok';note.textContent='✅ Testo poster copiato negli appunti.';msg.prepend(note);setTimeout(()=>note.remove(),2500);
-  }catch(e){
-    console.error('Errore testo poster:',e);
-    const box=$('history');if(box)box.insertAdjacentHTML('afterbegin',`<div class="msg err">❌ Impossibile generare il testo poster: ${escOperator(e.message||e)}</div>`);
-  }
+    try{await navigator.clipboard.writeText(text);alert('✅ Testo poster copiato negli appunti!');}
+    catch(e){prompt('Copia questo testo per il poster:',text);}
+  }catch(e){console.error(e);alert('❌ Impossibile generare il testo poster: '+(e.message||e));}
 }
 function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
 function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
@@ -2232,7 +2285,8 @@ $("adminBtn").onclick=async()=>{hidePlayerArea?.();location.hash="";$("partialPa
   $("opCalendarTab")?.classList.remove("primary");
   await loadOperatorHistory();
 }}};
-$("login").onclick=login;$("logout").onclick=logout;$("save").onclick=saveMatch;
+$("login").onclick=login;
+$("operatorPasskeyLoginBtn")?.addEventListener('click',()=>rplSignInWithPasskey('operator'));$("operatorRegisterPasskeyBtn")?.addEventListener('click',()=>rplRegisterPasskeyForCurrentUser('operatorPasskeyMsg'));$("logout").onclick=logout;$("save").onclick=saveMatch;
 $("date").value=new Date().toISOString().slice(0,16);
 (async()=>{await loadPlayers();buildSets();await loadRanking()})();
 </script>
@@ -3257,69 +3311,57 @@ async function loadPublicCalendar(){
     }catch(e){console.warn('Deep link RPL:',e);}
   }
 
-  function rplPosterPlayerLine(p, snap){
-  const s=snap[String(p.id)]||{};
-  const fas=s.fascia?`Fascia ${s.fascia} • ${s.fascia_value||0} pt`:
-    (s.fascia_value?`${s.fascia_value} pt fascia`:'');
-  return `${p.name}${p.nickname?' — '+p.nickname:''}${fas?' • '+fas:''}`;
-}
-function rplCopyText(t){
-  if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);
-  const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();return Promise.resolve();
-}
-async function copyHistoryPoster(matchId){
+  async function copyHistoryMatchPoster(matchId){
   try{
-    const [mr,mpr,sr,pr,ar]=await Promise.all([
-      sb.from('matches').select('id,played_at,approval_status').eq('id',matchId).single(),
-      sb.from('match_players').select('*').eq('match_id',matchId),
-      sb.from('sets').select('*').eq('match_id',matchId).order('set_number'),
-      sb.from('players').select('id,name,nickname,is_guest,active'),
-      sb.from('match_awards').select('*').eq('match_id',matchId)
+    const [mR,mpR,setsR,plR]=await Promise.all([
+      sb.from("matches").select("id,played_at,approval_status").eq("id",matchId).single(),
+      sb.from("match_players").select("player_id,fascia,fascia_value").eq("match_id",matchId),
+      sb.from("sets").select("set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b").eq("match_id",matchId).order("set_number"),
+      sb.from("players").select("id,name,nickname,fascia,fascia_value")
     ]);
-    if(mr.error)throw mr.error;if(mpr.error)throw mpr.error;if(sr.error)throw sr.error;if(pr.error)throw pr.error;if(ar.error)throw ar.error;
-    const match=mr.data, rows=mpr.data||[], sets=sr.data||[], players=pr.data||[], awards=ar.data||[];
-    const byId={};players.forEach(p=>byId[String(p.id)]=p);
-    const snap={};rows.forEach(x=>snap[String(x.player_id)]=x);
-    const ids=[...new Set(rows.map(x=>Number(x.player_id)))];
-    const stats={};ids.forEach(id=>stats[id]={id,sets:0,wins:0,losses:0,games:0,setPts:0});
-    sets.forEach(x=>{
-      const A=[x.pair_a_player_1,x.pair_a_player_2].filter(Boolean),B=[x.pair_b_player_1,x.pair_b_player_2].filter(Boolean);
-      const ga=Number(x.games_a),gb=Number(x.games_b);if(ga===gb)return;
-      const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
-      W.forEach(pid=>{const z=stats[pid];if(z){z.sets++;z.wins++;z.games+=wg;z.setPts+=(snap[String(L[0])]?.fascia_value||0)+(snap[String(L[1])]?.fascia_value||0)+wg*.30+.10;}});
-      L.forEach(pid=>{const z=stats[pid];if(z){z.sets++;z.losses++;z.games+=lg;z.setPts+=lg*.30+.10;}});
-    });
-    let best=-Infinity,mvps=[];
-    Object.values(stats).forEach(z=>{if(z.setPts>best){best=z.setPts;mvps=[z.id];}else if(Math.abs(z.setPts-best)<0.0001)mvps.push(z.id);});
-    const imb=Object.values(stats).filter(z=>z.sets>=3&&z.losses===0).map(z=>z.id);
-    const d=new Date(match.played_at);
-    const date=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
-    const time=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    if(mR.error)throw mR.error;if(mpR.error)throw mpR.error;if(setsR.error)throw setsR.error;if(plR.error)throw plR.error;
+    const players=new Map((plR.data||[]).map(p=>[Number(p.id),p]));
+    const snap=new Map((mpR.data||[]).map(x=>[Number(x.player_id),x]));
+    const sets=setsR.data||[];
+    const ids=[...new Set((mpR.data||[]).map(x=>Number(x.player_id)))];
+    const stats={};ids.forEach(id=>stats[id]={wins:0,losses:0,games:0,sets:0});
+    const nameOf=id=>players.get(Number(id))?.name||'Giocatore';
+    const nickOf=id=>players.get(Number(id))?.nickname||'';
+    const labelOf=id=>nickOf(id)?`${nameOf(id)} “${nickOf(id)}”`:nameOf(id);
+    const pairText=(a,b)=>[a,b].filter(Boolean).map(labelOf).join(' + ');
     const out=[
-      '🏆 ROYAL PADEL LEAGUE 🏆','',
-      `🎾 PARTITA DEL ${date.toUpperCase()}`,
-      `🕐 Ore ${time}`,'',
-      '👥 GIOCATORI:'
+      '🏆 ROYAL PADEL LEAGUE 🏆',
+      '🎾 RISULTATO PARTITA',
+      '',
+      `📅 ${fmtOperatorDate(mR.data.played_at)} — ⏰ ${fmtOperatorTime(mR.data.played_at)}`,
+      ''
     ];
-    ids.forEach(id=>{const p=byId[String(id)];if(p)out.push(`• ${rplPosterPlayerLine(p,snap)}`);});
-    out.push('','🎾 RISULTATI SET:');
-    sets.forEach((x,i)=>{
-      const a1=byId[String(x.pair_a_player_1)],a2=byId[String(x.pair_a_player_2)],b1=byId[String(x.pair_b_player_1)],b2=byId[String(x.pair_b_player_2)];
-      const left=[a1?.name,a2?.name].filter(Boolean).join(' + '),right=[b1?.name,b2?.name].filter(Boolean).join(' + ');
-      out.push(`SET ${i+1}: ${left}  🆚  ${right}  →  ${x.games_a}-${x.games_b}`);
+    ids.forEach(id=>{
+      const p=players.get(id)||{};const x=snap.get(id)||{};
+      const fascia=x.fascia||p.fascia||'';const fp=x.fascia_value||p.fascia_value||'';
+      out.push(`👤 ${labelOf(id)}${fascia?` — Fascia ${fascia}${fp?` (${fp} pt)`:''}`:''}`);
     });
-    out.push('');
-    out.push(mvps.length?`👑 MVP: ${mvps.map(id=>byId[String(id)]?.name||'').filter(Boolean).join(' • ')}`:'👑 MVP: —');
-    out.push(imb.length?`🛡️ IMBATTUTO: ${imb.map(id=>byId[String(id)]?.name||'').filter(Boolean).join(' • ')}`:'🛡️ IMBATTUTO: Nessuno');
-    out.push('','👑 ROYAL PADEL LEAGUE','WHERE LEGENDS PLAY');
+    out.push('','📊 SET DELLA PARTITA');
+    sets.forEach((x,i)=>{
+      const A=[Number(x.pair_a_player_1),Number(x.pair_a_player_2)],B=[Number(x.pair_b_player_1),Number(x.pair_b_player_2)];
+      const ga=Number(x.games_a),gb=Number(x.games_b);
+      A.concat(B).forEach(id=>{if(stats[id]){stats[id].sets++;stats[id].games+=A.includes(id)?ga:gb;}});
+      if(ga>gb){A.forEach(id=>stats[id].wins++);B.forEach(id=>stats[id].losses++);} else if(gb>ga){B.forEach(id=>stats[id].wins++);A.forEach(id=>stats[id].losses++);}
+      out.push(`SET ${i+1}: ${pairText(A[0],A[1])}  ${ga}-${gb}  ${pairText(B[0],B[1])}`);
+    });
+    const bestWins=Math.max(0,...ids.map(id=>stats[id].wins));
+    const bestGames=Math.max(0,...ids.filter(id=>stats[id].wins===bestWins).map(id=>stats[id].games));
+    const mvps=ids.filter(id=>stats[id].wins===bestWins&&stats[id].games===bestGames);
+    const imbs=ids.filter(id=>stats[id].sets>=3&&stats[id].losses===0);
+    out.push('','👑 MVP DELLA SERATA');
+    out.push(mvps.length?mvps.map(labelOf).map(x=>`⭐ ${x}`).join('\n'):'—');
+    out.push('','🛡️ IMBATTUTO');
+    out.push(imbs.length?imbs.map(labelOf).map(x=>`💪 ${x}`).join('\n'):'Nessun imbattuto');
+    out.push('','━━━━━━━━━━━━━━━━━━','ROYAL PADEL LEAGUE','WHERE LEGENDS PLAY');
     const text=out.join('\n');
-    await rplCopyText(text);
-    const msg=$('history');
-    const note=document.createElement('div');note.className='msg ok';note.textContent='✅ Testo poster copiato negli appunti.';msg.prepend(note);setTimeout(()=>note.remove(),2500);
-  }catch(e){
-    console.error('Errore testo poster:',e);
-    const box=$('history');if(box)box.insertAdjacentHTML('afterbegin',`<div class="msg err">❌ Impossibile generare il testo poster: ${escOperator(e.message||e)}</div>`);
-  }
+    try{await navigator.clipboard.writeText(text);alert('✅ Testo poster copiato negli appunti!');}
+    catch(e){prompt('Copia questo testo per il poster:',text);}
+  }catch(e){console.error(e);alert('❌ Impossibile generare il testo poster: '+(e.message||e));}
 }
 function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}
   function fmtTime(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
@@ -3883,7 +3925,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
   window.rplAutoSendNotification=rplAutoSendNotification;window.rplGetActivePlayerIds=rplGetActivePlayerIds;
   async function playerLogout(){await sb.auth.signOut();playerUser=null;playerAccount=null;playerRow=null;assignedMatch=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden');q('playerPassword').value='';}
   function bind(){
-    q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('savePlayerProfileBtn')?.addEventListener('click',savePlayerProfile);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
+    q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerPasskeyLoginBtn')?.addEventListener('click',()=>rplSignInWithPasskey('player'));q('playerRegisterPasskeyBtn')?.addEventListener('click',()=>rplRegisterPasskeyForCurrentUser('playerPasskeyMsg'));q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('savePlayerProfileBtn')?.addEventListener('click',savePlayerProfile);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
     q('playerEnableNotificationsBtn')?.addEventListener('click',rplEnablePlayerNotifications);rplUpdateMobileNotificationHelp();rplUpdateNotificationButton();
     ['playerCameraInput','playerGalleryInput'].forEach(id=>q(id)?.addEventListener('change',e=>uploadAvatar(e.target.files?.[0])));
     q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showPlayerArea()},true);
