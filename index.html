@@ -696,7 +696,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </style>
 
 <style id="rpl-v892-security-compact-style">
-/* RPL v9.0.2 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+/* RPL v9.0.3 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
 #playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
 #playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
 #playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
@@ -751,7 +751,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
 <style id="rpl-v900-interface">
-/* RPL v9.0.2 — interfaccia semplificata */
+/* RPL v9.0.3 — interfaccia semplificata */
 :root{--rpl-bg:#eef2f6;--rpl-panel:#fff;--rpl-ink:#162333;--rpl-blue:#164e8a;--rpl-blue2:#0d3765;--rpl-green:#a8d64b;--rpl-gold:#d5a92d}
 body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:var(--rpl-ink)!important}
 .card{background:rgba(255,255,255,.97)!important;color:var(--rpl-ink)}
@@ -787,7 +787,7 @@ body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:
 </style>
 
 <style id="rpl-v902-ui-fix">
-/* RPL 9.0.2 — contrast, responsive layout and lightweight navigation */
+/* RPL 9.0.3 — contrast, responsive layout and lightweight navigation */
 :root{--rpl-text:#172536;--rpl-text2:#42546a;--rpl-gold-text:#765300;--rpl-gold-border:#b78a24}
 body{color:var(--rpl-text)!important;background:linear-gradient(180deg,#f6f8fa 0%,#edf1f5 100%)!important;overflow-x:hidden!important}
 body,main,section,div,table,td,th,label{max-width:100%}
@@ -3292,7 +3292,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.0.2</div>
+<div id="rplVersionBadge">RPL v9.0.3</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4336,4 +4336,46 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
   hideSubs();syncMain(null);
 })();
 </script>
-<script id="rpl-v902-startup-cleanup">document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){['rplRankingsSubmenu','rplCalendarSubmenu'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));['rplRankingsMenuBtn','rplCalendarMenuBtn','playerAreaBtn'].forEach(id=>document.getElementById(id)?.classList.remove('primary','open'));},0);});</script></body></html>
+<script id="rpl-v902-startup-cleanup">document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){['rplRankingsSubmenu','rplCalendarSubmenu'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));['rplRankingsMenuBtn','rplCalendarMenuBtn','playerAreaBtn'].forEach(id=>document.getElementById(id)?.classList.remove('primary','open'));},0);});</script><style id="rpl-v903-dark-theme">
+/* RPL 9.0.3 — tema scuro RPL + submenu persistenti per sezione */
+:root{--rpl-text:#f8fafc;--rpl-text2:#cbd5e1;--rpl-gold-text:#ffd86a;--rpl-gold-border:#b78a24}
+body{color:#f8fafc!important;background:radial-gradient(circle at 50% -10%,rgba(31,91,133,.34),transparent 42%),linear-gradient(180deg,#02070d,#06121f 45%,#02070d)!important}
+.top,.card{color:#f8fafc!important}
+.card h1,.card h2,.card h3,.card h4,.card strong{color:#fff!important}
+label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
+.rpl-main-nav-v900{background:transparent!important}
+.rpl-main-menu-btn{background:#0b1825!important;color:#f8fafc!important;border-color:rgba(231,185,78,.42)!important;box-shadow:0 2px 10px rgba(0,0,0,.2)!important}
+.rpl-main-menu-btn.primary,.rpl-main-menu-btn.open{background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;color:#111827!important;border-color:#f2ca63!important}
+.rpl-submenu-v900{background:rgba(6,18,31,.96)!important;border:1px solid rgba(231,185,78,.34)!important;box-shadow:0 8px 24px rgba(0,0,0,.3)!important}
+.rpl-submenu-btn{background:#0b1825!important;color:#f1f5f9!important;border-color:#34495c!important}
+.rpl-submenu-btn.primary,.rpl-submenu-btn:hover{background:#173f69!important;color:#fff!important;border-color:#4f7da7!important}
+.rpl-top-utility-v900 button{background:rgba(7,21,33,.94)!important;color:#f1f5f9!important;border-color:rgba(231,185,78,.4)!important}
+.rpl-ranking-player-name{color:#fff!important}.rpl-ranking-player-nick{color:#ffd86a!important}
+@media(max-width:600px){
+ .rpl-main-nav-row{width:100%;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important}
+ .rpl-main-menu-btn{width:100%;min-width:0!important;padding:0 6px!important;font-size:11px!important;white-space:normal!important;line-height:1.15!important}
+ .rpl-submenu-v900{width:100%;display:flex;flex-wrap:wrap;gap:6px!important;padding:6px!important}
+ .rpl-submenu-btn{flex:1 1 30%;min-width:0!important;padding:7px 6px!important;font-size:11px!important;white-space:normal!important;line-height:1.15!important}
+}
+</style>
+<script id="rpl-v903-navigation-fix">
+(function(){
+ const $=id=>document.getElementById(id), legacy=id=>$(id)?.click();
+ const rankMenu=$('rplRankingsMenuBtn'),calMenu=$('rplCalendarMenuBtn'),playerMenu=$('playerAreaBtn');
+ const rankSub=$('rplRankingsSubmenu'),calSub=$('rplCalendarSubmenu');
+ function hideSubs(){rankSub?.classList.add('hidden');calSub?.classList.add('hidden');}
+ function activate(main){[rankMenu,calMenu,playerMenu].forEach(x=>x?.classList.remove('primary','open')); if(main)$(main)?.classList.add('primary','open');}
+ function openRank(){hideSubs();activate('rplRankingsMenuBtn');rankSub?.classList.remove('hidden');}
+ function openCal(){hideSubs();activate('rplCalendarMenuBtn');calSub?.classList.remove('hidden');}
+ rankMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openRank();},true);
+ calMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openCal();},true);
+ $('rplRankGeneralBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openRank();legacy('publicBtn');},true);
+ $('rplRankPartialBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openRank();legacy('partialBtn');},true);
+ $('rplRankBonusBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openRank();legacy('bonusBtn');},true);
+ $('rplCalendarMainBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openCal();legacy('calendarPublicBtn');},true);
+ $('rplHistoryMainBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openCal();legacy('historyBtn');},true);
+ $('rplTopAdminBtn')?.addEventListener('click',()=>{hideSubs();activate(null);legacy('adminBtn');},true);
+ playerMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();hideSubs();activate('playerAreaBtn');},true);
+})();
+</script>
+</body></html>
