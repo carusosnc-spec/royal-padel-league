@@ -1823,8 +1823,37 @@ async function saveMatch(){
   const im=[...$("imb").querySelectorAll("input:checked")].map(x=>+x.value);
   const awards=[...mv.map(pid=>({match_id:matchId,player_id:pid,award_type:"MVP"})),...im.map(pid=>({match_id:matchId,player_id:pid,award_type:"IMBATTUTO"}))];
   if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){await sb.from("matches").delete().eq("id",matchId);$("msg").className="msg err";$("msg").textContent="Errore premi: "+ae.message;return}}
-  $("msg").className="msg ok";$("msg").textContent="✅ Partita salvata nel database.";
-  resetForm();await loadRanking();await loadOperatorHistory();
+  // Il salvataggio è completato: aggiorna classifica/storico, poi invia DUE notifiche distinte:
+  // 1) ai quattro partecipanti; 2) a tutti i giocatori attivi non ospiti per l'aggiornamento classifica.
+  $("msg").className="msg ok";$("msg").textContent="✅ Partita salvata. Aggiornamento classifica e invio delle notifiche…";
+  resetForm();
+  await loadRanking();
+  await loadOperatorHistory();
+  const participantNotice=await rplAutoSendNotification(
+    ids,
+    "🎾 Nuovi risultati Royal Padel League",
+    "È stata registrata la tua partita. Apri la RPL per consultare i risultati.",
+    "?rpl=history#player"
+  );
+  const rankingRecipients=await rplGetActivePlayerIds();
+  const rankingNotice=await rplAutoSendNotification(
+    rankingRecipients,
+    "🏆 Classifica RPL aggiornata",
+    "È stata registrata una nuova partita e la classifica RPL è stata aggiornata. Entra nell'app per vedere la tua posizione.",
+    "#public"
+  );
+  const pSent=Number(participantNotice?.sent||0), pMissing=Number(participantNotice?.missing||0), pFailed=Number(participantNotice?.failed||0);
+  const rSent=Number(rankingNotice?.sent||0), rMissing=Number(rankingNotice?.missing||0), rFailed=Number(rankingNotice?.failed||0);
+  const pOk=participantNotice?.ok===true && pSent>0;
+  const rOk=rankingNotice?.ok===true && rSent>0;
+  if(pOk&&rOk){
+    $("msg").textContent=`✅ Partita salvata e classifica aggiornata. Notifica partita: ${pSent} dispositivo/i; notifica classifica a tutti: ${rSent} dispositivo/i.`;
+  }else{
+    const problems=[];
+    if(!pOk)problems.push(`notifica ai 4 partecipanti non consegnata (senza dispositivo: ${pMissing}, errori: ${pFailed}${participantNotice?.error?", "+participantNotice.error:""})`);
+    if(!rOk)problems.push(`notifica classifica a tutti non consegnata (senza dispositivo: ${rMissing}, errori: ${rFailed}${rankingNotice?.error?", "+rankingNotice.error:""})`);
+    $("msg").textContent="⚠️ Partita salvata e classifica aggiornata, ma "+problems.join("; ")+". Controlla le notifiche nell'Area Riservata.";
+  }
 }
 async function calculateStandingsBefore(timestamp){
   const {data:matches}=await sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").lt("played_at",timestamp).order("played_at",{ascending:true});
@@ -3287,7 +3316,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.0</div>
+<div id="rplVersionBadge">RPL v9.1.2</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
