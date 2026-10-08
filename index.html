@@ -696,7 +696,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </style>
 
 <style id="rpl-v892-security-compact-style">
-/* RPL v9.0.0 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+/* RPL v9.0.1 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
 #playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
 #playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
 #playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
@@ -751,7 +751,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
 <style id="rpl-v900-interface">
-/* RPL v9.0.0 — interfaccia semplificata */
+/* RPL v9.0.1 — interfaccia semplificata */
 :root{--rpl-bg:#eef2f6;--rpl-panel:#fff;--rpl-ink:#162333;--rpl-blue:#164e8a;--rpl-blue2:#0d3765;--rpl-green:#a8d64b;--rpl-gold:#d5a92d}
 body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:var(--rpl-ink)!important}
 .card{background:rgba(255,255,255,.97)!important;color:var(--rpl-ink)}
@@ -3222,7 +3222,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.0.0</div>
+<div id="rplVersionBadge">RPL v9.0.1</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4249,35 +4249,24 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
  const legacy=id=>$(id)?.click();
  const rankMenu=$('rplRankingsMenuBtn'),calMenu=$('rplCalendarMenuBtn'),rankSub=$('rplRankingsSubmenu'),calSub=$('rplCalendarSubmenu');
  function hideSubs(){rankSub?.classList.add('hidden');calSub?.classList.add('hidden');}
- function openRank(){calSub?.classList.add('hidden');rankSub?.classList.toggle('hidden');}
- function openCal(){rankSub?.classList.add('hidden');calSub?.classList.toggle('hidden');}
  function syncMain(active){[rankMenu,calMenu,$('playerAreaBtn')].forEach(x=>x?.classList.remove('primary'));$(active)?.classList.add('primary');}
- rankMenu?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();syncMain('rplRankingsMenuBtn');openRank();$('rplCalendarSubmenu')?.classList.add('hidden'); if(rankSub?.classList.contains('hidden')===false && location.hash!=='' && location.hash!=='#') legacy('publicBtn');},true);
- calMenu?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();syncMain('rplCalendarMenuBtn');openCal();},true);
+ rankMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();syncMain('rplRankingsMenuBtn');calSub?.classList.add('hidden');rankSub?.classList.toggle('hidden');},true);
+ calMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();syncMain('rplCalendarMenuBtn');rankSub?.classList.add('hidden');calSub?.classList.toggle('hidden');},true);
  $('rplRankGeneralBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('publicBtn');},true);
  $('rplRankPartialBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('partialBtn');},true);
  $('rplRankBonusBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('bonusBtn');},true);
  $('rplCalendarMainBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplCalendarMenuBtn');legacy('calendarPublicBtn');},true);
  $('rplHistoryMainBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplCalendarMenuBtn');legacy('historyBtn');},true);
  $('rplTopAdminBtn')?.addEventListener('click',()=>legacy('adminBtn'),true);
- function toggle(btn,panel){if(!btn||!panel)return;btn.addEventListener('click',()=>{const open=!panel.classList.contains('hidden');panel.classList.toggle('hidden',open);btn.classList.toggle('open',!open);const c=btn.querySelector('.rpl-toggle-chevron');if(c)c.textContent=open?'⌄':'⌃';});}
- toggle($('rplVoteToggleBtn'),$('rplVotePanelV900'));toggle($('rplProfileToggleBtn'),$('rplProfilePanelV900'));toggle($('rplStatsToggleBtn'),$('rplStatsPanelV900'));toggle($('rplMatchesToggleBtn'),$('rplMatchesPanelV900'));
- function profileState(){const b=$('playerBirthDate')?.value,s=$('playerPreferredSide')?.value;const panel=$('rplProfilePanelV900'),btn=$('rplProfileToggleBtn');if(!panel||!btn)return;const complete=!!(b&&s); if(complete){panel.classList.add('hidden');btn.classList.remove('open');}else{panel.classList.remove('hidden');btn.classList.add('open');}}
- function playerUiSync(){
-  const dash=$('playerDashboard');
-  if(dash&&!dash.dataset.rplUtilitiesMoved){
-    const pass=$('playerPasskeyCard'),noti=$('playerNotificationCard');
-    const logout=$('playerLogoutBtn')?.parentElement;
-    if(pass&&noti&&logout){dash.appendChild(pass);dash.appendChild(noti);dash.appendChild(logout);dash.dataset.rplUtilitiesMoved='1';}
-  }
-  profileState(); const vote=$('playerVotingCard'),vp=$('rplVotePanelV900'); if(vote&&vp){const active=!vote.classList.contains('hidden');const requested=new URLSearchParams(location.search).get('rpl')==='vote'; if(active&&requested){vp.classList.remove('hidden');$('rplVoteToggleBtn')?.classList.add('open');}}
- }
+ function toggle(btn,panel){if(!btn||!panel)return;btn.addEventListener('click',()=>{const opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);btn.classList.toggle('open',opening);const c=btn.querySelector('.rpl-toggle-chevron');if(c)c.textContent=opening?'⌃':'⌄';});}
+ toggle($('rplVoteToggleBtn'),$('rplVotePanelV900'));
+ toggle($('rplProfileToggleBtn'),$('rplProfilePanelV900'));
+ toggle($('rplStatsToggleBtn'),$('rplStatsPanelV900'));
+ toggle($('rplMatchesToggleBtn'),$('rplMatchesPanelV900'));
+ function profileState(){const b=$('playerBirthDate')?.value,s=$('playerPreferredSide')?.value,p=$('rplProfilePanelV900'),btn=$('rplProfileToggleBtn');if(!p||!btn)return;const complete=!!(b&&s);if(complete){p.classList.add('hidden');btn.classList.remove('open');}else{p.classList.remove('hidden');btn.classList.add('open');}}
  window.rplV900ProfileState=profileState;
- const observer=new MutationObserver(()=>profileState());
- if($('playerDashboard'))observer.observe($('playerDashboard'),{subtree:true,childList:true,attributes:true,attributeFilter:['class','value']});
- $('playerAreaBtn')?.addEventListener('click',()=>{syncMain('playerAreaBtn');hideSubs();setTimeout(playerUiSync,250);},true);
+ $('playerAreaBtn')?.addEventListener('click',()=>{syncMain('playerAreaBtn');hideSubs();setTimeout(profileState,300);},true);
  $('savePlayerProfileBtn')?.addEventListener('click',()=>setTimeout(profileState,500),true);
- window.addEventListener('load',()=>setTimeout(playerUiSync,500));
 })();
 </script>
 </body></html>
