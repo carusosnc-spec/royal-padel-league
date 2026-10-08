@@ -696,7 +696,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </style>
 
 <style id="rpl-v892-security-compact-style">
-/* RPL v9.0.1 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+/* RPL v9.0.2 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
 #playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
 #playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
 #playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
@@ -751,7 +751,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
 <style id="rpl-v900-interface">
-/* RPL v9.0.1 — interfaccia semplificata */
+/* RPL v9.0.2 — interfaccia semplificata */
 :root{--rpl-bg:#eef2f6;--rpl-panel:#fff;--rpl-ink:#162333;--rpl-blue:#164e8a;--rpl-blue2:#0d3765;--rpl-green:#a8d64b;--rpl-gold:#d5a92d}
 body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:var(--rpl-ink)!important}
 .card{background:rgba(255,255,255,.97)!important;color:var(--rpl-ink)}
@@ -785,6 +785,76 @@ body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:
  .rpl-top-utility-v900{top:8px;left:8px;right:8px}.rpl-top-utility-v900 button{font-size:9px;padding:5px 7px}
 }
 </style>
+
+<style id="rpl-v902-ui-fix">
+/* RPL 9.0.2 — contrast, responsive layout and lightweight navigation */
+:root{--rpl-text:#172536;--rpl-text2:#42546a;--rpl-gold-text:#765300;--rpl-gold-border:#b78a24}
+body{color:var(--rpl-text)!important;background:linear-gradient(180deg,#f6f8fa 0%,#edf1f5 100%)!important;overflow-x:hidden!important}
+body,main,section,div,table,td,th,label{max-width:100%}
+.card{color:var(--rpl-text)!important}
+.muted{color:#53657a!important}
+/* Gold is an accent on light surfaces, never the main body text. */
+.card h1,.card h2,.card h3,.card h4,.card strong{color:var(--rpl-text)}
+.card [style*="color:var(--gold2)"],.card [style*="color:#ffd86a"],.card [style*="color: #ffd86a"]{color:var(--rpl-gold-text)!important}
+.card [style*="color:var(--gold)"],.card [style*="color:#e7b94e"],.card [style*="color: #e7b94e"]{color:var(--rpl-gold-text)!important}
+/* Main navigation: exactly three buttons on the home screen. */
+.rpl-main-nav-v900{padding:12px 0 16px!important}
+.rpl-main-nav-row{display:flex!important;justify-content:center!important;gap:10px!important;flex-wrap:wrap!important}
+.rpl-main-menu-btn{background:#fff!important;color:#203247!important;border:1px solid #c8d2de!important;box-shadow:0 2px 7px rgba(18,38,58,.07)!important}
+.rpl-main-menu-btn:hover,.rpl-main-menu-btn.open{background:#173f69!important;color:#fff!important;border-color:#173f69!important}
+.rpl-main-menu-btn.primary{background:#173f69!important;color:#fff!important;border-color:#173f69!important}
+/* Submenus are hidden until their parent is explicitly opened. */
+.rpl-submenu-v900.hidden{display:none!important}
+.rpl-submenu-v900:not(.hidden){display:flex!important}
+.rpl-submenu-v900{background:#fff!important;border:1px solid #d3dce6!important;box-shadow:0 4px 14px rgba(24,43,61,.08)!important}
+.rpl-submenu-btn{background:#fff!important;color:#30455b!important;border-color:#d1dae4!important}
+.rpl-submenu-btn.primary,.rpl-submenu-btn:hover{background:#173f69!important;color:#fff!important;border-color:#173f69!important}
+/* Ranking: always show real name first, nickname below. */
+.rpl-ranking-player-info{min-width:0;overflow:hidden}
+.rpl-ranking-player-name{display:inline-block!important;color:#16283a!important;font-size:13px!important;font-weight:900!important;line-height:1.15!important;white-space:normal!important;overflow-wrap:anywhere!important;cursor:pointer!important}
+.rpl-ranking-player-nick{display:inline-block!important;color:#765300!important;font-size:11px!important;font-weight:800!important;line-height:1.15!important;margin-top:2px!important;white-space:normal!important;overflow-wrap:anywhere!important}
+/* Never let long labels force the page wider on phones. */
+button,a,input,select,textarea{max-width:100%;}
+button{overflow-wrap:anywhere;word-break:normal}
+img{max-width:100%;}
+.rpl-player-section-v900,.rpl-toggle-panel-v900,.rpl-player-profile-head{max-width:100%;min-width:0}
+.rpl-player-profile-head{overflow:hidden}
+/* Smaller, faster-feeling section changes: no decorative movement on navigation. */
+.rpl-main-menu-btn,.rpl-submenu-btn,.rpl-player-toggle-v900{transition:background-color .12s ease,color .12s ease,border-color .12s ease!important;transform:none!important}
+.rpl-main-menu-btn:hover,.rpl-submenu-btn:hover{transform:none!important}
+/* Mobile */
+@media(max-width:700px){
+  main{width:100%!important;max-width:100%!important;padding-left:10px!important;padding-right:10px!important;overflow-x:hidden!important}
+  header.top{margin-left:-10px!important;margin-right:-10px!important;border-radius:0 0 18px 18px!important;padding:14px 10px 16px!important}
+  .rpl-main-nav-v900{padding:9px 0 12px!important}
+  .rpl-main-nav-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  .rpl-main-menu-btn{width:100%!important;min-width:0!important;min-height:44px!important;padding:6px 4px!important;font-size:11px!important;letter-spacing:0!important;white-space:normal!important;line-height:1.15!important}
+  .rpl-main-menu-btn span{display:block!important;overflow-wrap:anywhere!important}
+  .rpl-submenu-v900{width:100%!important;margin:7px 0 10px!important;padding:6px!important;gap:5px!important}
+  .rpl-submenu-btn{flex:1 1 0!important;min-width:0!important;padding:7px 5px!important;font-size:11px!important;line-height:1.15!important;white-space:normal!important}
+  table{width:100%!important;table-layout:auto!important}
+  th,td{font-size:11px!important}
+  .rpl-ranking-player-name{font-size:12px!important}
+  .rpl-ranking-player-nick{font-size:10px!important}
+  .rpl-ranking-player-info{max-width:calc(100vw - 150px)!important}
+  .rpl-top-utility-v900{top:6px!important;left:6px!important;right:6px!important;gap:5px!important}
+  .rpl-top-utility-v900 button{font-size:9px!important;padding:5px 6px!important;white-space:normal!important;line-height:1.1!important}
+  .rpl-player-profile-head{gap:10px!important}
+  .rpl-player-name-title{font-size:20px!important;overflow-wrap:anywhere!important}
+  .rpl-player-nick-title{font-size:13px!important;overflow-wrap:anywhere!important}
+  .rpl-photo-actions{flex-direction:column!important}
+  .rpl-photo-btn{width:100%!important}
+  .rpl-player-toggle-v900{width:100%!important;min-height:42px!important;font-size:12px!important}
+  .rpl-toggle-panel-v900{overflow:hidden!important}
+  .rpl-toggle-panel-v900 .card{padding:12px!important}
+  input,select,textarea{font-size:16px!important;max-width:100%!important}
+}
+@media(max-width:380px){
+  .rpl-main-menu-btn{font-size:10px!important;min-height:42px!important}
+  .rpl-submenu-btn{font-size:10px!important}
+  .rpl-ranking-player-info{max-width:calc(100vw - 135px)!important}
+}
+</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -809,7 +879,7 @@ body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:
 </header>
 <nav id="rplMainNav" class="rpl-main-nav-v900">
   <div class="rpl-main-nav-row">
-    <button type="button" id="rplRankingsMenuBtn" class="rpl-main-menu-btn primary">🏆 <span>CLASSIFICHE</span></button>
+    <button type="button" id="rplRankingsMenuBtn" class="rpl-main-menu-btn">🏆 <span>CLASSIFICHE</span></button>
     <button type="button" id="rplCalendarMenuBtn" class="rpl-main-menu-btn">📅 <span>CALENDARIO</span></button>
     <button type="button" id="playerAreaBtn" class="rpl-main-menu-btn">👤 <span>AREA GIOCATORE</span></button>
   </div>
@@ -1387,7 +1457,7 @@ function render(){
       <td><b>${i+1}</b></td>
       <td><div style="display:flex;align-items:center;gap:9px">
         <img src="${logoFile(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
-        <div><b style="color:#fff;cursor:pointer" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span>${status}</div>
+        <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span class="rpl-ranking-player-nick">${s.nick}</span>${status}</div>
       </div></td>
       <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
       <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
@@ -2667,7 +2737,7 @@ $("date").value=new Date().toISOString().slice(0,16);
         <td><b>${i+1}</b></td>
         <td><div style="display:flex;align-items:center;gap:9px">
           <img src="${logoFor(s.name)}" alt="${escp(s.name)}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
-          <div><b style="color:#fff;cursor:pointer" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${escp(s.name)}</b><br><span style="color:#ffd86a;font-size:11px">${escp(s.nick)}</span></div>
+          <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${escp(s.name)}</b><br><span style="color:#ffd86a;font-size:11px">${escp(s.nick)}</span></div>
         </div></td>
         <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
         <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
@@ -3222,7 +3292,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.0.1</div>
+<div id="rplVersionBadge">RPL v9.0.2</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4243,30 +4313,27 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
 })();
 </script>
 <!-- RPL v8.6 - automatic notification rules -->
-<!-- RPL v8.6: current-month provisional Bonus is propagated into the final ranking. -->\n<script id="rpl-v900-interface-controller">
+<!-- RPL v8.6: current-month provisional Bonus is propagated into the final ranking. -->\n<script id="rpl-v902-interface-controller">
 (function(){
- const $=id=>document.getElementById(id);
- const legacy=id=>$(id)?.click();
- const rankMenu=$('rplRankingsMenuBtn'),calMenu=$('rplCalendarMenuBtn'),rankSub=$('rplRankingsSubmenu'),calSub=$('rplCalendarSubmenu');
- function hideSubs(){rankSub?.classList.add('hidden');calSub?.classList.add('hidden');}
- function syncMain(active){[rankMenu,calMenu,$('playerAreaBtn')].forEach(x=>x?.classList.remove('primary'));$(active)?.classList.add('primary');}
- rankMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();syncMain('rplRankingsMenuBtn');calSub?.classList.add('hidden');rankSub?.classList.toggle('hidden');},true);
- calMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();syncMain('rplCalendarMenuBtn');rankSub?.classList.add('hidden');calSub?.classList.toggle('hidden');},true);
- $('rplRankGeneralBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('publicBtn');},true);
- $('rplRankPartialBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('partialBtn');},true);
- $('rplRankBonusBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('bonusBtn');},true);
- $('rplCalendarMainBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplCalendarMenuBtn');legacy('calendarPublicBtn');},true);
- $('rplHistoryMainBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplCalendarMenuBtn');legacy('historyBtn');},true);
- $('rplTopAdminBtn')?.addEventListener('click',()=>legacy('adminBtn'),true);
- function toggle(btn,panel){if(!btn||!panel)return;btn.addEventListener('click',()=>{const opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);btn.classList.toggle('open',opening);const c=btn.querySelector('.rpl-toggle-chevron');if(c)c.textContent=opening?'⌃':'⌄';});}
- toggle($('rplVoteToggleBtn'),$('rplVotePanelV900'));
- toggle($('rplProfileToggleBtn'),$('rplProfilePanelV900'));
- toggle($('rplStatsToggleBtn'),$('rplStatsPanelV900'));
- toggle($('rplMatchesToggleBtn'),$('rplMatchesPanelV900'));
- function profileState(){const b=$('playerBirthDate')?.value,s=$('playerPreferredSide')?.value,p=$('rplProfilePanelV900'),btn=$('rplProfileToggleBtn');if(!p||!btn)return;const complete=!!(b&&s);if(complete){p.classList.add('hidden');btn.classList.remove('open');}else{p.classList.remove('hidden');btn.classList.add('open');}}
- window.rplV900ProfileState=profileState;
- $('playerAreaBtn')?.addEventListener('click',()=>{syncMain('playerAreaBtn');hideSubs();setTimeout(profileState,300);},true);
- $('savePlayerProfileBtn')?.addEventListener('click',()=>setTimeout(profileState,500),true);
+  const $=id=>document.getElementById(id);
+  const legacy=id=>$(id)?.click();
+  const rankMenu=$('rplRankingsMenuBtn'), calMenu=$('rplCalendarMenuBtn'), playerMenu=$('playerAreaBtn');
+  const rankSub=$('rplRankingsSubmenu'), calSub=$('rplCalendarSubmenu');
+  function hideSubs(){rankSub?.classList.add('hidden');calSub?.classList.add('hidden');}
+  function syncMain(active){[rankMenu,calMenu,playerMenu].forEach(x=>x?.classList.remove('primary','open'));if(active)$(active)?.classList.add('primary','open');}
+  rankMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();const wasOpen=!rankSub?.classList.contains('hidden');hideSubs();syncMain('rplRankingsMenuBtn');if(!wasOpen)rankSub?.classList.remove('hidden');},true);
+  calMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();const wasOpen=!calSub?.classList.contains('hidden');hideSubs();syncMain('rplCalendarMenuBtn');if(!wasOpen)calSub?.classList.remove('hidden');},true);
+  $('rplRankGeneralBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('publicBtn');},true);
+  $('rplRankPartialBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('partialBtn');},true);
+  $('rplRankBonusBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplRankingsMenuBtn');legacy('bonusBtn');},true);
+  $('rplCalendarMainBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplCalendarMenuBtn');legacy('calendarPublicBtn');},true);
+  $('rplHistoryMainBtn')?.addEventListener('click',()=>{hideSubs();syncMain('rplCalendarMenuBtn');legacy('historyBtn');},true);
+  $('rplTopAdminBtn')?.addEventListener('click',()=>{hideSubs();syncMain(null);legacy('adminBtn');},true);
+  playerMenu?.addEventListener('click',()=>{hideSubs();syncMain('playerAreaBtn');},true);
+  function toggle(btn,panel){if(!btn||!panel)return;btn.addEventListener('click',()=>{const opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);btn.classList.toggle('open',opening);const c=btn.querySelector('.rpl-toggle-chevron');if(c)c.textContent=opening?'⌃':'⌄';});}
+  toggle($('rplVoteToggleBtn'),$('rplVotePanelV900'));toggle($('rplProfileToggleBtn'),$('rplProfilePanelV900'));toggle($('rplStatsToggleBtn'),$('rplStatsPanelV900'));toggle($('rplMatchesToggleBtn'),$('rplMatchesPanelV900'));
+  // Home starts clean: no submenu and no highlighted main section.
+  hideSubs();syncMain(null);
 })();
 </script>
-</body></html>
+<script id="rpl-v902-startup-cleanup">document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){['rplRankingsSubmenu','rplCalendarSubmenu'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));['rplRankingsMenuBtn','rplCalendarMenuBtn','playerAreaBtn'].forEach(id=>document.getElementById(id)?.classList.remove('primary','open'));},0);});</script></body></html>
