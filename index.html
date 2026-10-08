@@ -634,6 +634,13 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   cursor:pointer;
   margin:-2px -2px 4px 4px;
 }
+#rplRegolamentoModal{width:min(98vw,1200px);height:94vh;max-height:94vh;box-sizing:border-box;padding:8px;overflow:hidden;display:flex;flex-direction:column}
+#rplRegolamentoSlider{flex:1;min-height:0;width:100%;height:100%}
+.rpl-regolamento-track{height:100%;align-items:stretch}
+.rpl-regolamento-slide{height:100%;align-items:center}
+.rpl-regolamento-slide img{width:auto;max-width:100%;height:auto;max-height:100%;object-fit:contain}
+.rpl-regolamento-nav{flex:0 0 auto}
+@media(max-width:600px){#rplRegolamentoModal{width:98vw;height:96vh;max-height:96vh;padding:6px}.rpl-regolamento-slide img{max-height:100%;max-width:100%}}
 @media(max-width:600px){
   #rplRegolamentoBtn{top:8px;right:8px;font-size:9px;padding:4px 7px}
   #rplRegolamentoOverlay{padding:7px}
@@ -706,7 +713,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </style>
 
 <style id="rpl-v892-security-compact-style">
-/* RPL v9.0.9 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+/* RPL v9.1.0 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
 #playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
 #playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
 #playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
@@ -761,7 +768,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
 <style id="rpl-v900-interface">
-/* RPL v9.0.9 — interfaccia semplificata */
+/* RPL v9.1.0 — interfaccia semplificata */
 :root{--rpl-bg:#eef2f6;--rpl-panel:#fff;--rpl-ink:#162333;--rpl-blue:#164e8a;--rpl-blue2:#0d3765;--rpl-green:#a8d64b;--rpl-gold:#d5a92d}
 body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:var(--rpl-ink)!important}
 .card{background:rgba(255,255,255,.97)!important;color:var(--rpl-ink)}
@@ -3280,7 +3287,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.0.9</div>
+<div id="rplVersionBadge">RPL v9.1.0</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
