@@ -4451,7 +4451,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
  $('rplRankBonusBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openRank();legacy('bonusBtn');},true);
  $('rplCalendarMainBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openCal();legacy('calendarPublicBtn');},true);
  $('rplHistoryMainBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openCal();legacy('historyBtn');},true);
- $('rplTopAdminBtn')?.addEventListener('click',()=>{hideSubs();activate(null);legacy('adminBtn');},true);
+ $('rplTopAdminBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();hideSubs();activate(null);const admin=$('adminBtn');if(admin&&typeof admin.onclick==='function'){Promise.resolve(admin.onclick.call(admin,e)).catch(err=>console.error('Area Riservata:',err));}},true);
  playerMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();hideSubs();activate('playerAreaBtn');if(typeof showPlayerArea==='function')showPlayerArea();},true);
 })();
 </script>
