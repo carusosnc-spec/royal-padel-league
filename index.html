@@ -696,7 +696,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </style>
 
 <style id="rpl-v892-security-compact-style">
-/* RPL v9.0.4 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+/* RPL v9.0.5 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
 #playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
 #playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
 #playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
@@ -751,7 +751,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
 <style id="rpl-v900-interface">
-/* RPL v9.0.4 — interfaccia semplificata */
+/* RPL v9.0.5 — interfaccia semplificata */
 :root{--rpl-bg:#eef2f6;--rpl-panel:#fff;--rpl-ink:#162333;--rpl-blue:#164e8a;--rpl-blue2:#0d3765;--rpl-green:#a8d64b;--rpl-gold:#d5a92d}
 body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:var(--rpl-ink)!important}
 .card{background:rgba(255,255,255,.97)!important;color:var(--rpl-ink)}
@@ -857,7 +857,7 @@ img{max-width:100%;}
 </style>
 
 <style id="rpl-v904-professional-dark">
-/* RPL 9.0.4 — tema scuro coerente su tutta l'interfaccia */
+/* RPL 9.0.5 — tema scuro coerente su tutta l'interfaccia */
 :root{
   --rpl-bg:#02070d;
   --rpl-surface:#071522;
@@ -3351,7 +3351,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.0.4</div>
+<div id="rplVersionBadge">RPL v9.0.5</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4364,7 +4364,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerPasskeyLoginBtn')?.addEventListener('click',()=>rplSignInWithPasskey('player'));q('playerRegisterPasskeyBtn')?.addEventListener('click',()=>rplRegisterPasskeyForCurrentUser('playerPasskeyMsg'));q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('savePlayerProfileBtn')?.addEventListener('click',savePlayerProfile);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
     q('playerEnableNotificationsBtn')?.addEventListener('click',rplEnablePlayerNotifications);rplUpdateMobileNotificationHelp();rplUpdateNotificationButton();
     ['playerCameraInput','playerGalleryInput'].forEach(id=>q(id)?.addEventListener('change',e=>uploadAvatar(e.target.files?.[0])));
-    q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();showPlayerArea()},true);
+    q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();showPlayerArea();},true);
     if(location.hash==='#player')showPlayerArea();
   }
   sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'&&location.hash==='#player'){playerUser=null;playerAccount=null;playerRow=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden')}});
@@ -4396,7 +4396,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
 })();
 </script>
 <script id="rpl-v902-startup-cleanup">document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){['rplRankingsSubmenu','rplCalendarSubmenu'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));['rplRankingsMenuBtn','rplCalendarMenuBtn','playerAreaBtn'].forEach(id=>document.getElementById(id)?.classList.remove('primary','open'));},0);});</script><style id="rpl-v903-dark-theme">
-/* RPL 9.0.4 — tema scuro RPL + submenu persistenti per sezione */
+/* RPL 9.0.5 — tema scuro RPL + submenu persistenti per sezione */
 :root{--rpl-text:#f8fafc;--rpl-text2:#cbd5e1;--rpl-gold-text:#ffd86a;--rpl-gold-border:#b78a24}
 body{color:#f8fafc!important;background:radial-gradient(circle at 50% -10%,rgba(31,91,133,.34),transparent 42%),linear-gradient(180deg,#02070d,#06121f 45%,#02070d)!important}
 .top,.card{color:#f8fafc!important}
@@ -4437,4 +4437,14 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
  playerMenu?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();hideSubs();activate('playerAreaBtn');},true);
 })();
 </script>
+
+<style id="rpl-v905-mobile-polish">
+/* RPL 9.0.5 — mobile main navigation: one-line labels */
+@media(max-width:600px){
+  .rpl-main-nav-row{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;}
+  .rpl-main-menu-btn{min-height:44px!important;padding:0 3px!important;font-size:10.5px!important;line-height:1!important;white-space:nowrap!important;letter-spacing:-.01em!important;}
+  .rpl-main-menu-btn span{display:inline!important;white-space:nowrap!important;overflow:visible!important;overflow-wrap:normal!important;}
+}
+</style>
+<script id="rpl-v905-version">document.documentElement.dataset.rplVersion="9.0.5";</script>
 </body></html>
