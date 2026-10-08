@@ -696,7 +696,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </style>
 
 <style id="rpl-v892-security-compact-style">
-/* RPL v9.0.3 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+/* RPL v9.0.4 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
 #playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
 #playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
 #playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
@@ -751,7 +751,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
 <style id="rpl-v900-interface">
-/* RPL v9.0.3 — interfaccia semplificata */
+/* RPL v9.0.4 — interfaccia semplificata */
 :root{--rpl-bg:#eef2f6;--rpl-panel:#fff;--rpl-ink:#162333;--rpl-blue:#164e8a;--rpl-blue2:#0d3765;--rpl-green:#a8d64b;--rpl-gold:#d5a92d}
 body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:var(--rpl-ink)!important}
 .card{background:rgba(255,255,255,.97)!important;color:var(--rpl-ink)}
@@ -855,6 +855,65 @@ img{max-width:100%;}
   .rpl-ranking-player-info{max-width:calc(100vw - 135px)!important}
 }
 </style>
+
+<style id="rpl-v904-professional-dark">
+/* RPL 9.0.4 — tema scuro coerente su tutta l'interfaccia */
+:root{
+  --rpl-bg:#02070d;
+  --rpl-surface:#071522;
+  --rpl-surface-2:#0b1825;
+  --rpl-border:rgba(231,185,78,.28);
+  --rpl-text:#f8fafc;
+  --rpl-muted:#aebdcb;
+  --rpl-gold:#f6d86b;
+}
+html{background:#02070d!important;}
+body{
+  background:radial-gradient(circle at 50% -10%,rgba(31,91,133,.34),transparent 42%),linear-gradient(180deg,#02070d,#06121f 45%,#02070d)!important;
+  color:#f8fafc!important;
+}
+main{background:transparent!important;}
+/* Sovrascrive esplicitamente le vecchie regole light della 9.0.0 */
+.card,#publicPage .card,#partialPage .card,#bonusPage .card,#adminPage .card,#historyView .card{
+  background:linear-gradient(180deg,rgba(8,25,40,.98),rgba(3,12,21,.98))!important;
+  color:#f8fafc!important;
+  border-color:rgba(231,185,78,.20)!important;
+  box-shadow:0 12px 35px rgba(0,0,0,.28)!important;
+}
+#publicPage,#partialPage,#bonusPage,#adminPage,#historyView,#publicCalendarPage,#playerAreaPage{
+  background:transparent!important;
+  color:#f8fafc!important;
+}
+#publicPage .muted,#partialPage .muted,#bonusPage .muted,#historyView .muted{color:#aebdcb!important;}
+#publicPage table,#partialPage table,#bonusPage table{background:transparent!important;color:#f8fafc!important;}
+#publicPage th,#partialPage th,#bonusPage th{color:#f6d86b!important;background:transparent!important;}
+#publicPage td,#partialPage td,#bonusPage td{color:#f1f5f9!important;background:transparent!important;}
+#publicPage tbody tr:hover,#partialPage tbody tr:hover,#bonusPage tbody tr:hover{background:rgba(231,185,78,.045)!important;}
+.rpl-ranking-player-name{color:#fff!important;}
+.rpl-ranking-player-nick{color:#ffd86a!important;}
+.rpl-cal-toolbar,.rpl-cal-card,.rpl-public-cal-hero{
+  background:linear-gradient(180deg,rgba(8,25,40,.98),rgba(3,12,21,.98))!important;
+  color:#f8fafc!important;
+  border-color:rgba(231,185,78,.22)!important;
+}
+.rpl-cal-field input,.rpl-cal-field select{background:#0b1b2a!important;color:#fff!important;border-color:#34495c!important;}
+.rpl-submenu-v900{background:rgba(6,18,31,.98)!important;}
+.rpl-submenu-btn{color:#f1f5f9!important;background:#0b1825!important;}
+/* Stato attivo sempre leggibile */
+.rpl-main-menu-btn.primary,.rpl-main-menu-btn.open{
+  background:linear-gradient(180deg,#f6d86b,#d9ad32)!important;
+  color:#111827!important;
+}
+.rpl-submenu-btn.primary{background:#173f69!important;color:#fff!important;border-color:#4f7da7!important;}
+/* Nessun overflow orizzontale su mobile */
+html,body{overflow-x:hidden!important;}
+@media(max-width:700px){
+  #publicPage .card,#partialPage .card,#bonusPage .card{padding:10px!important;}
+  #publicPage table,#partialPage table,#bonusPage table{font-size:11px!important;}
+  #publicPage th,#publicPage td,#partialPage th,#partialPage td,#bonusPage th,#bonusPage td{padding:8px 5px!important;}
+}
+</style>
+
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -3292,7 +3351,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.0.3</div>
+<div id="rplVersionBadge">RPL v9.0.4</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4337,7 +4396,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
 })();
 </script>
 <script id="rpl-v902-startup-cleanup">document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){['rplRankingsSubmenu','rplCalendarSubmenu'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));['rplRankingsMenuBtn','rplCalendarMenuBtn','playerAreaBtn'].forEach(id=>document.getElementById(id)?.classList.remove('primary','open'));},0);});</script><style id="rpl-v903-dark-theme">
-/* RPL 9.0.3 — tema scuro RPL + submenu persistenti per sezione */
+/* RPL 9.0.4 — tema scuro RPL + submenu persistenti per sezione */
 :root{--rpl-text:#f8fafc;--rpl-text2:#cbd5e1;--rpl-gold-text:#ffd86a;--rpl-gold-border:#b78a24}
 body{color:#f8fafc!important;background:radial-gradient(circle at 50% -10%,rgba(31,91,133,.34),transparent 42%),linear-gradient(180deg,#02070d,#06121f 45%,#02070d)!important}
 .top,.card{color:#f8fafc!important}
