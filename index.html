@@ -3124,11 +3124,13 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
     const p=playerById(id);
     const name=p?.name||'Giocatore'; const nick=p?.nickname||''; const src=logoForPlayer(p);
     const logo=src?`<img class="rpl-cal-logo" src="${src}" alt="${esc(name)}" loading="lazy">`:`<div class="rpl-cal-logo" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">${esc(name)}</div>`;
-    return `<div class="rpl-cal-player">${logo}<div class="rpl-cal-name">${esc(name)}</div>${nick?`<div class="rpl-cal-nick">“${esc(nick)}”</div>`:''}${p?.fascia?`<div class="rpl-cal-meta">Fascia ${esc(p.fascia)} · ${esc(p.fascia_value??'')} punti</div>`:''}</div>`;
+    const click=p?.id?`onclick="openRplPlayerProfile(${Number(p.id)});event.stopPropagation()" role="button" tabindex="0"`:'';
+    return `<div class="rpl-cal-player rpl-profile-click" ${click}>${logo}<div class="rpl-cal-name">${esc(name)}</div>${nick?`<div class="rpl-cal-nick">“${esc(nick)}”</div>`:''}${p?.fascia?`<div class="rpl-cal-meta">Fascia ${esc(p.fascia)} · ${esc(p.fascia_value??'')} punti</div>`:''}</div>`;
   }
   function miniPlayer(id){
-    const p=playerById(id),name=p?.name||'Giocatore',src=logoForPlayer(p);
-    return `<span title="${esc(name)}">${src?`<img class="rpl-public-cal-mini-logo" src="${src}" alt="${esc(name)}" loading="lazy">`:`<span class="rpl-public-cal-mini-logo" style="display:inline-flex;align-items:center;justify-content:center;font-size:7px;color:#fff">${esc(name)}</span>`}</span>`;
+    const p=playerById(id),name=p?.name||'Giocatore',src=logoForPlayer(p),pid=p?.id;
+    const click=pid?`onclick="openRplPlayerProfile(${Number(pid)});event.stopPropagation()" role="button" tabindex="0"`:'';
+    return `<span title="${esc(name)}" class="rpl-profile-click" ${click}>${src?`<img class="rpl-public-cal-mini-logo" src="${src}" alt="${esc(name)}" loading="lazy">`:`<span class="rpl-public-cal-mini-logo" style="display:inline-flex;align-items:center;justify-content:center;font-size:7px;color:#fff">${esc(name)}</span>`}</span>`;
   }
   function fmtDate(d){return d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'});}
   function fmtTime(d){return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
@@ -3994,12 +3996,14 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
   }
   async function renderPlayerProfile(){
     q('playerNameTitle').textContent=playerRow.name||'';q('playerNickTitle').textContent=playerRow.nickname?`“${playerRow.nickname}”`:'';q('playerFasciaTitle').textContent=`Fascia ${playerRow.fascia||'—'} · ${playerRow.fascia_value||'—'} punti`;
-    const src=playerAccount.avatar_path?sb.storage.from('avatars').getPublicUrl(playerAccount.avatar_path).data.publicUrl:'';
+    const prof=playerAccount._profile||await loadPlayerProfileData(playerRow.id);
+    playerAccount._profile=prof;
+    const avatarPath=prof?.avatar_path||playerAccount.avatar_path||'';
+    const src=avatarPath?sb.storage.from('avatars').getPublicUrl(avatarPath).data.publicUrl:'';
     const img=q('playerAvatar'), box=img?.parentElement;
     if(src){img.src=src+'?v='+Date.now();box?.classList.add('has-image')}else{img?.removeAttribute('src');box?.classList.remove('has-image')}
     const logoSrc=logoFile(playerRow.name),logoImg=q('playerLogo'),logoBox=logoImg?.parentElement;
     if(logoImg&&logoBox){if(logoSrc){logoImg.src=logoSrc;logoImg.alt=(playerRow.name||'')+' — logo';logoBox.classList.add('has-image')}else{logoImg.removeAttribute('src');logoBox.classList.remove('has-image')}}
-    const prof=playerAccount._profile||await loadPlayerProfileData(playerRow.id);playerAccount._profile=prof;
     if(q('playerBirthDate'))q('playerBirthDate').value=prof?.birth_date||'';
     if(q('playerPreferredSide'))q('playerPreferredSide').value=prof?.preferred_side||'';
     if(q('playerRacket'))q('playerRacket').value=prof?.racket||'';
@@ -4090,10 +4094,44 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
   }
   async function loadPlayerMatches(){
     const box=q('playerMatchesList');if(!box)return;
-    const {data:all}=await sb.from('calendar_matches').select('*').or(`player_1.eq.${playerRow.id},player_2.eq.${playerRow.id},player_3.eq.${playerRow.id},player_4.eq.${playerRow.id}`).order('scheduled_at',{ascending:true}).limit(20);
-    const rows=all||[];
-    if(!rows.length){box.innerHTML='<div class="rpl-no-match">Nessuna partita presente nel calendario.</div>';return;}
-    box.innerHTML=rows.map(m=>{const names=[1,2,3,4].map(i=>m['player_'+i+'_name']||playerById(m['player_'+i])?.name||'Giocatore');const resp=String(m.responsible_player_id)===String(playerRow.id);const done=!!m.result_submitted_at;return `<div class="rpl-match-card"><b>${escP(fmtDate(m.scheduled_at))} · ${escP(fmtTime(m.scheduled_at))}</b><div class="rpl-match-meta">📍 ${escP(m.court||'Campo')} · ${escP(m.match_type==='ONE_VS_ONE'?'1 vs 1':'Tutti contro tutti')}</div><div class="rpl-match-meta">${names.map(escP).join(' · ')}</div>${done?'<div class="rpl-match-meta rpl-closed">✅ Risultato registrato</div>':resp?'<div class="rpl-match-meta" style="color:var(--gold2);font-weight:800">🔴 Sei il Responsabile Partita</div>':''}</div>`}).join('');
+    box.innerHTML='<div class="muted">Caricamento delle tue partite…</div>';
+    try{
+      const {data:mpRows,error:mpe}=await sb.from('match_players').select('match_id,player_id').eq('player_id',playerRow.id);
+      if(mpe)throw mpe;
+      const ids=(mpRows||[]).map(x=>x.match_id).filter(Boolean);
+      if(!ids.length){box.innerHTML='<div class="rpl-no-match">Nessuna partita giocata.</div>';return;}
+      const [mr,sr,awr,allMp,pr]=await Promise.all([
+        sb.from('matches').select('id,played_at,calendar_match_id,approval_status').in('id',ids).or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:false}),
+        sb.from('sets').select('*').in('match_id',ids).order('set_number'),
+        sb.from('match_awards').select('*').in('match_id',ids),
+        sb.from('match_players').select('*').in('match_id',ids),
+        sb.from('players').select('id,name,nickname').eq('active',true)
+      ]);
+      if(mr.error||sr.error||awr.error||allMp.error||pr.error)throw(mr.error||sr.error||awr.error||allMp.error||pr.error);
+      const matches=mr.data||[],sets=sr.data||[],awards=awr.data||[],players=pr.data||[];
+      const pmap=new Map(players.map(p=>[String(p.id),p]));
+      const mpByMatch={};(allMp.data||[]).forEach(x=>(mpByMatch[x.match_id]??=[]).push(x));
+      const setsByMatch={};sets.forEach(x=>(setsByMatch[x.match_id]??=[]).push(x));
+      const awByMatch={};awards.forEach(x=>(awByMatch[x.match_id]??=[]).push(x));
+      const calIds=[...new Set(matches.map(m=>m.calendar_match_id).filter(Boolean))];
+      let calendars=[];if(calIds.length){const cr=await sb.from('calendar_matches').select('id,court,match_type,scheduled_at').in('id',calIds);if(cr.error)throw cr.error;calendars=cr.data||[];}
+      const cmap=new Map(calendars.map(x=>[String(x.id),x]));
+      const grouped={};
+      const monthKey=d=>{const dt=new Date(d);return dt.toLocaleDateString('it-IT',{month:'long',year:'numeric'}).toUpperCase();};
+      matches.forEach(m=>{(grouped[monthKey(m.played_at)]??=[]).push(m)});
+      const escLocal=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const playerBlock=pid=>{const p=pmap.get(String(pid))||playerById(pid);const name=p?.name||'Giocatore',nick=p?.nickname||'',src=logoFile(name);return `<div class="history-player rpl-profile-click" onclick="openRplPlayerProfile(${Number(pid)});event.stopPropagation()"><div class="history-logo-wrap">${src?`<img src="${src}" alt="${escLocal(name)}" loading="lazy">`:`<div class="history-player-fallback">${escLocal(name)}</div>`}</div><div class="history-player-name">${escLocal(name)}${nick?`<small>${escLocal(nick)}</small>`:''}</div></div>`};
+      const renderSets=rows=>rows.length?rows.map(x=>`<div class="rpl-player-match-set"><b>SET ${x.set_number}</b><span>${x.games_a} - ${x.games_b}</span></div>`).join(''):'<div class="muted">Nessun dettaglio set disponibile.</div>';
+      const renderMatch=m=>{
+        const rows=setsByMatch[m.id]||[], mp=mpByMatch[m.id]||[], cal=cmap.get(String(m.calendar_match_id))||{};
+        const pids=mp.map(x=>Number(x.player_id));
+        const left=pids.slice(0,2),right=pids.slice(2,4);
+        const aw=awByMatch[m.id]||[],mvp=aw.filter(x=>String(x.award_type).toUpperCase()==='MVP').map(x=>pmap.get(String(x.player_id))?.name||'').filter(Boolean),imb=aw.filter(x=>String(x.award_type).toUpperCase()==='IMBATTUTO').map(x=>pmap.get(String(x.player_id))?.name||'').filter(Boolean);
+        const summary=rows.map(x=>`${x.games_a}-${x.games_b}`).join(' · ');
+        return `<details class="rpl-player-match-detail"><summary><span><b>${escLocal(new Date(m.played_at).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}))} · ${escLocal(new Date(m.played_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}))}</b><small>${escLocal(cal.court||'Campo')} · ${escLocal(summary||'Risultato disponibile')}</small></span><span>⌄</span></summary><div class="rpl-player-match-body"><div class="rpl-player-match-teams"><div>${left.map(playerBlock).join('')}</div><div class="rpl-match-vs">VS</div><div>${right.map(playerBlock).join('')}</div></div><div class="rpl-player-match-sets">${renderSets(rows)}</div>${mvp.length?`<div class="rpl-match-award">🏆 MVP: ${escLocal(mvp.join(', '))}</div>`:''}${imb.length?`<div class="rpl-match-award">🔥 Imbattuto: ${escLocal(imb.join(', '))}</div>`:''}</div></details>`;
+      };
+      box.innerHTML=Object.entries(grouped).map(([month,rows])=>`<div class="rpl-player-match-month"><button type="button" class="rpl-player-month-btn" onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('span:last-child').textContent=this.nextElementSibling.classList.contains('hidden')?'⌄':'⌃'"><span>📅 ${escLocal(month)} <small>(${rows.length})</small></span><span>⌃</span></button><div class="rpl-player-month-list">${rows.map(renderMatch).join('')}</div></div>`).join('');
+    }catch(e){console.error('RPL player matches',e);box.innerHTML=`<div class="msg err">Errore caricamento partite: ${escP(e.message||e)}</div>`;}
   }
   async function playerLogin(){
     const msg=q('playerLoginMsg');msg.className='msg';msg.textContent='Accesso…';
@@ -4125,8 +4163,13 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     const path=`${playerUser.id}/profile.${ext}`;
     const {error}=await sb.storage.from('avatars').upload(path,file,{contentType:file.type,upsert:true,cacheControl:'3600'});
     if(error){msg.className='msg err';msg.textContent='Errore foto: '+error.message;return}
-    const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:new Date().toISOString()}).eq('user_id',playerUser.id);if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
-    playerAccount.avatar_path=path;renderPlayerProfile();msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
+    const nowIso=new Date().toISOString();
+    const {error:e}=await sb.from('player_accounts').update({avatar_path:path,updated_at:nowIso}).eq('user_id',playerUser.id);
+    if(e){msg.className='msg err';msg.textContent='Foto caricata ma non salvata nel profilo: '+e.message;return}
+    const {error:pe}=await sb.from('player_profiles').upsert({player_id:playerRow.id,avatar_path:path,updated_at:nowIso},{onConflict:'player_id'});
+    if(pe){msg.className='msg err';msg.textContent='Foto caricata ma non collegata alla scheda pubblica: '+pe.message;return}
+    playerAccount.avatar_path=path;playerAccount._profile={...(playerAccount._profile||{}),avatar_path:path};
+    await renderPlayerProfile();msg.className='msg ok';msg.textContent='✅ Foto profilo aggiornata.';
   }
   function scoreRowsFromPanel(){const panel=q('inlinePlayerResultPanel');if(!panel)return [];return [...panel.querySelectorAll('.rpl-result-set')].map((r,i)=>{const a=r.querySelector('[data-set-a]')?.value,b=r.querySelector('[data-set-b]')?.value;return {n:i+1,a1:Number(r.dataset.a1),a2:Number(r.dataset.a2),b1:Number(r.dataset.b1),b2:Number(r.dataset.b2),ga:a===''?null:Number(a),gb:b===''?null:Number(b)}})}
   async function openPlayerResult(cm){
@@ -4446,5 +4489,9 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   .rpl-main-menu-btn span{display:inline-block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:normal!important;min-width:0!important;}
 }
 </style>
-<script id="rpl-v906-version">document.documentElement.dataset.rplVersion="9.0.6";</script>
+<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.0.7";</script>
+
+<style id="rpl-v907-player-matches-photo-fix">
+.rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
+</style>
 </body></html>
