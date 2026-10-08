@@ -750,30 +750,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 #operatorAccountsSection .rpl-account-ok{color:#39d98a}.rpl-account-warn{color:#ffd86a}.rpl-account-err{color:#ff6b6b}
 @media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
-
-<style id="rpl-v894-weather">
-.rpl-weather-mini{display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:5px 9px;border:1px solid rgba(255,216,106,.28);border-radius:999px;background:rgba(7,18,30,.72);color:#fff;font-size:11px;font-weight:900;cursor:pointer;vertical-align:middle}
-.rpl-weather-mini .ico{font-size:17px;line-height:1}
-.rpl-weather-mini .temp{color:#ffd86a}
-.rpl-weather-mini.rain{border-color:rgba(74,169,255,.55)}
-.rpl-weather-mini.warn{border-color:rgba(255,123,132,.7);box-shadow:0 0 0 1px rgba(255,123,132,.08)}
-.rpl-weather-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px}
-.rpl-weather-card{width:min(440px,100%);background:linear-gradient(145deg,#0b1826,#06101a);border:1px solid rgba(255,216,106,.5);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.55);padding:20px;color:#fff}
-.rpl-weather-close{float:right;border:0;background:rgba(255,255,255,.08);color:#fff;border-radius:10px;width:34px;height:34px;font-size:18px;cursor:pointer}
-.rpl-weather-title{color:#ffd86a;font-size:18px;font-weight:950;margin:2px 45px 3px 0}
-.rpl-weather-sub{color:#9da8b4;font-size:11px;margin-bottom:16px}
-.rpl-weather-main{display:flex;align-items:center;gap:15px;padding:14px;border-radius:16px;background:rgba(255,216,106,.06);border:1px solid rgba(255,255,255,.07)}
-.rpl-weather-bigico{font-size:48px;line-height:1}
-.rpl-weather-temp{font-size:32px;font-weight:950}
-.rpl-weather-desc{font-size:12px;color:#d7dee8;margin-top:2px}
-.rpl-weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.rpl-weather-stat{padding:10px;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.06);font-size:11px;color:#b9c5d0}
-.rpl-weather-stat b{display:block;color:#fff;font-size:14px;margin-top:2px}
-.rpl-weather-note{margin-top:12px;padding:10px;border-radius:12px;font-size:11px;color:#ffd86a;background:rgba(255,216,106,.06)}
-.rpl-weather-source{margin-top:12px;text-align:center;font-size:10px;color:#7f8b98}
-@media(max-width:700px){.rpl-weather-mini{margin-left:4px;padding:4px 7px}.rpl-weather-mini .ico{font-size:15px}.rpl-weather-mini .temp{font-size:10px}}
-</style>
-
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1696,9 +1672,7 @@ async function createOperatorPoll(){
     if(!confirm(`Creare la votazione ${weekStart} → ${weekEnd} con ${options.length} possibilità di gioco?`))return;
     const {error}=await sb.rpc("rpl_create_poll_week",{p_week_start:weekStart,p_week_end:weekEnd,p_opens_at:new Date(opens).toISOString(),p_closes_at:new Date(closes).toISOString(),p_options:options});
     if(error)throw error;
-    const pollRecipients=await rplGetActivePlayerIds();
-    await rplAutoSendNotification(pollRecipients,"🗳️ Nuova votazione RPL","È stata pubblicata una nuova votazione settimanale. Controlla l'Area Giocatore per vedere apertura e serate disponibili.","?rpl=vote#player");
-    msg.className="msg ok";msg.textContent="✅ Votazione creata correttamente. Notifica automatica inviata ai giocatori con notifiche attive."; await loadOperatorVoting();
+    msg.className="msg ok";msg.textContent="✅ Votazione creata correttamente. La notifica verrà inviata automaticamente all'orario di apertura."; await loadOperatorVoting();
   }catch(e){console.error(e);msg.className="msg err";msg.textContent="Errore creazione votazione: "+(e.message||e);}
 }
 window.createOperatorPoll=createOperatorPoll;
@@ -1773,7 +1747,7 @@ async function deleteOperatorPoll(id){return managePollWeek('delete',id)}
 async function archiveOperatorPoll(id){return managePollWeek('archive',id)}
 async function restoreOperatorPoll(id){const msg=$("operatorVotingMsg");if(!confirm('Ripristinare questa votazione nell’elenco attivo?'))return;try{const r=await sb.rpc('rpl_restore_poll_week',{p_poll_week_id:id});if(r.error)throw r.error;msg.className='msg ok';msg.textContent='↩️ Votazione ripristinata correttamente.';await loadOperatorVoting();}catch(e){console.error(e);msg.className='msg err';msg.textContent='Errore ripristino: '+(e.message||e);}}
 async function editOperatorPoll(id){const {data:w,error:we}=await sb.from('rpl_poll_weeks').select('*').eq('id',id).single();if(we){alert(we.message);return;}const {data:o,error:oe}=await sb.from('rpl_poll_options').select('*').eq('poll_week_id',id).order('sort_order');if(oe){alert(oe.message);return;}$("pollWeekStart").value=w.week_start;$("pollWeekEnd").value=w.week_end;$("pollOpensAt").value=new Date(w.opens_at).toISOString().slice(0,16);$("pollClosesAt").value=new Date(w.closes_at).toISOString().slice(0,16);const host=$("pollOptionRows");host.innerHTML='';(o||[]).forEach(x=>{let kind=x.start_time?'time':(x.label||'').includes('MATTINA')?'mattina':(x.label||'').includes('POMERIGGIO')?'pomeriggio':'sera';addPollOptionRow({date:x.play_date,time:(x.start_time||'').slice(0,5),kind,court:x.court||'__TBD__'});});const btn=document.querySelector('button[onclick="createOperatorPoll()"]');if(btn){btn.textContent='💾 SALVA MODIFICHE';btn.onclick=()=>updateOperatorPoll(id);}msg.className='msg ok';msg.textContent='✏️ Modifica caricata.';window.scrollTo({top:$("operatorVotingSection").offsetTop-10,behavior:'smooth'});}
-async function updateOperatorPoll(id){const msg=$("operatorVotingMsg");try{const ws=$("pollWeekStart").value,we=$("pollWeekEnd").value,op=$("pollOpensAt").value,cl=$("pollClosesAt").value;const rows=[...document.querySelectorAll('#pollOptionRows .rpl-poll-option-row')];const options=rows.map((row,i)=>{const date=row.querySelector('.poll-option-date').value,kind=row.querySelector('.poll-option-kind').value,time=row.querySelector('.poll-option-time').value,court=row.querySelector('.poll-option-court')?.value||'__TBD__';if(!date)throw new Error('Ogni opzione deve avere una data.');const d=new Date(date+'T12:00:00'),day=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase(),suffix=kind==='time'?`ORE ${time}`:kind.toUpperCase();return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,court,sort_order:i,max_players:4};});const r=await sb.rpc('rpl_update_poll_week',{p_poll_week_id:id,p_week_start:ws,p_week_end:we,p_opens_at:new Date(op).toISOString(),p_closes_at:new Date(cl).toISOString(),p_options:options});if(r.error)throw r.error;const pollRecipients=await rplGetActivePlayerIds();await rplAutoSendNotification(pollRecipients,"🗳️ Votazione RPL aggiornata","La votazione settimanale è stata modificata. Controlla le nuove date e gli orari nell'Area Giocatore.","?rpl=vote#player");msg.className='msg ok';msg.textContent='✅ Votazione modificata. Notifica automatica inviata.';await loadOperatorVoting();}catch(e){msg.className='msg err';msg.textContent='Errore modifica: '+e.message;}}
+async function updateOperatorPoll(id){const msg=$("operatorVotingMsg");try{const ws=$("pollWeekStart").value,we=$("pollWeekEnd").value,op=$("pollOpensAt").value,cl=$("pollClosesAt").value;const rows=[...document.querySelectorAll('#pollOptionRows .rpl-poll-option-row')];const options=rows.map((row,i)=>{const date=row.querySelector('.poll-option-date').value,kind=row.querySelector('.poll-option-kind').value,time=row.querySelector('.poll-option-time').value,court=row.querySelector('.poll-option-court')?.value||'__TBD__';if(!date)throw new Error('Ogni opzione deve avere una data.');const d=new Date(date+'T12:00:00'),day=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase(),suffix=kind==='time'?`ORE ${time}`:kind.toUpperCase();return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,court,sort_order:i,max_players:4};});const r=await sb.rpc('rpl_update_poll_week',{p_poll_week_id:id,p_week_start:ws,p_week_end:we,p_opens_at:new Date(op).toISOString(),p_closes_at:new Date(cl).toISOString(),p_options:options});if(r.error)throw r.error;msg.className='msg ok';msg.textContent='✅ Votazione modificata. La notifica verrà inviata automaticamente all’orario di apertura.';await loadOperatorVoting();}catch(e){msg.className='msg err';msg.textContent='Errore modifica: '+e.message;}}
 window.editOperatorPoll=editOperatorPoll;window.updateOperatorPoll=updateOperatorPoll;
 async function generateCalendarFromPoll(weekId){
   const msg=$("operatorVotingMsg");
@@ -2958,51 +2932,6 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   function publicDistintaButton(id){
   return `<button type="button" class="rpl-distinta-btn" onclick="event.stopPropagation();downloadDistintaPDF('${esc(id)}')">📄 DISTINTA</button>`;
 }
-const RPL_WEATHER={lat:37.567,lon:14.279,cache:null,cacheAt:0,byHour:new Map()};
-function rplWeatherInfo(code){
-  const c=Number(code);
-  if(c===0)return ['☀️','Sereno',false];
-  if([1,2].includes(c))return ['🌤️','Poco nuvoloso',false];
-  if(c===3)return ['☁️','Nuvoloso',false];
-  if([45,48].includes(c))return ['🌫️','Nebbia',false];
-  if([51,53,55,56,57].includes(c))return ['🌦️','Pioviggine',true];
-  if([61,63,65,66,67].includes(c))return ['🌧️','Pioggia',true];
-  if([71,73,75,77,85,86].includes(c))return ['🌨️','Neve',true];
-  if([80,81,82].includes(c))return ['🌦️','Rovesci',true];
-  if([95,96,99].includes(c))return ['⛈️','Temporale',true];
-  return ['🌤️','Condizioni variabili',false];
-}
-function rplWeatherKey(d){return new Date(d).toLocaleString('sv-SE',{timeZone:'Europe/Rome',hour12:false}).slice(0,13).replace(' ','T');}
-async function rplLoadWeather(){
-  const now=Date.now();
-  if(RPL_WEATHER.cache && now-RPL_WEATHER.cacheAt<10*60*1000)return RPL_WEATHER.cache;
-  const url='https://api.open-meteo.com/v1/forecast?latitude='+RPL_WEATHER.lat+'&longitude='+RPL_WEATHER.lon+'&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m&timezone=Europe%2FRome&forecast_days=7';
-  const res=await fetch(url,{cache:'no-store'}); if(!res.ok)throw new Error('Servizio meteo non disponibile');
-  const data=await res.json(); RPL_WEATHER.cache=data; RPL_WEATHER.cacheAt=now; RPL_WEATHER.byHour.clear();
-  (data.hourly?.time||[]).forEach((t,i)=>RPL_WEATHER.byHour.set(t,{temp:data.hourly.temperature_2m?.[i],prob:data.hourly.precipitation_probability?.[i],precip:data.hourly.precipitation?.[i],code:data.hourly.weather_code?.[i],wind:data.hourly.wind_speed_10m?.[i]}));
-  return data;
-}
-function rplWeatherForMatch(date){
-  const key=rplWeatherKey(date); const exact=RPL_WEATHER.byHour.get(key); if(exact)return exact;
-  const prefix=key.slice(0,11); const candidates=[...RPL_WEATHER.byHour.entries()].filter(([k])=>k.startsWith(prefix));
-  if(!candidates.length)return null; candidates.sort((a,b)=>Math.abs(new Date(a[0])-date)-Math.abs(new Date(b[0])-date)); return candidates[0][1];
-}
-function rplWeatherMini(date){
-  const w=rplWeatherForMatch(date); if(!w)return '<span class="rpl-weather-mini" title="Meteo in caricamento">🌦️ <span>meteo</span></span>';
-  const [ico,desc,rain]=rplWeatherInfo(w.code), prob=Number(w.prob??0); const warn=prob>=60||Number(w.precip||0)>=1;
-  return `<button type="button" class="rpl-weather-mini ${rain?'rain':''} ${warn?'warn':''}" onclick="event.stopPropagation();rplOpenWeatherModal('${esc(date.toISOString())}')" title="Apri dettaglio meteo"><span class="ico">${ico}</span><span class="temp">${Number.isFinite(Number(w.temp))?Math.round(Number(w.temp))+'°':''}</span></button>`;
-}
-function rplOpenWeatherModal(iso){
-  const date=new Date(iso),w=rplWeatherForMatch(date); if(!w)return;
-  const [ico,desc]=rplWeatherInfo(w.code),prob=Number(w.prob??0),precip=Number(w.precip??0),wind=Number(w.wind??0),temp=Number(w.temp);
-  const warn=prob>=60||precip>=1;
-  const old=document.getElementById('rplWeatherModal'); if(old)old.remove();
-  const modal=document.createElement('div'); modal.id='rplWeatherModal'; modal.className='rpl-weather-modal'; modal.onclick=e=>{if(e.target===modal)modal.remove()};
-  modal.innerHTML=`<div class="rpl-weather-card"><button class="rpl-weather-close" onclick="document.getElementById('rplWeatherModal')?.remove()">✕</button><div class="rpl-weather-title">🌦️ Meteo partita</div><div class="rpl-weather-sub">Enna · ${esc(fmtDate(date))} · ore ${esc(fmtTime(date))}</div><div class="rpl-weather-main"><div class="rpl-weather-bigico">${ico}</div><div><div class="rpl-weather-temp">${Number.isFinite(temp)?Math.round(temp)+'°C':'—'}</div><div class="rpl-weather-desc">${esc(desc)}</div></div></div><div class="rpl-weather-grid"><div class="rpl-weather-stat">Probabilità pioggia<b>${prob}%</b></div><div class="rpl-weather-stat">Precipitazioni<b>${precip.toFixed(1)} mm</b></div><div class="rpl-weather-stat">Vento<b>${Math.round(wind)} km/h</b></div><div class="rpl-weather-stat">Temperatura<b>${Number.isFinite(temp)?temp.toFixed(1)+'°C':'—'}</b></div></div>${warn?'<div class="rpl-weather-note">⚠️ Possibili precipitazioni durante l’orario della partita.</div>':'<div class="rpl-weather-note">✅ Al momento non risultano precipitazioni significative previste all’orario della partita.</div>'}<div class="rpl-weather-source">Previsione oraria · dati aggiornati automaticamente</div></div>`;
-  document.body.appendChild(modal);
-}
-window.rplOpenWeatherModal=rplOpenWeatherModal;
-
 function renderCalendar(matches){
   const box=$('publicCalendarContent'); if(!box)return;
   const now=new Date();
@@ -3011,7 +2940,7 @@ function renderCalendar(matches){
   const first=future[0], firstDay=first._date.toDateString();
   const main=`<div class="rpl-public-cal-main">
       <div class="cal-date">⭐ PROSSIMA PARTITA · ${esc(fmtDate(first._date))}</div>
-      <div class="cal-time">${esc(fmtTime(first._date))} ${rplWeatherMini(first._date)}</div>
+      <div class="cal-time">${esc(fmtTime(first._date))}</div>
       <div class="cal-court">📍 ${esc(first.court||'Campo da definire')}</div>
       <div class="rpl-public-cal-players">
         <div class="rpl-cal-side">${playerCard(first.player_1)}${playerCard(first.player_2)}</div>
@@ -3028,7 +2957,7 @@ function renderCalendar(matches){
       const n3=p3?.name||m.player_3_name||'Giocatore', n4=p4?.name||m.player_4_name||'Giocatore';
       return `<div class="rpl-public-cal-item ${same?'same-day':''}">
         <div class="rpl-public-cal-item-head">
-          <div><div class="mini-date">${esc(fmtDayShort(m._date))}</div><div class="mini-time">${esc(fmtTime(m._date))} ${rplWeatherMini(m._date)}</div></div>
+          <div><div class="mini-date">${esc(fmtDayShort(m._date))}</div><div class="mini-time">${esc(fmtTime(m._date))}</div></div>
           <div class="mini-court">📍 ${esc(m.court||'Campo da definire')}</div>
           ${same?'<div class="rpl-cal-today">OGGI</div>':''}
         </div>
@@ -3185,7 +3114,6 @@ async function loadPublicCalendar(){
       if(mr.error)throw mr.error;
       if(pr.error)throw pr.error;
       window.calendarPlayers=pr.data||[];
-      try{await rplLoadWeather();}catch(weatherErr){console.warn('Meteo non disponibile:',weatherErr);}
       renderCalendar(mr.data||[]);
     }catch(e){
       console.error('Errore calendario pubblico:',e);
