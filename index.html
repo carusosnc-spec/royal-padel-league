@@ -696,7 +696,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 </style>
 
 <style id="rpl-v892-security-compact-style">
-/* RPL v9.0.5 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
+/* RPL v9.0.8 - le impostazioni di sicurezza diventano discrete dopo l'attivazione */
 #playerDashboard.rpl-security-layout{display:flex;flex-direction:column;}
 #playerDashboard.rpl-security-layout > #playerPasskeyCard.rpl-security-compact,
 #playerDashboard.rpl-security-layout > #playerNotificationCard.rpl-security-compact{
@@ -751,7 +751,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 @media(max-width:700px){#operatorAccountsSection .rpl-account-row{grid-template-columns:1fr 1fr}.rpl-account-row>*:first-child{grid-column:1/-1}}
 </style>
 <style id="rpl-v900-interface">
-/* RPL v9.0.5 — interfaccia semplificata */
+/* RPL v9.0.8 — interfaccia semplificata */
 :root{--rpl-bg:#eef2f6;--rpl-panel:#fff;--rpl-ink:#162333;--rpl-blue:#164e8a;--rpl-blue2:#0d3765;--rpl-green:#a8d64b;--rpl-gold:#d5a92d}
 body{background:linear-gradient(180deg,#f4f7fa 0%,#e8edf2 100%)!important;color:var(--rpl-ink)!important}
 .card{background:rgba(255,255,255,.97)!important;color:var(--rpl-ink)}
@@ -857,7 +857,7 @@ img{max-width:100%;}
 </style>
 
 <style id="rpl-v904-professional-dark">
-/* RPL 9.0.5 — tema scuro coerente su tutta l'interfaccia */
+/* RPL 9.0.8 — tema scuro coerente su tutta l'interfaccia */
 :root{
   --rpl-bg:#02070d;
   --rpl-surface:#071522;
@@ -914,6 +914,11 @@ html,body{overflow-x:hidden!important;}
 }
 </style>
 
+
+<style id="rpl-v908-history-months">
+.rpl-history-month{margin:0 0 14px}.rpl-history-month-list{display:grid;gap:10px;padding-top:8px}.rpl-history-month .rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;background:#0b1825;color:#f6d86b;border:1px solid rgba(231,185,78,.28);border-radius:12px;padding:11px 13px;font-weight:900}.rpl-history-month .rpl-player-month-btn small{color:#aebdcb}.rpl-history-month-list.hidden{display:none}
+@media(max-width:700px){.rpl-history-month .rpl-player-month-btn{font-size:12px}.rpl-history-month-list .history-card{padding:10px}}
+</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -2963,96 +2968,8 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   }
 
   async function loadHistory(){
-    const list=$("historyList"), summary=$("historySummary");
-    if(!list)return;
-    list.innerHTML='<div class="history-empty">Caricamento storico…</div>';
-    try{
-      const from=$("historyFrom")?.value||"";
-      const to=$("historyTo")?.value||"";
-      const player=$("historyPlayer")?.value||"";
-
-      let mq=window.sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").order("played_at",{ascending:false});
-      if(from)mq=mq.gte("played_at",from+"T00:00:00");
-      if(to)mq=mq.lte("played_at",to+"T23:59:59");
-      let mr=await mq;
-      if(mr.error)throw mr.error;
-      let matches=mr.data||[];
-
-      if(player){
-        const pr=await window.sb.from("match_players").select("match_id").eq("player_id",Number(player));
-        if(pr.error)throw pr.error;
-        const ids=new Set((pr.data||[]).map(x=>String(x.match_id)));
-        matches=matches.filter(m=>ids.has(String(m.id)));
-      }
-
-      summary.textContent=`${matches.length} partite trovate`;
-      if(!matches.length){
-        list.innerHTML='<div class="history-empty">Nessuna partita trovata con questi filtri.</div>';
-        return;
-      }
-
-      const ids=matches.map(m=>m.id);
-      const [sr,mpR,plR]=await Promise.all([
-        window.sb.from("sets").select("*").in("match_id",ids).order("set_number"),
-        window.sb.from("match_players").select("*").in("match_id",ids),
-        window.sb.from("players").select("id,name,nickname")
-      ]);
-      if(sr.error)throw sr.error;
-      if(mpR.error)throw mpR.error;
-      if(plR.error)throw plR.error;
-
-      const names={};
-      (plR.data||[]).forEach(p=>names[String(p.id)]=p.name+(p.nickname?" — "+p.nickname:""));
-      const setsBy={};
-      (sr.data||[]).forEach(s=>(setsBy[String(s.match_id)]??=[]).push(s));
-
-      list.innerHTML=matches.map(m=>{
-        const sets=setsBy[String(m.id)]||[];
-        const date=new Date(m.played_at);
-        const dateText=isNaN(date)?String(m.played_at):date.toLocaleString("it-IT",{dateStyle:"medium",timeStyle:"short"});
-
-        const involved=[];
-        (mpR.data||[]).filter(x=>String(x.match_id)===String(m.id)).forEach(x=>{
-          if(names[String(x.player_id)] && !involved.includes(names[String(x.player_id)]))involved.push(names[String(x.player_id)]);
-        });
-
-        const results=sets.map(s=>`${s.games_a}-${s.games_b}`).join(" · ");
-
-        const detail=sets.map((s,i)=>{
-          const a1=names[String(s.pair_a_player_1)]||"Giocatore";
-          const a2=names[String(s.pair_a_player_2)]||"Giocatore";
-          const b1=names[String(s.pair_b_player_1)]||"Giocatore";
-          const b2=names[String(s.pair_b_player_2)]||"Giocatore";
-          const ga=Number(s.games_a), gb=Number(s.games_b);
-          const aClass=ga>gb?'win':ga<gb?'loss':'draw';
-          const bClass=gb>ga?'win':gb<ga?'loss':'draw';
-          return `<div class="history-set">
-            <div class="history-set-title"><b>SET ${i+1}</b></div>
-            <div class="history-set-score"><span class="score ${aClass}">${esc(s.games_a)}</span><span class="score-sep">-</span><span class="score ${bClass}">${esc(s.games_b)}</span></div>
-            <div class="history-set-teams">
-              <div class="history-team-side team-a">${playerVisual(a1)}<span class="history-plus">+</span>${playerVisual(a2)}</div>
-              <div class="history-vs">VS</div>
-              <div class="history-team-side team-b">${playerVisual(b1)}<span class="history-plus">+</span>${playerVisual(b2)}</div>
-            </div>
-          </div>`;
-        }).join("");
-
-        return `<div class="history-card" onclick="this.classList.toggle('open')">
-          <div class="history-head">
-            <span class="history-date">${esc(dateText)}</span>
-            <span class="history-meta">${sets.length} set</span>
-          </div>
-          <div class="history-team" style="font-size:13px;margin-bottom:7px">${involved.map(esc).join(" · ")}</div>
-          <div class="history-score">${esc(results||"—")}</div>
-          <div class="history-detail">${detail}</div>
-        </div>`;
-      }).join("");
-    }catch(e){
-      console.error(e);
-      summary.textContent="";
-      list.innerHTML=`<div class="history-empty">Errore nel caricamento dello storico.<br><small>${esc(e.message||e)}</small></div>`;
-    }
-  }
+    const list=$('historyList'),summary=$('historySummary');if(!list)return;list.innerHTML='<div class="history-empty">Caricamento storico…</div>';
+    try{const from=$("historyFrom")?.value||"",to=$("historyTo")?.value||"",player=$("historyPlayer")?.value||"";let mq=window.sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").order("played_at",{ascending:false});if(from)mq=mq.gte("played_at",from+"T00:00:00");if(to)mq=mq.lte("played_at",to+"T23:59:59");let mr=await mq;if(mr.error)throw mr.error;let matches=mr.data||[];if(player){const pr=await window.sb.from("match_players").select("match_id").eq("player_id",Number(player));if(pr.error)throw pr.error;const ids=new Set((pr.data||[]).map(x=>String(x.match_id)));matches=matches.filter(m=>ids.has(String(m.id)));}summary.textContent=`${matches.length} partite trovate`;if(!matches.length){list.innerHTML='<div class="history-empty">Nessuna partita trovata con questi filtri.</div>';return;}const ids=matches.map(m=>m.id);const [sr,mpR,plR]=await Promise.all([window.sb.from("sets").select("*").in("match_id",ids).order("set_number"),window.sb.from("match_players").select("*").in("match_id",ids),window.sb.from("players").select("id,name,nickname")]);if(sr.error||mpR.error||plR.error)throw(sr.error||mpR.error||plR.error);const names={};(plR.data||[]).forEach(p=>names[String(p.id)]=p.name+(p.nickname?" — "+p.nickname:""));const setsBy={};(sr.data||[]).forEach(s=>(setsBy[String(s.match_id)]??=[]).push(s));const grouped={};const monthKey=d=>new Date(d).toLocaleDateString('it-IT',{month:'long',year:'numeric'}).toUpperCase();matches.forEach(m=>(grouped[monthKey(m.played_at)]??=[]).push(m));const involvedNames=m=>{const out=[];(mpR.data||[]).filter(x=>String(x.match_id)===String(m.id)).forEach(x=>{if(names[String(x.player_id)]&&!out.includes(names[String(x.player_id)]))out.push(names[String(x.player_id)]);});return out;};const renderSet=(s,i)=>{const a1=names[String(s.pair_a_player_1)]||'Giocatore',a2=names[String(s.pair_a_player_2)]||'Giocatore',b1=names[String(s.pair_b_player_1)]||'Giocatore',b2=names[String(s.pair_b_player_2)]||'Giocatore',ga=Number(s.games_a),gb=Number(s.games_b);return `<div class="history-set"><div class="history-set-title"><b>SET ${i+1}</b></div><div class="history-set-score"><span class="score ${ga>gb?'win':ga<gb?'loss':'draw'}">${esc(s.games_a)}</span><span class="score-sep">-</span><span class="score ${gb>ga?'win':gb<ga?'loss':'draw'}">${esc(s.games_b)}</span></div><div class="history-set-teams"><div class="history-team-side team-a">${playerVisual(a1)}<span class="history-plus">+</span>${playerVisual(a2)}</div><div class="history-vs">VS</div><div class="history-team-side team-b">${playerVisual(b1)}<span class="history-plus">+</span>${playerVisual(b2)}</div></div></div>`};const renderMatch=m=>{const sets=setsBy[String(m.id)]||[],date=new Date(m.played_at),dateText=isNaN(date)?String(m.played_at):date.toLocaleString('it-IT',{dateStyle:'medium',timeStyle:'short'}),results=sets.map(s=>`${s.games_a}-${s.games_b}`).join(' · ');return `<div class="history-card" onclick="this.classList.toggle('open')"><div class="history-head"><span class="history-date">${esc(dateText)}</span><span class="history-meta">${sets.length} set</span></div><div class="history-team" style="font-size:13px;margin-bottom:7px">${involvedNames(m).map(esc).join(' · ')}</div><div class="history-score">${esc(results||'—')}</div><div class="history-detail">${sets.map(renderSet).join('')}</div></div>`};list.innerHTML=Object.entries(grouped).map(([month,rows])=>`<div class="rpl-history-month"><button type="button" class="rpl-player-month-btn" onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('span:last-child').textContent=this.nextElementSibling.classList.contains('hidden')?'⌄':'⌃'"><span>📅 ${esc(month)} <small>(${rows.length})</small></span><span>⌃</span></button><div class="rpl-history-month-list">${rows.map(renderMatch).join('')}</div></div>`).join('');}catch(e){console.error(e);summary.textContent='';list.innerHTML=`<div class="history-empty">Errore nel caricamento dello storico.<br><small>${esc(e.message||e)}</small></div>`;}}
 
   window.showHistory=openHistory;
   window.showHome=openHome;
@@ -3353,7 +3270,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.0.5</div>
+<div id="rplVersionBadge">RPL v9.0.8</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3991,8 +3908,14 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     playerAccount._profile=payload;msg.className='msg ok';msg.textContent='✅ Profilo aggiornato.';renderPlayerProfile();
   }
   async function loadPlayerProfileData(playerId){
-    const {data,error}=await sb.from('player_profiles').select('player_id,birth_date,preferred_side,racket,play_style,avatar_path').eq('player_id',playerId).maybeSingle();
-    if(error){console.error('RPL profile',error);return null;}return data||null;
+    const [{data:prof,error:pe},{data:acc,error:ae}]=await Promise.all([
+      sb.from('player_profiles').select('player_id,birth_date,preferred_side,racket,play_style,avatar_path').eq('player_id',playerId).maybeSingle(),
+      sb.from('player_accounts').select('player_id,avatar_path').eq('player_id',playerId).maybeSingle()
+    ]);
+    if(pe)console.warn('RPL profile read',pe);
+    if(ae)console.warn('RPL account avatar read',ae);
+    if(!prof && !acc)return null;
+    return {...(prof||{player_id:playerId}),avatar_path:prof?.avatar_path||acc?.avatar_path||null};
   }
   async function renderPlayerProfile(){
     q('playerNameTitle').textContent=playerRow.name||'';q('playerNickTitle').textContent=playerRow.nickname?`“${playerRow.nickname}”`:'';q('playerFasciaTitle').textContent=`Fascia ${playerRow.fascia||'—'} · ${playerRow.fascia_value||'—'} punti`;
@@ -4072,8 +3995,20 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     return {general:general.findIndex(x=>String(x.id)===String(playerId))+1,partial,bonus};
   }
   async function openRplPlayerProfile(playerId){
-    const modal=q('rplPlayerProfileModal'),body=q('rplPlayerProfileModalBody');if(!modal||!body)return;modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');body.innerHTML='<div class="muted" style="text-align:center;padding:25px">Caricamento scheda giocatore…</div>';
-    try{const p=playerById(playerId);if(!p)throw new Error('Giocatore non trovato.');const [prof,ranks,st]=await Promise.all([loadPlayerProfileData(playerId),rplGetRankingsForProfile(playerId),rplCalcPlayerStats(playerId)]);const photo=prof?.avatar_path?sb.storage.from('avatars').getPublicUrl(prof.avatar_path).data.publicUrl:'';const logo=logoFile(p.name);const age=rplProfileAge(prof?.birth_date);const side=rplProfileSide(prof?.preferred_side);const style=rplProfileStyle(prof?.play_style);const stats=[['SET',st.st.sets],['VINTI',st.st.won],['GAME',st.st.games],['PT.SET',st.st.pt.toFixed(1)],['BASE',st.base.toFixed(2)],['MVP',st.st.mvp],['IMBATTUTO',st.st.imb],['TOTALE',st.total.toFixed(2)]];body.innerHTML=`<div class="rpl-profile-modal-head"><img class="rpl-profile-modal-photo" src="${photo||''}" ${photo?'':'style="display:none"'}><div class="rpl-profile-modal-logo" style="${logo?`background-image:url('${logo}');background-size:cover;background-position:center`:''}">${logo?'':'🏆'}</div><div style="flex:1"><div class="rpl-player-kicker">ROYAL PADEL LEAGUE</div><div class="rpl-profile-modal-title">${escP(p.name||'')}</div><div class="rpl-profile-modal-nick">${p.nickname?`“${escP(p.nickname)}”`:''}</div><div class="muted">Fascia ${p.fascia||'—'} · ${p.fascia_value||'—'} punti</div></div></div><div class="rpl-profile-ranks"><div class="rpl-profile-rank main"><b>${ranks.general||'—'}</b><span>CLASSIFICA GENERALE</span></div><div class="rpl-profile-rank"><b>${ranks.partial||'—'}</b><span>PARZIALE MESE</span></div><div class="rpl-profile-rank"><b>${ranks.bonus||'—'}</b><span>CLASSIFICA BONUS</span></div></div><div class="rpl-public-profile-meta">${prof?.birth_date?`<div><b>${rplProfileDate(prof.birth_date)}${age!==''?' · '+age+' anni':''}</b><span>DATA DI NASCITA</span></div>`:''}${side?`<div><b>${side}</b><span>LATO PREFERITO</span></div>`:''}${prof?.racket?`<div><b>${escP(prof.racket)}</b><span>RACCHETTA</span></div>`:''}${style?`<div><b>${style}</b><span>STILE DI GIOCO</span></div>`:''}</div><div class="rpl-profile-stat-grid">${stats.map(x=>`<div class="rpl-profile-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>`;}catch(e){body.innerHTML=`<div class="msg err">Errore caricamento scheda: ${escP(e.message||e)}</div>`;}
+    const modal=q('rplPlayerProfileModal'),body=q('rplPlayerProfileModalBody');if(!modal||!body)return;
+    modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');body.innerHTML='<div class="muted" style="text-align:center;padding:25px">Caricamento scheda giocatore…</div>';
+    try{
+      const p=playerById(playerId);if(!p)throw new Error('Giocatore non trovato.');
+      const [prof,ranks,st,acc]=await Promise.all([loadPlayerProfileData(playerId),rplGetRankingsForProfile(playerId),rplCalcPlayerStats(playerId),sb.from('player_accounts').select('avatar_path').eq('player_id',playerId).maybeSingle()]);
+      const profileAvatar=prof?.avatar_path||'';
+      const accountAvatar=acc?.data?.avatar_path||'';
+      const photo=profileAvatar?sb.storage.from('avatars').getPublicUrl(profileAvatar).data.publicUrl:(accountAvatar?sb.storage.from('avatars').getPublicUrl(accountAvatar).data.publicUrl:'');
+      const fallbackPhoto=profileAvatar&&accountAvatar&&profileAvatar!==accountAvatar?sb.storage.from('avatars').getPublicUrl(accountAvatar).data.publicUrl:'';
+      const logo=logoFile(p.name);const age=rplProfileAge(prof?.birth_date);const side=rplProfileSide(prof?.preferred_side);const style=rplProfileStyle(prof?.play_style);
+      const stats=[['SET',st.st.sets],['VINTI',st.st.won],['GAME',st.st.games],['PT.SET',st.st.pt.toFixed(1)],['BASE',st.base.toFixed(2)],['MVP',st.st.mvp],['IMBATTUTO',st.st.imb],['TOTALE',st.total.toFixed(2)]];
+      const photoAttrs=photo?`src="${escP(photo)}" class="rpl-profile-modal-photo" loading="eager" onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback}else{this.style.display='none'}" data-fallback="${escP(fallbackPhoto)}"`:'class="rpl-profile-modal-photo" style="display:none"';
+      body.innerHTML=`<div class="rpl-profile-modal-head"><img ${photoAttrs}><div class="rpl-profile-modal-logo" style="${logo?`background-image:url('${logo}');background-size:cover;background-position:center`:''}">${logo?'':'🏆'}</div><div style="flex:1"><div class="rpl-player-kicker">ROYAL PADEL LEAGUE</div><div class="rpl-profile-modal-title">${escP(p.name||'')}</div><div class="rpl-profile-modal-nick">${p.nickname?`“${escP(p.nickname)}”`:''}</div><div class="muted">Fascia ${p.fascia||'—'} · ${p.fascia_value||'—'} punti</div></div></div><div class="rpl-profile-ranks"><div class="rpl-profile-rank main"><b>${ranks.general||'—'}</b><span>CLASSIFICA GENERALE</span></div><div class="rpl-profile-rank"><b>${ranks.partial||'—'}</b><span>PARZIALE MESE</span></div><div class="rpl-profile-rank"><b>${ranks.bonus||'—'}</b><span>CLASSIFICA BONUS</span></div></div><div class="rpl-public-profile-meta">${prof?.birth_date?`<div><b>${rplProfileDate(prof.birth_date)}${age!==''?' · '+age+' anni':''}</b><span>DATA DI NASCITA</span></div>`:''}${side?`<div><b>${side}</b><span>LATO PREFERITO</span></div>`:''}${prof?.racket?`<div><b>${escP(prof.racket)}</b><span>RACCHETTA</span></div>`:''}${style?`<div><b>${style}</b><span>STILE DI GIOCO</span></div>`:''}</div><div class="rpl-profile-stat-grid">${stats.map(x=>`<div class="rpl-profile-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>`;
+    }catch(e){body.innerHTML=`<div class="msg err">Errore caricamento scheda: ${escP(e.message||e)}</div>`;}
   }
   function closeRplPlayerProfile(){const m=q('rplPlayerProfileModal');if(m){m.classList.add('hidden');m.setAttribute('aria-hidden','true')}}
   window.openRplPlayerProfile=openRplPlayerProfile;window.closeRplPlayerProfile=closeRplPlayerProfile;
@@ -4096,8 +4031,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     const box=q('playerMatchesList');if(!box)return;
     box.innerHTML='<div class="muted">Caricamento delle tue partite…</div>';
     try{
-      const {data:mpRows,error:mpe}=await sb.from('match_players').select('match_id,player_id').eq('player_id',playerRow.id);
-      if(mpe)throw mpe;
+      const {data:mpRows,error:mpe}=await sb.from('match_players').select('match_id,player_id').eq('player_id',playerRow.id);if(mpe)throw mpe;
       const ids=(mpRows||[]).map(x=>x.match_id).filter(Boolean);
       if(!ids.length){box.innerHTML='<div class="rpl-no-match">Nessuna partita giocata.</div>';return;}
       const [mr,sr,awr,allMp,pr]=await Promise.all([
@@ -4110,26 +4044,17 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       if(mr.error||sr.error||awr.error||allMp.error||pr.error)throw(mr.error||sr.error||awr.error||allMp.error||pr.error);
       const matches=mr.data||[],sets=sr.data||[],awards=awr.data||[],players=pr.data||[];
       const pmap=new Map(players.map(p=>[String(p.id),p]));
-      const mpByMatch={};(allMp.data||[]).forEach(x=>(mpByMatch[x.match_id]??=[]).push(x));
       const setsByMatch={};sets.forEach(x=>(setsByMatch[x.match_id]??=[]).push(x));
       const awByMatch={};awards.forEach(x=>(awByMatch[x.match_id]??=[]).push(x));
-      const calIds=[...new Set(matches.map(m=>m.calendar_match_id).filter(Boolean))];
-      let calendars=[];if(calIds.length){const cr=await sb.from('calendar_matches').select('id,court,match_type,scheduled_at').in('id',calIds);if(cr.error)throw cr.error;calendars=cr.data||[];}
+      const calIds=[...new Set(matches.map(m=>m.calendar_match_id).filter(Boolean))];let calendars=[];
+      if(calIds.length){const cr=await sb.from('calendar_matches').select('id,court,match_type,scheduled_at').in('id',calIds);if(cr.error)throw cr.error;calendars=cr.data||[];}
       const cmap=new Map(calendars.map(x=>[String(x.id),x]));
-      const grouped={};
-      const monthKey=d=>{const dt=new Date(d);return dt.toLocaleDateString('it-IT',{month:'long',year:'numeric'}).toUpperCase();};
-      matches.forEach(m=>{(grouped[monthKey(m.played_at)]??=[]).push(m)});
+      const grouped={};const monthKey=d=>new Date(d).toLocaleDateString('it-IT',{month:'long',year:'numeric'}).toUpperCase();
+      matches.forEach(m=>(grouped[monthKey(m.played_at)]??=[]).push(m));
       const escLocal=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       const playerBlock=pid=>{const p=pmap.get(String(pid))||playerById(pid);const name=p?.name||'Giocatore',nick=p?.nickname||'',src=logoFile(name);return `<div class="history-player rpl-profile-click" onclick="openRplPlayerProfile(${Number(pid)});event.stopPropagation()"><div class="history-logo-wrap">${src?`<img src="${src}" alt="${escLocal(name)}" loading="lazy">`:`<div class="history-player-fallback">${escLocal(name)}</div>`}</div><div class="history-player-name">${escLocal(name)}${nick?`<small>${escLocal(nick)}</small>`:''}</div></div>`};
-      const renderSets=rows=>rows.length?rows.map(x=>`<div class="rpl-player-match-set"><b>SET ${x.set_number}</b><span>${x.games_a} - ${x.games_b}</span></div>`).join(''):'<div class="muted">Nessun dettaglio set disponibile.</div>';
-      const renderMatch=m=>{
-        const rows=setsByMatch[m.id]||[], mp=mpByMatch[m.id]||[], cal=cmap.get(String(m.calendar_match_id))||{};
-        const pids=mp.map(x=>Number(x.player_id));
-        const left=pids.slice(0,2),right=pids.slice(2,4);
-        const aw=awByMatch[m.id]||[],mvp=aw.filter(x=>String(x.award_type).toUpperCase()==='MVP').map(x=>pmap.get(String(x.player_id))?.name||'').filter(Boolean),imb=aw.filter(x=>String(x.award_type).toUpperCase()==='IMBATTUTO').map(x=>pmap.get(String(x.player_id))?.name||'').filter(Boolean);
-        const summary=rows.map(x=>`${x.games_a}-${x.games_b}`).join(' · ');
-        return `<details class="rpl-player-match-detail"><summary><span><b>${escLocal(new Date(m.played_at).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}))} · ${escLocal(new Date(m.played_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}))}</b><small>${escLocal(cal.court||'Campo')} · ${escLocal(summary||'Risultato disponibile')}</small></span><span>⌄</span></summary><div class="rpl-player-match-body"><div class="rpl-player-match-teams"><div>${left.map(playerBlock).join('')}</div><div class="rpl-match-vs">VS</div><div>${right.map(playerBlock).join('')}</div></div><div class="rpl-player-match-sets">${renderSets(rows)}</div>${mvp.length?`<div class="rpl-match-award">🏆 MVP: ${escLocal(mvp.join(', '))}</div>`:''}${imb.length?`<div class="rpl-match-award">🔥 Imbattuto: ${escLocal(imb.join(', '))}</div>`:''}</div></details>`;
-      };
+      const renderSet=x=>{const ga=Number(x.games_a),gb=Number(x.games_b),A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];return `<div class="history-set"><div class="history-set-title"><b>SET ${x.set_number}</b></div><div class="history-set-score"><span class="score ${ga>gb?'win':ga<gb?'loss':'draw'}">${ga}</span><span class="score-sep">-</span><span class="score ${gb>ga?'win':gb<ga?'loss':'draw'}">${gb}</span></div><div class="history-set-teams"><div class="history-team-side team-a">${playerBlock(A[0])}<span class="history-plus">+</span>${playerBlock(A[1])}</div><div class="history-vs">VS</div><div class="history-team-side team-b">${playerBlock(B[0])}<span class="history-plus">+</span>${playerBlock(B[1])}</div></div></div>`};
+      const renderMatch=m=>{const rows=setsByMatch[m.id]||[],cal=cmap.get(String(m.calendar_match_id))||{},aw=awByMatch[m.id]||[];const mvp=aw.filter(x=>String(x.award_type).toUpperCase()==='MVP').map(x=>pmap.get(String(x.player_id))?.name||'').filter(Boolean),imb=aw.filter(x=>String(x.award_type).toUpperCase()==='IMBATTUTO').map(x=>pmap.get(String(x.player_id))?.name||'').filter(Boolean);const summary=rows.map(x=>`${x.games_a}-${x.games_b}`).join(' · ');return `<details class="rpl-player-match-detail"><summary><span><b>${escLocal(new Date(m.played_at).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}))} · ${escLocal(new Date(m.played_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}))}</b><small>${escLocal(cal.court||'Campo')} · ${escLocal(summary||'Risultato disponibile')}</small></span><span>⌄</span></summary><div class="rpl-player-match-body">${rows.map(renderSet).join('')}${mvp.length?`<div class="rpl-match-award">🏆 MVP: ${escLocal(mvp.join(', '))}</div>`:''}${imb.length?`<div class="rpl-match-award">🔥 Imbattuto: ${escLocal(imb.join(', '))}</div>`:''}</div></details>`};
       box.innerHTML=Object.entries(grouped).map(([month,rows])=>`<div class="rpl-player-match-month"><button type="button" class="rpl-player-month-btn" onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('span:last-child').textContent=this.nextElementSibling.classList.contains('hidden')?'⌄':'⌃'"><span>📅 ${escLocal(month)} <small>(${rows.length})</small></span><span>⌃</span></button><div class="rpl-player-month-list">${rows.map(renderMatch).join('')}</div></div>`).join('');
     }catch(e){console.error('RPL player matches',e);box.innerHTML=`<div class="msg err">Errore caricamento partite: ${escP(e.message||e)}</div>`;}
   }
@@ -4439,7 +4364,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
 })();
 </script>
 <script id="rpl-v902-startup-cleanup">document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){['rplRankingsSubmenu','rplCalendarSubmenu'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));['rplRankingsMenuBtn','rplCalendarMenuBtn','playerAreaBtn'].forEach(id=>document.getElementById(id)?.classList.remove('primary','open'));},0);});</script><style id="rpl-v903-dark-theme">
-/* RPL 9.0.5 — tema scuro RPL + submenu persistenti per sezione */
+/* RPL 9.0.8 — tema scuro RPL + submenu persistenti per sezione */
 :root{--rpl-text:#f8fafc;--rpl-text2:#cbd5e1;--rpl-gold-text:#ffd86a;--rpl-gold-border:#b78a24}
 body{color:#f8fafc!important;background:radial-gradient(circle at 50% -10%,rgba(31,91,133,.34),transparent 42%),linear-gradient(180deg,#02070d,#06121f 45%,#02070d)!important}
 .top,.card{color:#f8fafc!important}
