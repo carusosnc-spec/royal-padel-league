@@ -691,7 +691,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 9.1.10 - Link 3B Meteo anche in Area Vota -->
+<!-- RPL VERSION 9.1.11 - Fix meteo calendario: funzioni condivise e fallback 3B Meteo -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -3140,14 +3140,14 @@ async function initRplCalendarWeather(box,matches){
     const panel=document.getElementById('rplCalendarWeatherDetail-'+btn.dataset.calWeather);if(!panel)return;
     if(!panel.hidden){panel.hidden=true;return;}
     panel.hidden=false;panel.innerHTML='<div class="muted">Caricamento previsioni dettagliate…</div>';btn.disabled=true;
-    const rows=await rplGetWeatherDetails(btn.dataset.weatherDate,'time',btn.dataset.weatherTime);btn.disabled=false;
-    if(!rows||!rows.length){panel.innerHTML='<div class="muted">Previsioni dettagliate momentaneamente non disponibili.</div>';return;}
-    panel.innerHTML='<div class="rpl-calendar-weather-hours">'+rows.map(x=>{const z=rplWeatherInfo(x.code);return `<div class="rpl-calendar-weather-hour"><b>${x.hour}</b><div style="font-size:19px">${z[0]}</div><div>${x.temp==null?'—':Math.round(x.temp)+'°C'}</div><div>🌧️ ${x.rain==null?'—':Math.round(x.rain)+'%'}</div><div>💨 ${x.wind==null?'—':Math.round(x.wind)+' km/h'}</div><div>${esc(z[1])}</div></div>`;}).join('')+'</div><div class="rpl-calendar-weather-note">Previsione oraria per Enna · temperatura, probabilità di pioggia e vento · dati Open-Meteo. <a href="https://www.3bmeteo.com/meteo/enna" target="_blank" rel="noopener noreferrer">Approfondisci anche su 3B Meteo ↗</a></div>';
+    let rows=null;try{rows=await window.rplGetWeatherDetails(btn.dataset.weatherDate,'time',btn.dataset.weatherTime);}catch(e){console.warn('Dettaglio meteo calendario non disponibile',e);}btn.disabled=false;
+    if(!rows||!rows.length){panel.innerHTML='<div class="muted">Previsioni dettagliate non disponibili per questa data. <a href="https://www.3bmeteo.com/meteo/enna" target="_blank" rel="noopener noreferrer">Apri 3B Meteo Enna ↗</a></div>';return;}
+    panel.innerHTML='<div class="rpl-calendar-weather-hours">'+rows.map(x=>{const z=window.rplWeatherInfo(x.code);return `<div class="rpl-calendar-weather-hour"><b>${x.hour}</b><div style="font-size:19px">${z[0]}</div><div>${x.temp==null?'—':Math.round(x.temp)+'°C'}</div><div>🌧️ ${x.rain==null?'—':Math.round(x.rain)+'%'}</div><div>💨 ${x.wind==null?'—':Math.round(x.wind)+' km/h'}</div><div>${esc(z[1])}</div></div>`;}).join('')+'</div><div class="rpl-calendar-weather-note">Previsione oraria per Enna · temperatura, probabilità di pioggia e vento · dati Open-Meteo. <a href="https://www.3bmeteo.com/meteo/enna" target="_blank" rel="noopener noreferrer">Approfondisci anche su 3B Meteo ↗</a></div>';
   }));
   await Promise.all(buttons.map(async btn=>{
     const out=box.querySelector('[data-cal-weather-temp="'+btn.dataset.calWeather+'"]');
-    const info=await rplGetWeather(btn.dataset.weatherDate,'time',btn.dataset.weatherTime);
-    if(out)out.textContent=info?(info.temp!=null?info.temp+'°C · ':'')+info.label:'Previsione non disponibile';
+    let info=null;try{info=await window.rplGetWeather(btn.dataset.weatherDate,'time',btn.dataset.weatherTime);}catch(e){console.warn('Previsione meteo calendario non disponibile',e);}
+    if(out)out.textContent=info?(info.temp!=null?info.temp+'°C · ':'')+info.label:'Previsioni non disponibili';
     if(info)btn.textContent=info.icon;
   }));
 }
@@ -3956,6 +3956,10 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
   function rplWeatherInfo(code){const m={0:['☀️','Sereno'],1:['🌤️','Preval. sereno'],2:['⛅','Parzialmente nuvoloso'],3:['☁️','Nuvoloso'],45:['🌫️','Nebbia'],48:['🌫️','Nebbia'],51:['🌦️','Pioviggine'],53:['🌦️','Pioviggine'],55:['🌧️','Pioviggine'],61:['🌦️','Pioggia'],63:['🌧️','Pioggia'],65:['🌧️','Pioggia forte'],71:['🌨️','Neve'],73:['🌨️','Neve'],75:['❄️','Neve forte'],80:['🌦️','Rovesci'],81:['🌧️','Rovesci'],82:['⛈️','Rovesci forti'],95:['⛈️','Temporale'],96:['⛈️','Temporale'],99:['⛈️','Temporale']};return m[code]||['🌡️','Meteo'];}
   async function rplGetWeather(date,kind,time){try{const key=date+'|'+kind+'|'+time;if(rplWeatherCache[key])return rplWeatherCache[key];const url=`https://api.open-meteo.com/v1/forecast?latitude=${RPL_ENNA_LAT}&longitude=${RPL_ENNA_LON}&daily=weather_code,temperature_2m_max,temperature_2m_min&hourly=weather_code,temperature_2m&timezone=Europe%2FRome&start_date=${date}&end_date=${date}`;const r=await fetch(url);if(!r.ok)throw 0;const j=await r.json();let temp=null,code=null;if(kind==='time'&&time){const h=Number(time.slice(0,2));temp=j.hourly?.temperature_2m?.[h];code=j.hourly?.weather_code?.[h];}else{const rr={mattina:[8,11],pomeriggio:[14,17],sera:[19,22]}[kind]||[12,15],hs=Array.from({length:rr[1]-rr[0]+1},(_,i)=>rr[0]+i),ts=hs.map(h=>j.hourly?.temperature_2m?.[h]).filter(Number.isFinite),cs=hs.map(h=>j.hourly?.weather_code?.[h]).filter(x=>x!==undefined);temp=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:j.daily?.temperature_2m_max?.[0];code=cs.length?cs[Math.floor(cs.length/2)]:j.daily?.weather_code?.[0];}const z=rplWeatherInfo(code),out={icon:z[0],label:z[1],temp:temp==null?null:Math.round(temp)};rplWeatherCache[key]=out;return out;}catch(e){return null;}}
   async function rplGetWeatherDetails(date,kind,time){try{const url=`https://api.open-meteo.com/v1/forecast?latitude=${RPL_ENNA_LAT}&longitude=${RPL_ENNA_LON}&hourly=weather_code,temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe%2FRome&start_date=${date}&end_date=${date}`;const r=await fetch(url);if(!r.ok)throw 0;const j=await r.json();let range=kind==='time'&&time?[Number(time.slice(0,2)),Number(time.slice(0,2))+2]:({mattina:[8,11],pomeriggio:[14,17],sera:[19,23]}[kind]||[19,23]);return Array.from({length:Math.max(1,range[1]-range[0]+1)},(_,i)=>range[0]+i).filter(h=>h<24).map(h=>({hour:String(h).padStart(2,'0')+':00',code:j.hourly?.weather_code?.[h],temp:j.hourly?.temperature_2m?.[h],rain:j.hourly?.precipitation_probability?.[h],wind:j.hourly?.wind_speed_10m?.[h]}));}catch(e){return null;}}
+  // Condividi le funzioni meteo con il calendario pubblico, che vive in uno script separato.
+  window.rplWeatherInfo=rplWeatherInfo;
+  window.rplGetWeather=rplGetWeather;
+  window.rplGetWeatherDetails=rplGetWeatherDetails;
   async function loadPlayerVoting(){
     const card=q('playerVotingCard');
     const optionsBox=q('playerVotingOptions');
@@ -4601,7 +4605,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   .rpl-main-menu-btn span{display:inline-block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:normal!important;min-width:0!important;}
 }
 </style>
-<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.10";</script>
+<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.11";</script>
 
 <style id="rpl-v907-player-matches-photo-fix">
 .rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
@@ -4627,7 +4631,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 .rpl-profile-photo-wrap.has-photo .rpl-profile-photo-placeholder{display:none}
 @media(max-width:600px){.rpl-profile-photo-wrap{width:96px;height:96px;flex-basis:96px}}
 </style>
-<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.5";</script>
+<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.11";</script>
 
 
 <style id="rpl-v916-regolamento-carousel-fix">
@@ -4644,6 +4648,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 #rplRegolamentoClose{position:absolute!important;top:7px!important;right:8px!important;z-index:10!important;margin:0!important}
 @media(max-width:600px){#rplRegolamentoModal{padding:43px 3px 5px!important}#rplRegolamentoTrack .rpl-regolamento-slide img{width:100%!important;height:100%!important;object-fit:contain!important}.rpl-regolamento-nav{gap:14px!important}}
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.6";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.11";</script>
 
 </body></html>
