@@ -691,7 +691,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 8.9.1 - Passkey / Face ID / Impronta -->
+<!-- RPL VERSION 9.1.7 - Swipe regolamento bidirezionale -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -3683,7 +3683,32 @@ async function loadPublicCalendar(){
     prev.addEventListener('click',()=>go(idx-1));next.addEventListener('click',()=>go(idx+1));dots.forEach((d,i)=>d.addEventListener('click',()=>go(i)));
     o.addEventListener('click',e=>{if(e.target===o)close();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&o.classList.contains('open'))close();if(o.classList.contains('open')&&e.key==='ArrowRight')go(idx+1);if(o.classList.contains('open')&&e.key==='ArrowLeft')go(idx-1);});
-    let sx=0;track.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});track.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>45)go(idx+(dx<0?1:-1));},{passive:true});
+    // Swipe affidabile in entrambe le direzioni: gli eventi sono agganciati
+    // al contenitore fisso, non al track che si sposta durante la navigazione.
+    const slider=document.getElementById('rplRegolamentoSlider');
+    let sx=0, sy=0, tracking=false;
+    const swipeStart=e=>{
+      const t=e.touches?e.touches[0]:e;
+      sx=t.clientX;sy=t.clientY;tracking=true;
+    };
+    const swipeEnd=e=>{
+      if(!tracking)return;
+      tracking=false;
+      const t=e.changedTouches?e.changedTouches[0]:e;
+      const dx=t.clientX-sx,dy=t.clientY-sy;
+      if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)*1.15){
+        e.preventDefault?.();
+        go(idx+(dx<0?1:-1));
+      }
+    };
+    if(slider){
+      slider.addEventListener('touchstart',swipeStart,{passive:true});
+      slider.addEventListener('touchend',swipeEnd,{passive:false});
+      slider.addEventListener('touchcancel',()=>{tracking=false;},{passive:true});
+      slider.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')swipeStart(e);},{passive:true});
+      slider.addEventListener('pointerup',e=>{if(e.pointerType==='touch')swipeEnd(e);},{passive:false});
+      slider.addEventListener('pointercancel',()=>{tracking=false;},{passive:true});
+    }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initRplRegolamento);else initRplRegolamento();
 })();
@@ -4527,7 +4552,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   .rpl-main-menu-btn span{display:inline-block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:normal!important;min-width:0!important;}
 }
 </style>
-<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.0.7";</script>
+<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.7";</script>
 
 <style id="rpl-v907-player-matches-photo-fix">
 .rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
