@@ -691,7 +691,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 9.1.11 - Fix meteo calendario: funzioni condivise e fallback 3B Meteo -->
+<!-- RPL VERSION 9.1.12 - Fix notifiche risultato partita server-side -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -3368,7 +3368,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.5</div>
+<div id="rplVersionBadge">RPL v9.1.12</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4328,24 +4328,30 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     r=await sb.from('calendar_matches').update({result_submitted_at:new Date().toISOString(),result_submitted_by:playerUser.id}).eq('id',cm.id).is('result_submitted_at',null);
     if(r.error){msg.className='msg err';msg.textContent='Risultato salvato ma non riesco a chiudere l’assegnazione: '+r.error.message;return}
 
-    // Risultato inserito: ai 4 giocatori + ai 4 operatori ufficiali.
-    const opNames=['Gianni Caruso','Salvatore Bertuccio','Salvatore Balsamo','Filippo Di Dio'];
-    const {data:opRows}=await sb.from('players').select('id,name').in('name',opNames);
-    const operatorIds=(opRows||[]).map(x=>Number(x.id)).filter(Number.isFinite);
-    const resultRecipients=[...new Set([...ids,...operatorIds])];
-    await rplAutoSendNotification(resultRecipients,"🎾 Risultato partita inserito","È stato inserito un nuovo risultato di partita. È in attesa di conferma.","?rpl=confirm#player");
-
-    // MVP e Imbattuto: notifica personale ai giocatori premiati.
-    const awardIds=[...new Set([...mvps,...imbs])];
-    for(const pid of awardIds){
-      const isMvp=mvps.includes(pid),isImb=imbs.includes(pid);
-      const title=isMvp&&isImb?"👑🛡️ MVP e Imbattuto":isMvp?"👑 MVP della serata":"🛡️ Imbattuto";
-      const body=isMvp&&isImb?"Complimenti! Sei stato MVP e hai chiuso la partita senza perdere un set.":isMvp?"Complimenti! Sei stato nominato MVP della tua partita.":"Complimenti! Hai chiuso la partita senza perdere un set.";
-      await rplAutoSendNotification([pid],title,body,"#player");
+    // Notifiche server-side: l'Edge Function verifica identità, ruolo di responsabile e risultato registrato.
+    let notificationSummary='';
+    try{
+      const {data:notificationData,error:notificationError}=await sb.functions.invoke('rpl-notifications',{body:{action:'result_submitted',calendar_match_id:Number(cm.id)}});
+      if(notificationError)throw notificationError;
+      if(!notificationData?.ok)throw new Error(notificationData?.error||'Il server non ha confermato l’invio delle notifiche.');
+      const main=notificationData.mainNotification||{};
+      const awards=notificationData.awardNotifications||{};
+      const sent=Number(main.sent||0)+Number(awards.sent||0);
+      const failed=Number(main.failed||0)+Number(awards.failed||0);
+      const missing=Number(main.missing||0)+Number(awards.missing||0);
+      notificationSummary=failed||missing
+        ? `⚠️ Risultato registrato. Notifiche inviate: ${sent}; errori: ${failed}; giocatori senza dispositivo attivo: ${missing}.`
+        : `✅ Risultato registrato. Notifiche inviate correttamente (${sent} consegne).`;
+    }catch(notificationError){
+      console.error('Errore invio notifiche risultato RPL:',notificationError);
+      notificationSummary='⚠️ Risultato registrato, ma l’invio delle notifiche non è stato confermato. Controllare lo stato notifiche nell’Area Riservata.';
     }
+    msg.className=notificationSummary.startsWith('⚠️')?'msg err':'msg ok';msg.textContent=notificationSummary;
+    assignedMatch=null;panel.classList.add('hidden');panel.innerHTML='';
+    await Promise.all([loadPlayerStats(),loadPlayerMatches()]);
+    const resultHero=q('playerResponsibleHero');
+    if(resultHero){resultHero.classList.remove('hidden');resultHero.innerHTML=`<div class="card" style="margin:0"><div style="font-weight:900;font-size:16px">${escP(notificationSummary)}</div><div class="muted" style="margin-top:7px">Il risultato è stato registrato. Puoi continuare a usare l’Area Giocatore.</div></div>`;}
 
-    msg.className='msg ok';msg.textContent='✅ Risultato registrato. Notificati giocatori, operatori, MVP e imbattuti.';
-    assignedMatch=null;clearResponsible();panel.classList.add('hidden');panel.innerHTML='';await Promise.all([loadPlayerStats(),loadPlayerMatches()]);
   }
   function rplIsIOS(){return /iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/i.test(navigator.userAgent)&&navigator.maxTouchPoints>1);}
   function rplIsStandalone(){return window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;}
@@ -4605,7 +4611,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   .rpl-main-menu-btn span{display:inline-block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:normal!important;min-width:0!important;}
 }
 </style>
-<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.11";</script>
+<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.12";</script>
 
 <style id="rpl-v907-player-matches-photo-fix">
 .rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
@@ -4631,7 +4637,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 .rpl-profile-photo-wrap.has-photo .rpl-profile-photo-placeholder{display:none}
 @media(max-width:600px){.rpl-profile-photo-wrap{width:96px;height:96px;flex-basis:96px}}
 </style>
-<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.11";</script>
+<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.12";</script>
 
 
 <style id="rpl-v916-regolamento-carousel-fix">
@@ -4648,6 +4654,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 #rplRegolamentoClose{position:absolute!important;top:7px!important;right:8px!important;z-index:10!important;margin:0!important}
 @media(max-width:600px){#rplRegolamentoModal{padding:43px 3px 5px!important}#rplRegolamentoTrack .rpl-regolamento-slide img{width:100%!important;height:100%!important;object-fit:contain!important}.rpl-regolamento-nav{gap:14px!important}}
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.11";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.12";</script>
 
 </body></html>
