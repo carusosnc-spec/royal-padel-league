@@ -2752,7 +2752,33 @@ async function updateMatch(){
   const mv=[...document.querySelectorAll("#editMvp input:checked")].map(x=>+x.value),im=[...document.querySelectorAll("#editImb input:checked")].map(x=>+x.value);
   const awards=[...mv.map(pid=>({match_id:id,player_id:pid,award_type:"MVP"})),...im.map(pid=>({match_id:id,player_id:pid,award_type:"IMBATTUTO"}))];
   if(awards.length){let {error:ae}=await sb.from("match_awards").insert(awards);if(ae){$("editMsg").className="msg err";$("editMsg").textContent=ae.message;return}}
-  closeEdit();await loadRanking();await loadOperatorHistory();
+  // La partita è stata modificata: aggiorna classifica/storico e invia nuovamente le due notifiche.
+  closeEdit();
+  await loadRanking();
+  await loadOperatorHistory();
+  const participantNotice=await rplAutoSendNotification(
+    ids,
+    "🎾 Risultato partita aggiornato",
+    "Il risultato della tua partita RPL è stato modificato. Apri l'app per consultare i risultati aggiornati.",
+    "?rpl=history#player"
+  );
+  const rankingRecipients=await rplGetActivePlayerIds();
+  const rankingNotice=await rplAutoSendNotification(
+    rankingRecipients,
+    "🏆 Classifica RPL aggiornata",
+    "È stata modificata una partita e la classifica RPL è stata aggiornata. Entra nell'app per vedere la tua posizione.",
+    "#public"
+  );
+  const pSent=Number(participantNotice?.sent||0), pMissing=Number(participantNotice?.missing||0), pFailed=Number(participantNotice?.failed||0);
+  const rSent=Number(rankingNotice?.sent||0), rMissing=Number(rankingNotice?.missing||0), rFailed=Number(rankingNotice?.failed||0);
+  const problems=[];
+  if(!(participantNotice?.ok===true && pSent>0)) problems.push(`notifica ai partecipanti non consegnata (senza dispositivo: ${pMissing}, errori: ${pFailed}${participantNotice?.error?", "+participantNotice.error:""})`);
+  if(!(rankingNotice?.ok===true && rSent>0)) problems.push(`notifica classifica non consegnata (senza dispositivo: ${rMissing}, errori: ${rFailed}${rankingNotice?.error?", "+rankingNotice.error:""})`);
+  const editMsg=$("editMsg");
+  editMsg.className=problems.length?'msg err':'msg ok';
+  editMsg.textContent=problems.length
+    ? '⚠️ Partita modificata e classifica ricaricata, ma '+problems.join('; ')+'. Controlla i dispositivi nell’Area Riservata.'
+    : `✅ Modifiche salvate. Notifiche inviate: ${pSent} dispositivo/i ai partecipanti e ${rSent} dispositivo/i per la classifica.`;
 }
 $("loadLastMatchBtn")?.addEventListener("click",loadLastCalendarMatch);
 $("publicBtn").onclick=()=>{hidePlayerArea?.();location.hash="";const cal=$("publicCalendarPage");if(cal){cal.classList.add("hidden");cal.style.display="none";}$("partialPage")?.classList.add("hidden");$("historyView")?.style.setProperty("display","none");$("publicPage").classList.remove("hidden");$("publicPage").style.display="";$("adminPage").classList.add("hidden");$("calendarPublicBtn")?.classList.remove("primary");$("partialBtn")?.classList.remove("primary");$("historyBtn")?.classList.remove("primary");$("adminBtn")?.classList.remove("primary");$("publicBtn")?.classList.add("primary");loadRanking()};
@@ -3316,7 +3342,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.2</div>
+<div id="rplVersionBadge">RPL v9.1.5</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4085,8 +4111,8 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       const avatarCandidates=JSON.stringify(avatarUrls);
       const logo=logoFile(p.name);const age=rplProfileAge(prof?.birth_date);const side=rplProfileSide(prof?.preferred_side);const style=rplProfileStyle(prof?.play_style);
       const stats=[['SET',st.st.sets],['VINTI',st.st.won],['GAME',st.st.games],['PT.SET',st.st.pt.toFixed(1)],['BASE',st.base.toFixed(2)],['MVP',st.st.mvp],['IMBATTUTO',st.st.imb],['TOTALE',st.total.toFixed(2)]];
-      const photoAttrs=photo?`src="${escP(photo)}" class="rpl-profile-modal-photo" loading="eager" data-avatar-candidates='${escP(avatarCandidates)}' data-avatar-index="0" onerror="try{const a=JSON.parse(this.dataset.avatarCandidates||'[]');const i=Number(this.dataset.avatarIndex||0)+1;if(i<a.length){this.dataset.avatarIndex=i;this.src=a[i]}else{this.onerror=null;this.style.display='none'}}catch(_){this.onerror=null;this.style.display='none'}"`:'class="rpl-profile-modal-photo" style="display:none"';
-      body.innerHTML=`<div class="rpl-profile-modal-head"><img ${photoAttrs}><div class="rpl-profile-modal-logo" style="${logo?`background-image:url('${logo}');background-size:cover;background-position:center`:''}">${logo?'':'🏆'}</div><div style="flex:1"><div class="rpl-player-kicker">ROYAL PADEL LEAGUE</div><div class="rpl-profile-modal-title">${escP(p.name||'')}</div><div class="rpl-profile-modal-nick">${p.nickname?`“${escP(p.nickname)}”`:''}</div><div class="muted">Fascia ${p.fascia||'—'} · ${p.fascia_value||'—'} punti</div></div></div><div class="rpl-profile-ranks"><div class="rpl-profile-rank main"><b>${ranks.general||'—'}</b><span>CLASSIFICA GENERALE</span></div><div class="rpl-profile-rank"><b>${ranks.partial||'—'}</b><span>PARZIALE MESE</span></div><div class="rpl-profile-rank"><b>${ranks.bonus||'—'}</b><span>CLASSIFICA BONUS</span></div></div><div class="rpl-public-profile-meta">${prof?.birth_date?`<div><b>${rplProfileDate(prof.birth_date)}${age!==''?' · '+age+' anni':''}</b><span>DATA DI NASCITA</span></div>`:''}${side?`<div><b>${side}</b><span>LATO PREFERITO</span></div>`:''}${prof?.racket?`<div><b>${escP(prof.racket)}</b><span>RACCHETTA</span></div>`:''}${style?`<div><b>${style}</b><span>STILE DI GIOCO</span></div>`:''}</div><div class="rpl-profile-stat-grid">${stats.map(x=>`<div class="rpl-profile-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>`;
+      const photoMarkup=`<div class="rpl-profile-photo-wrap">${photo?`<img src="${escP(photo)}" class="rpl-profile-modal-photo" loading="eager" data-avatar-candidates='${escP(avatarCandidates)}' data-avatar-index="0" onload="this.parentElement.classList.add('has-photo')" onerror="try{const a=JSON.parse(this.dataset.avatarCandidates||'[]');const i=Number(this.dataset.avatarIndex||0)+1;if(i<a.length){this.dataset.avatarIndex=i;this.src=a[i]}else{this.onerror=null;this.removeAttribute('src');this.parentElement.classList.remove('has-photo')}}catch(_){this.onerror=null;this.removeAttribute('src');this.parentElement.classList.remove('has-photo')}">`:''}<div class="rpl-profile-photo-placeholder" aria-label="Foto profilo non ancora caricata"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="34" r="18"/><path d="M15 91c2-22 16-35 35-35s33 13 35 35z"/></svg></div></div>`;
+      body.innerHTML=`<div class="rpl-profile-modal-head">${photoMarkup}<div class="rpl-profile-modal-logo" style="${logo?`background-image:url('${logo}');background-size:cover;background-position:center`:''}">${logo?'':'🏆'}</div><div style="flex:1"><div class="rpl-player-kicker">ROYAL PADEL LEAGUE</div><div class="rpl-profile-modal-title">${escP(p.name||'')}</div><div class="rpl-profile-modal-nick">${p.nickname?`“${escP(p.nickname)}”`:''}</div><div class="muted">Fascia ${p.fascia||'—'} · ${p.fascia_value||'—'} punti</div></div></div><div class="rpl-profile-ranks"><div class="rpl-profile-rank main"><b>${ranks.general||'—'}</b><span>CLASSIFICA GENERALE</span></div><div class="rpl-profile-rank"><b>${ranks.partial||'—'}</b><span>PARZIALE MESE</span></div><div class="rpl-profile-rank"><b>${ranks.bonus||'—'}</b><span>CLASSIFICA BONUS</span></div></div><div class="rpl-public-profile-meta">${prof?.birth_date?`<div><b>${rplProfileDate(prof.birth_date)}${age!==''?' · '+age+' anni':''}</b><span>DATA DI NASCITA</span></div>`:''}${side?`<div><b>${side}</b><span>LATO PREFERITO</span></div>`:''}${prof?.racket?`<div><b>${escP(prof.racket)}</b><span>RACCHETTA</span></div>`:''}${style?`<div><b>${style}</b><span>STILE DI GIOCO</span></div>`:''}</div><div class="rpl-profile-stat-grid">${stats.map(x=>`<div class="rpl-profile-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>`;
     }catch(e){body.innerHTML=`<div class="msg err">Errore caricamento scheda: ${escP(e.message||e)}</div>`;}
   }
   function closeRplPlayerProfile(){const m=q('rplPlayerProfileModal');if(m){m.classList.add('hidden');m.setAttribute('aria-hidden','true')}}
@@ -4498,4 +4524,27 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 <style id="rpl-v907-player-matches-photo-fix">
 .rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
 </style>
+
+<style id="rpl-v915-regolamento-fullscreen-avatar-placeholder">
+/* Regolamento: immagini grandi, quasi a schermo intero, mantenendo il carosello */
+#rplRegolamentoOverlay{padding:0!important;align-items:stretch!important;justify-content:stretch!important;background:rgba(0,0,0,.96)!important}
+#rplRegolamentoModal{width:100vw!important;height:100vh!important;height:100dvh!important;max-height:100vh!important;max-height:100dvh!important;box-sizing:border-box!important;border:0!important;border-radius:0!important;padding:7px 7px 5px!important;overflow:hidden!important}
+#rplRegolamentoClose{position:absolute!important;top:8px!important;right:8px!important;float:none!important;margin:0!important;flex:0 0 auto!important;background:rgba(7,21,33,.94)!important}
+#rplRegolamentoSlider{flex:1 1 auto!important;min-height:0!important;width:100%!important;height:auto!important;border-radius:5px!important}
+.rpl-regolamento-track{height:100%!important;align-items:stretch!important}
+.rpl-regolamento-slide{height:100%!important;min-width:0!important;align-items:center!important;justify-content:center!important;padding:0!important}
+.rpl-regolamento-slide img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;border-radius:3px!important}
+.rpl-regolamento-nav{padding:4px 0 1px!important;margin-top:2px!important;flex:0 0 auto!important}
+.rpl-regolamento-hint{margin-top:2px!important;font-size:10px!important}
+/* Profilo pubblico: placeholder stabile, senza icona immagine rotta durante il caricamento */
+.rpl-profile-photo-wrap{position:relative;width:150px;height:150px;flex:0 0 150px;border-radius:50%;overflow:hidden;border:2px solid var(--gold);background:radial-gradient(circle at 50% 30%,#21384c 0,#0a1928 62%,#06111c 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 5px 18px rgba(0,0,0,.3)}
+.rpl-profile-photo-wrap .rpl-profile-modal-photo{position:absolute;inset:0;width:100%;height:100%;display:none;flex:none;object-fit:cover;border:0;border-radius:50%;background:transparent}
+.rpl-profile-photo-wrap.has-photo .rpl-profile-modal-photo{display:block}
+.rpl-profile-photo-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.rpl-profile-photo-placeholder svg{width:76%;height:76%;fill:#60778a;opacity:.72;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.rpl-profile-photo-wrap.has-photo .rpl-profile-photo-placeholder{display:none}
+@media(max-width:600px){.rpl-profile-photo-wrap{width:96px;height:96px;flex-basis:96px}}
+</style>
+<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.5";</script>
+
 </body></html>
