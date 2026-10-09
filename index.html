@@ -3666,11 +3666,19 @@ async function loadPublicCalendar(){
     const next=document.getElementById('rplRegolamentoNext');
     const dots=[...document.querySelectorAll('.rpl-regolamento-dot')];
     if(!b||!o||!c||!track||!prev||!next)return;
+    const slides=[...track.querySelectorAll('.rpl-regolamento-slide')];
     let idx=0;
-    function render(){track.style.transform=`translateX(-${idx*50}%)`;dots.forEach((d,i)=>d.classList.toggle('active',i===idx));}
+    function render(){
+      const count=slides.length||1;
+      track.style.transform=`translateX(-${idx*100}%)`;
+      dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
+      const hint=o.querySelector('.rpl-regolamento-hint');
+      if(hint)hint.textContent=`Scorri lateralmente oppure usa le frecce · ${idx+1}/${count}`;
+      prev.disabled=count<2;next.disabled=count<2;
+    }
     function open(){idx=0;render();o.classList.add('open');o.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
     function close(){o.classList.remove('open');o.setAttribute('aria-hidden','true');document.body.style.overflow='';}
-    function go(n){idx=(n+2)%2;render();}
+    function go(n){const count=slides.length||1;idx=(n+count)%count;render();}
     b.addEventListener('click',open);c.addEventListener('click',close);
     prev.addEventListener('click',()=>go(idx-1));next.addEventListener('click',()=>go(idx+1));dots.forEach((d,i)=>d.addEventListener('click',()=>go(i)));
     o.addEventListener('click',e=>{if(e.target===o)close();});
@@ -4546,5 +4554,22 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-profile-photo-wrap{width:96px;height:96px;flex-basis:96px}}
 </style>
 <script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.5";</script>
+
+
+<style id="rpl-v916-regolamento-carousel-fix">
+/* RPL 9.1.6 — una sola pagina del regolamento grande e leggibile per schermata */
+#rplRegolamentoOverlay{padding:0!important;align-items:stretch!important;justify-content:stretch!important;background:rgba(0,0,0,.97)!important}
+#rplRegolamentoModal{position:relative!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-height:100vh!important;max-height:100dvh!important;margin:0!important;padding:44px 8px 8px!important;border:0!important;border-radius:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+#rplRegolamentoSlider{display:block!important;flex:1 1 auto!important;min-height:0!important;width:100%!important;height:auto!important;overflow:hidden!important;touch-action:pan-y!important}
+#rplRegolamentoTrack{display:flex!important;width:100%!important;height:100%!important;align-items:stretch!important;transition:transform .28s ease!important}
+#rplRegolamentoTrack .rpl-regolamento-slide{display:flex!important;flex:0 0 100%!important;width:100%!important;min-width:100%!important;height:100%!important;align-items:center!important;justify-content:center!important;padding:0!important;overflow:hidden!important}
+#rplRegolamentoTrack .rpl-regolamento-slide img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;margin:0 auto!important;border-radius:3px!important}
+#rplRegolamentoNav,.rpl-regolamento-nav{flex:0 0 auto!important;margin-top:5px!important;padding:4px 0!important}
+.rpl-regolamento-arrow{width:44px!important;height:38px!important;font-size:24px!important}
+.rpl-regolamento-hint{font-size:11px!important;margin:2px 0 0!important}
+#rplRegolamentoClose{position:absolute!important;top:7px!important;right:8px!important;z-index:10!important;margin:0!important}
+@media(max-width:600px){#rplRegolamentoModal{padding:43px 3px 5px!important}#rplRegolamentoTrack .rpl-regolamento-slide img{width:100%!important;height:100%!important;object-fit:contain!important}.rpl-regolamento-nav{gap:14px!important}}
+</style>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.6";</script>
 
 </body></html>
