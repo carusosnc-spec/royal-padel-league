@@ -7,16 +7,9 @@ on:
       - 'pair-stats.js'
 permissions:
   contents: write
-  pages: write
-  id-token: write
-concurrency:
-  group: pages
-  cancel-in-progress: false
 jobs:
-  patch-and-deploy:
+  patch-index:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,11 +37,3 @@ jobs:
             git commit -m "Add RPL pair statistics to player profiles"
             git push origin HEAD:main
           fi
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: '.'
-      - name: Deploy Pages
-        uses: actions/deploy-pages@v4
