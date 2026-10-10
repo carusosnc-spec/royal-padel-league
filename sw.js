@@ -1,5 +1,5 @@
-// RPL pair statistics release 9.1.14
-const CACHE_NAME = "rpl-v9.1.14";
+// RPL pair statistics release 9.1.15
+const CACHE_NAME = "rpl-v9.1.15";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest"];
 
 self.addEventListener("install", event => {
