@@ -691,7 +691,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 9.1.15 - Console controllo votazioni Area Riservata -->
+<!-- RPL VERSION 9.1.16 - Percentuali e Top 5 compagni -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -936,6 +936,23 @@ html,body{overflow-x:hidden!important;}
 .rpl-history-month{margin:0 0 14px}.rpl-history-month-list{display:grid;gap:10px;padding-top:8px}.rpl-history-month .rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;background:#0b1825;color:#f6d86b;border:1px solid rgba(231,185,78,.28);border-radius:12px;padding:11px 13px;font-weight:900}.rpl-history-month .rpl-player-month-btn small{color:#aebdcb}.rpl-history-month-list.hidden{display:none}
 @media(max-width:700px){.rpl-history-month .rpl-player-month-btn{font-size:12px}.rpl-history-month-list .history-card{padding:10px}}
 </style>
+
+<style id="rpl-v9116-partner-top5-style">
+.rpl-partner-top5{margin-top:16px}
+.rpl-partner-top5-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.rpl-partner-top5-title{font-size:15px;font-weight:900;color:#ffd86a}
+.rpl-partner-top5-note{font-size:10px;color:#9da8b4}
+.rpl-partner-row{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(3,minmax(0,1fr));gap:8px;align-items:center;padding:11px 10px;border:1px solid rgba(231,185,78,.2);border-radius:12px;margin-top:7px;background:rgba(255,255,255,.025)}
+.rpl-partner-row:first-of-type{border-color:rgba(255,216,106,.55);background:linear-gradient(90deg,rgba(231,185,78,.1),rgba(255,255,255,.02))}
+.rpl-partner-name{font-size:12px;font-weight:850;color:#fff;min-width:0;overflow-wrap:anywhere}
+.rpl-partner-name small{display:block;color:#9da8b4;font-size:10px;margin-top:3px;font-weight:500}
+.rpl-partner-metric{text-align:center;font-size:13px;font-weight:900;color:#fff}
+.rpl-partner-metric span{display:block;font-size:9px;font-weight:700;color:#aeb8c4;margin-top:3px}
+.rpl-partner-points{color:#ffd86a}
+.rpl-partner-empty{padding:12px;border:1px dashed rgba(231,185,78,.25);border-radius:10px;color:#aeb8c4;font-size:12px}
+@media(max-width:520px){.rpl-partner-row{grid-template-columns:minmax(0,1fr) repeat(3,minmax(0,.8fr));gap:4px;padding:9px 6px}.rpl-partner-name{font-size:10px}.rpl-partner-metric{font-size:11px}.rpl-partner-metric span{font-size:8px}}
+</style>
+
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -980,7 +997,6 @@ html,body{overflow-x:hidden!important;}
     <button id="bonusBtn">Classifica Bonus</button><button id="adminBtn">Area riservata</button>
   </div>
 </nav>
-
 
 
 <section id="playerAreaPage" class="hidden">
@@ -1084,6 +1100,7 @@ html,body{overflow-x:hidden!important;}
     <div class="card">
       <h2>📊 Le mie statistiche</h2>
       <div id="playerStatsGrid" class="rpl-stat-grid"></div>
+      <div id="playerPartnerTop5" class="rpl-partner-top5"><div class="muted">Le statistiche dei compagni saranno mostrate qui.</div></div>
     </div>
 
       </div>
@@ -1979,7 +1996,6 @@ async function loadOperatorVoting(){
     /* Mostra subito le settimane, anche prima dei dettagli. */
     host.innerHTML=activeWeeks.length?activeWeeks.map(w=>renderWeek(w)).join(""):'<div class="muted">Nessuna votazione attiva.</div>';
     if(archiveHost)archiveHost.innerHTML=archivedWeeks.length?archivedWeeks.map(w=>renderWeek(w)).join(""):'<div class="muted">Nessuna votazione archiviata.</div>';
-
     /* I dettagli sono secondari: se una delle due letture fallisce, le settimane
        restano comunque visibili e mostriamo un messaggio senza lasciare "Caricamento". */
     const ids=weeks.map(w=>w.id);
@@ -2979,8 +2995,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
     $("partialReset")?.addEventListener("click",()=>{
       $("partialFrom").value="";
       $("partialTo").value="";
-      $("partialRanking").innerHTML="";
-      $("partialSummary").textContent="Seleziona un periodo e premi CALCOLA.";
+      $("partialRanking").innerHTML="";      $("partialSummary").textContent="Seleziona un periodo e premi CALCOLA.";
     });
     document.querySelectorAll(".partial-preset").forEach(b=>b.addEventListener("click",()=>{
       $("partialFrom").value=b.dataset.from;
@@ -3374,7 +3389,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.15</div>
+<div id="rplVersionBadge">RPL v9.1.16</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3979,8 +3994,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     if(msg){msg.className='msg';msg.textContent='';}
 
     const wr=await sb.from('rpl_poll_weeks').select('*').eq('status','open').order('opens_at',{ascending:false}).limit(10);
-    if(wr.error){console.error('RPL voting weeks',wr.error);return;}
-    const now=new Date();
+    if(wr.error){console.error('RPL voting weeks',wr.error);return;}    const now=new Date();
     const week=(wr.data||[]).find(w=>new Date(w.opens_at)<=now&&now<new Date(w.closes_at));
     if(!week)return;
 
@@ -4212,16 +4226,70 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
 
   async function loadPlayerStats(){
     const out=q('playerStatsGrid');if(!out)return;
-    const {data:matches,error:me}=await sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true});if(me){out.innerHTML='<div class="msg err">Errore caricamento statistiche.</div>';return}
-    const ids=(matches||[]).map(x=>x.id);let mp=[],sets=[],aw=[];
-    if(ids.length){const r=await Promise.all([sb.from('match_players').select('*').in('match_id',ids),sb.from('sets').select('*').in('match_id',ids),sb.from('match_awards').select('*').in('match_id',ids)]);mp=r[0].data||[];sets=r[1].data||[];aw=r[2].data||[];}
-    const snap={};mp.forEach(x=>snap[x.match_id+'_'+x.player_id]=x);
-    const st={sets:0,won:0,games:0,pt:0,mvp:0,imb:0};
-    sets.forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=Number(x.games_a),gb=Number(x.games_b);if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);if(W.includes(playerRow.id)){st.sets++;st.won++;st.games+=wg;st.pt+=(snap[x.match_id+'_'+L[0]]?.fascia_value||0)+(snap[x.match_id+'_'+L[1]]?.fascia_value||0)}else if(L.includes(playerRow.id)){st.sets++;st.games+=lg}});
-    aw.forEach(x=>{if(x.player_id===playerRow.id){if(x.award_type==='MVP')st.mvp++;if(x.award_type==='IMBATTUTO')st.imb++}});
-    const base=st.sets?((st.pt+st.games*.30+st.sets*.10)/st.sets)*10:0,total=base+st.mvp*1.5+st.imb;
-    const items=[['SET GIOCATI',st.sets],['SET VINTI',st.won],['GAME VINTI',st.games],['PT.SET',st.pt.toFixed(1)],['PUNTEGGIO BASE',base.toFixed(2)],['MVP',st.mvp],['IMBATTUTO',st.imb],['TOTALE',total.toFixed(2)]];
-    out.innerHTML=items.map(x=>`<div class="rpl-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+    const partnerOut=q('playerPartnerTop5');
+    try{
+      const {data:matches,error:me}=await sb.from('matches').select('id,played_at,approval_status').or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:true});
+      if(me)throw me;
+      const ids=(matches||[]).map(x=>x.id);let mp=[],sets=[],aw=[],players=[];
+      if(ids.length){
+        const r=await Promise.all([
+          sb.from('match_players').select('*').in('match_id',ids),
+          sb.from('sets').select('*').in('match_id',ids),
+          sb.from('match_awards').select('*').in('match_id',ids),
+          sb.from('players').select('id,name,nickname,is_guest')
+        ]);
+        if(r.some(x=>x.error))throw r.find(x=>x.error).error;
+        mp=r[0].data||[];sets=r[1].data||[];aw=r[2].data||[];players=r[3].data||[];
+      }else{
+        const {data,error}=await sb.from('players').select('id,name,nickname,is_guest');
+        if(error)throw error;players=data||[];
+      }
+      const snap={};mp.forEach(x=>snap[String(x.match_id)+'_'+String(x.player_id)]=x);
+      const pmap=new Map(players.map(p=>[String(p.id),p]));
+      const st={sets:0,won:0,games:0,pt:0,mvp:0,imb:0};
+      const partners=new Map();
+      sets.forEach(x=>{
+        const A=[x.pair_a_player_1,x.pair_a_player_2].filter(v=>v!=null).map(String);
+        const B=[x.pair_b_player_1,x.pair_b_player_2].filter(v=>v!=null).map(String);
+        const ga=Number(x.games_a),gb=Number(x.games_b);if(!Number.isFinite(ga)||!Number.isFinite(gb)||ga===gb)return;
+        const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);
+        if(W.includes(String(playerRow.id))){st.sets++;st.won++;st.games+=wg;st.pt+=(snap[String(x.match_id)+'_'+L[0]]?.fascia_value||0)+(snap[String(x.match_id)+'_'+L[1]]?.fascia_value||0)}
+        else if(L.includes(String(playerRow.id))){st.sets++;st.games+=lg}
+        const side=A.includes(String(playerRow.id))?A:(B.includes(String(playerRow.id))?B:null);
+        if(!side)return;
+        const partnerId=side.find(id=>id!==String(playerRow.id));if(!partnerId)return;
+        const partner=pmap.get(partnerId);
+        // Gli ospiti sono esclusi dalla classifica dei compagni.
+        if(!partner||partner.is_guest===true)return;
+        const ownWon=W.includes(String(playerRow.id));
+        const ownGames=A.includes(String(playerRow.id))?ga:gb;
+        const oppGames=A.includes(String(playerRow.id))?gb:ga;
+        const opponentIds=A.includes(String(playerRow.id))?B:A;
+        const setPoints=ownWon
+          ? Number(snap[String(x.match_id)+'_'+opponentIds[0]]?.fascia_value||0)+Number(snap[String(x.match_id)+'_'+opponentIds[1]]?.fascia_value||0)
+          : 0;
+        const row=partners.get(partnerId)||{id:partnerId,name:partner.name||'Giocatore',nickname:partner.nickname||'',sets:0,won:0,gamesWon:0,gamesPlayed:0,points:0};
+        row.sets++;if(ownWon)row.won++;
+        row.gamesWon+=ownGames;row.gamesPlayed+=ownGames+oppGames;
+        row.points+=setPoints+ownGames*.30+.10;
+        partners.set(partnerId,row);
+      });
+      aw.forEach(x=>{if(String(x.player_id)===String(playerRow.id)){if(x.award_type==='MVP')st.mvp++;if(x.award_type==='IMBATTUTO')st.imb++}});
+      const base=st.sets?((st.pt+st.games*.30+st.sets*.10)/st.sets)*10:0,total=base+st.mvp*1.5+st.imb;
+      const pct=(n,d)=>d?`${(n/d*100).toLocaleString('it-IT',{maximumFractionDigits:1})}%`:'—';
+      const items=[['SET GIOCATI',st.sets],['SET VINTI',`${st.won} · ${pct(st.won,st.sets)}`],['GAME VINTI',`${st.games} · ${pct(st.games,sets.reduce((sum,x)=>{const A=[x.pair_a_player_1,x.pair_a_player_2].map(String),B=[x.pair_b_player_1,x.pair_b_player_2].map(String);return sum+(A.includes(String(playerRow.id))||B.includes(String(playerRow.id))?Number(x.games_a)+Number(x.games_b):0)},0))}`],['PT.SET',st.pt.toFixed(1)],['PUNTEGGIO BASE',base.toFixed(2)],['MVP',st.mvp],['IMBATTUTO',st.imb],['TOTALE',total.toFixed(2)]];
+      out.innerHTML=items.map(x=>`<div class="rpl-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+      if(partnerOut){
+        const top=[...partners.values()].sort((a,b)=>b.points-a.points||b.sets-a.sets||b.won-a.won).slice(0,5);
+        partnerOut.innerHTML=`<div class="rpl-partner-top5-head"><div class="rpl-partner-top5-title">🤝 Top 5 compagni</div><div class="rpl-partner-top5-note">Ordinata per punti generati insieme · ospiti esclusi</div></div>`+
+          (top.length?top.map((p,i)=>`<div class="rpl-partner-row"><div class="rpl-partner-name">${i+1}. ${escP(p.name)}${p.nickname?`<small>“${escP(p.nickname)}”</small>`:''}<small>${p.sets} set giocati insieme</small></div><div class="rpl-partner-metric rpl-partner-points">${p.points.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})}<span>PT GENERATI</span></div><div class="rpl-partner-metric">${p.won} · ${pct(p.won,p.sets)}<span>SET VINTI</span></div><div class="rpl-partner-metric">${p.gamesWon} · ${pct(p.gamesWon,p.gamesPlayed)}<span>GAME VINTI</span></div></div>`).join(''):'<div class="rpl-partner-empty">Non ci sono ancora abbastanza dati dei compagni per creare la Top 5.</div>')+
+          `<div class="rpl-partner-top5-note" style="margin-top:8px">Le percentuali sono calcolate sui set e sui game effettivamente giocati insieme. I punti generati comprendono punti set, game (+0,30 ciascuno) e presenza (+0,10 per set).</div>`;
+      }
+    }catch(e){
+      console.error('Errore statistiche giocatore',e);
+      out.innerHTML='<div class="msg err">Errore caricamento statistiche.</div>';
+      if(partnerOut)partnerOut.innerHTML='<div class="rpl-partner-empty">Impossibile caricare le statistiche dei compagni. Riprova più tardi.</div>';
+    }
   }
   async function loadPlayerMatches(){
     const box=q('playerMatchesList');if(!box)return;
