@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Console votazioni · Royal Padel League</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:dark;--bg:#07121e;--panel:#0d1d2d;--gold:#ffd86a;--muted:#aab7c5;--green:#39d98a;--red:#ff888e;--line:rgba(231,185,78,.25)}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#132a40,var(--bg) 62%);color:#f5f7fa;font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:1100px;margin:auto;padding:18px}.brand{text-align:center;padding:14px 0 18px}.brand h1{margin:5px 0;color:var(--gold);font-size:clamp(21px,4vw,32px);letter-spacing:.04em}.brand p,.small{color:var(--muted)}.panel{background:rgba(13,29,45,.96);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 12px 35px #0002}.topline{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}h2{font-size:19px;margin:0 0 8px}label{display:block;font-weight:800;font-size:12px;color:var(--muted);margin-bottom:5px}select,input{width:100%;min-height:44px;background:#07121e;color:#fff;border:1px solid #425366;border-radius:9px;padding:9px;font:inherit}.select-wrap{margin-top:14px;max-width:520px}button{border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:#172d40;color:#fff;font-weight:850;cursor:pointer;min-height:42px}button.primary{background:var(--gold);color:#08121c;border-color:var(--gold)}button:disabled{opacity:.5}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:14px}.stat{border:1px solid #ffffff17;background:#06111d;border-radius:12px;padding:12px}.stat b{display:block;font-size:clamp(23px,4vw,32px);color:var(--gold)}.stat span{font-size:11px;color:var(--muted);font-weight:800}.status{padding:10px 12px;border-radius:10px;background:#ffffff08;color:var(--muted);margin-top:10px}.status.err{color:var(--red);border:1px solid #ff888e55}.status.ok{color:var(--green);border:1px solid #39d98a44}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.toolbar input{flex:1;min-width:190px}.pill{font-size:10px;font-weight:900;padding:4px 7px;border-radius:999px;white-space:nowrap}.yes{color:var(--green);background:#39d98a18;border:1px solid #39d98a55}.no{color:var(--red);background:#ff888e12;border:1px solid #ff888e55}.player{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #ffffff10}.player-name{font-weight:900}.nick{font-size:12px;color:var(--muted);margin-top:2px}.player-meta{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.empty{padding:18px;text-align:center;color:var(--green);font-weight:850}@media(max-width:650px){main{padding:10px}.panel{padding:12px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.player{align-items:flex-start}.player-meta{max-width:48%;flex-direction:column;align-items:flex-end}.brand{padding-top:7px}}
+</style></head><body><main>
+<header class="brand"><div style="font-size:30px">👑 🎾 👑</div><h1>ROYAL PADEL LEAGUE</h1><p>CONSOLE DI CONTROLLO VOTAZIONI · AREA RISERVATA</p></header>
+<section class="panel"><div class="topline"><div><h2>🗳️ Stato della votazione</h2><div class="small">Voti registrati, giocatori mancanti e stato notifiche.</div></div><button id="refresh" class="primary">↻ AGGIORNA DATI</button></div>
+<div class="select-wrap"><label for="pollSelect">SELEZIONA LA SETTIMANA</label><select id="pollSelect"><option>Caricamento votazioni…</option></select></div><div id="pollMeta" class="status">Accesso e caricamento dati…</div>
+<div class="stats"><div class="stat"><b id="total">—</b><span>GIOCATORI ATTIVI</span></div><div class="stat"><b id="voted">—</b><span>HANNO VOTATO</span></div><div class="stat"><b id="missing">—</b><span>NON HANNO VOTATO</span></div><div class="stat"><b id="rate">—</b><span>PARTECIPAZIONE</span></div></div></section>
+<section class="panel"><div class="topline"><div><h2 id="listTitle">📋 Elenco giocatori</h2><div class="small">Il voto e le notifiche sono due stati distinti.</div></div></div><div class="toolbar"><input id="search" type="search" placeholder="Cerca giocatore o soprannome…"><button id="copy">📋 COPIA NON VOTANTI</button><button id="onlyMissing">Mostra tutti</button></div><div id="list"><div class="status">Caricamento elenco…</div></div><div id="foot" class="small" style="margin-top:10px"></div></section>
+<div class="small" style="text-align:center;padding:8px 0 18px">RPL · Where Legends Play · Un dispositivo registrato non conferma che una notifica sia stata letta.</div></main>
+<script>
+const SUPABASE_URL="https://vanbadzkxvextdvnqwtr.supabase.co",SUPABASE_KEY="sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}}),$=id=>document.getElementById(id);
+let weeks=[],players=[],votes=[],devices=new Set(),selectedWeek=null,showMissingOnly=true;
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtDate=v=>v?new Date(v).toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"numeric"}):"—";
+const fmtDateTime=v=>v?new Date(v).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";
+function status(t,k){$("pollMeta").className="status "+(k||"");$("pollMeta").textContent=t;}
+async function load(){
+ $("refresh").disabled=true;$("refresh").textContent="⏳ AGGIORNAMENTO…";
+ try{
+  const sr=await sb.auth.getSession(),session=sr.data&&sr.data.session;
+  if(sr.error||!session)throw new Error("Accedi prima all’Area Riservata RPL in un’altra scheda, poi riapri questa console.");
+  const op=await sb.from("operators").select("user_id").eq("user_id",session.user.id).maybeSingle();
+  if(op.error)throw new Error("Verifica permessi operatore non riuscita: "+op.error.message);
+  if(!op.data)throw new Error("Accesso riservato agli operatori RPL.");
+  const res=await Promise.all([sb.from("rpl_poll_weeks").select("id,week_start,week_end,opens_at,closes_at,status,is_archived").order("opens_at",{ascending:false}).limit(100),sb.from("players").select("id,name,nickname,active,is_guest").eq("active",true).eq("is_guest",false).order("name"),sb.functions.invoke("rpl-notifications",{body:{action:"status"}})]);
+  if(res[0].error)throw res[0].error;if(res[1].error)throw res[1].error;
+  weeks=res[0].data||[];players=res[1].data||[];devices=new Set();
+  if(!res[2].error&&res[2].data&&res[2].data.ok)(res[2].data.devices||[]).forEach(d=>devices.add(Number(d.player_id)));
+  const old=$("pollSelect").value;
+  $("pollSelect").innerHTML=weeks.length?weeks.map(w=>'<option value="'+w.id+'">'+(w.is_archived?'📦 ':'')+fmtDate(w.week_start)+' → '+fmtDate(w.week_end)+' · '+esc(w.status||"—")+'</option>').join(""):'<option value="">Nessuna votazione</option>';
+  if(weeks.some(w=>String(w.id)===old))$("pollSelect").value=old;else{const a=weeks.find(w=>!w.is_archived&&w.status==="open")||weeks.find(w=>!w.is_archived)||weeks[0];if(a)$("pollSelect").value=String(a.id);}
+  await loadVotes();
+  status("Dati aggiornati alle "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+". "+(res[2].error?"Stato notifiche non disponibile.":"Stato notifiche verificato."),"ok");
+ }catch(e){status(e.message||String(e),"err");$("list").innerHTML='<div class="status err">'+esc(e.message||String(e))+'</div>';}
+ finally{$("refresh").disabled=false;$("refresh").textContent="↻ AGGIORNA DATI";}
+}
+async function loadVotes(){selectedWeek=Number($("pollSelect").value);if(!selectedWeek){votes=[];render();return;}const r=await sb.from("rpl_poll_votes").select("player_id,option_id,voted_at").eq("poll_week_id",selectedWeek);if(r.error)throw new Error("Lettura voti non riuscita: "+r.error.message);votes=r.data||[];render();}
+function render(){
+ const w=weeks.find(x=>Number(x.id)===selectedWeek);if(!w){["total","voted","missing","rate"].forEach(id=>$(id).textContent="0");$("list").innerHTML='<div class="empty">Nessuna votazione disponibile.</div>';return;}
+ const votedIds=new Set(votes.map(v=>Number(v.player_id))),voted=players.filter(p=>votedIds.has(Number(p.id))),missing=players.filter(p=>!votedIds.has(Number(p.id)));
+ $("total").textContent=players.length;$("voted").textContent=voted.length;$("missing").textContent=missing.length;$("rate").textContent=(players.length?Math.round(voted.length/players.length*100):0)+"%";
+ const rem=new Date(w.closes_at).getTime()-Date.now(),cd=rem>0?" · scade tra "+Math.floor(rem/3600000)+"h "+Math.floor(rem%3600000/60000)+"m":" · SCADENZA SUPERATA";
+ $("pollMeta").textContent="Settimana "+fmtDate(w.week_start)+" → "+fmtDate(w.week_end)+" · Stato: "+w.status+" · Apertura "+fmtDateTime(w.opens_at)+" · Chiusura "+fmtDateTime(w.closes_at)+cd;
+ const q=$("search").value.trim().toLocaleLowerCase("it"),src=showMissingOnly?missing:players,filtered=src.filter(p=>(p.name+" "+(p.nickname||"")).toLocaleLowerCase("it").includes(q)).sort((a,b)=>a.name.localeCompare(b.name,"it"));
+ $("listTitle").textContent=showMissingOnly?"⏳ NON HANNO ANCORA VOTATO ("+missing.length+")":"📋 TUTTI I GIOCATORI ("+players.length+")";$("onlyMissing").textContent=showMissingOnly?"Mostra tutti":"Mostra non votanti";
+ $("list").innerHTML=filtered.length?filtered.map(p=>{const hv=votedIds.has(Number(p.id)),hd=devices.has(Number(p.id));return '<div class="player"><div><div class="player-name">'+esc(p.name)+'</div><div class="nick">'+(p.nickname?'“'+esc(p.nickname)+'”':'')+'</div></div><div class="player-meta"><span class="pill '+(hv?'yes':'no')+'">'+(hv?'✅ VOTATO':'⏳ DA VOTARE')+'</span><span class="pill '+(hd?'yes':'no')+'">'+(hd?'🔔 NOTIFICHE ATTIVE':'🔕 NO DISPOSITIVO')+'</span></div></div>';}).join(""):'<div class="empty">'+(showMissingOnly?'🎉 Tutti i giocatori hanno votato!':'Nessun giocatore corrisponde alla ricerca.')+'</div>';
+ $("foot").textContent="Voti registrati: "+votes.length+". Giocatori conteggiati: attivi e non ospiti ("+players.length+"). Ultimo aggiornamento: "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+".";
+}
+$("refresh").addEventListener("click",load);$("pollSelect").addEventListener("change",()=>loadVotes().catch(e=>status(e.message||String(e),"err")));$("search").addEventListener("input",render);$("onlyMissing").addEventListener("click",()=>{showMissingOnly=!showMissingOnly;render();});
+$("copy").addEventListener("click",async()=>{const w=weeks.find(x=>Number(x.id)===selectedWeek),ids=new Set(votes.map(v=>Number(v.player_id))),list=players.filter(p=>!ids.has(Number(p.id))).sort((a,b)=>a.name.localeCompare(b.name,"it"));const out="ROYAL PADEL LEAGUE — GIOCATORI CHE NON HANNO VOTATO\nSettimana "+fmtDate(w&&w.week_start)+" → "+fmtDate(w&&w.week_end)+"\nScadenza: "+fmtDateTime(w&&w.closes_at)+"\n\n"+(list.length?list.map(p=>"• "+p.name+(p.nickname?' (“'+p.nickname+'”)':'')).join("\n"):"Tutti hanno votato.");try{await navigator.clipboard.writeText(out);status("Elenco non votanti copiato negli appunti.","ok");}catch(e){window.prompt("Copia l’elenco:",out);}});
+load();
+</script></body></html>
