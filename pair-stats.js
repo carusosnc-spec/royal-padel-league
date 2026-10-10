@@ -32,7 +32,7 @@
       const matches = mr.data || [];
       const ids = matches.map(function(m){return m.id;});
       const [pr,mp,sr] = await Promise.all([
-        sb.from('players').select('id,name,nickname,fascia_value'),
+        sb.from('players').select('id,name,nickname,fascia_value,is_guest'),
         ids.length ? sb.from('match_players').select('match_id,player_id,fascia_value').in('match_id',ids) : Promise.resolve({data:[],error:null}),
         ids.length ? sb.from('sets').select('id,match_id,set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b').in('match_id',ids).order('set_number',{ascending:true}) : Promise.resolve({data:[],error:null})
       ]);
@@ -87,9 +87,11 @@
     try { return await datasetPromise; } catch(e){ datasetPromise = null; throw e; }
   }
   function rowsFor(data, playerId){
+    const currentPlayer = data.players.get(String(playerId));
+    if(currentPlayer && currentPlayer.is_guest === true) return [];
     const map = data.byPlayer.get(String(playerId));
     if(!map) return [];
-    return Array.from(map.values()).map(function(x){
+    return Array.from(map.values()).filter(function(x){ return !(x.partner && x.partner.is_guest === true); }).map(function(x){
       return Object.assign({},x,{average:x.sets ? x.points/x.sets : 0,winRate:x.sets ? x.wins/x.sets*100 : 0});
     });
   }
