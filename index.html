@@ -691,7 +691,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 9.1.12 - Fix notifiche risultato partita server-side -->
+<!-- RPL VERSION 9.1.13 - Console controllo votazioni Area Riservata -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -997,8 +997,7 @@ html,body{overflow-x:hidden!important;}
   </div>
 
   <div id="playerDashboard" class="hidden">
-    <div id="playerPasswordPanel" class="card hidden">
-      <div class="rpl-alert-title">🔐 PRIMO ACCESSO</div>
+    <div id="playerPasswordPanel" class="card hidden">      <div class="rpl-alert-title">🔐 PRIMO ACCESSO</div>
       <div class="muted" style="margin-bottom:10px">Per sicurezza devi sostituire la password iniziale prima di continuare.</div>
       <label>Nuova password</label><input id="playerNewPassword" type="password" minlength="8" autocomplete="new-password">
       <label>Conferma nuova password</label><input id="playerNewPassword2" type="password" minlength="8" autocomplete="new-password">
@@ -1213,6 +1212,7 @@ html,body{overflow-x:hidden!important;}
 <button type="button" id="opMatchTab" class="primary" onclick="showOperatorSection('match')">🎾 Inserisci partita</button>
 <button type="button" id="opCalendarTab" onclick="showOperatorSection('calendar')">📅 Calendario</button>
 <button type="button" id="opVotingTab" onclick="showOperatorSection('voting')">🗳️ Votazioni settimanali</button>
+<button type="button" id="opVoteConsoleTab" onclick="showOperatorSection('voteconsole')">📊 Console votazioni</button>
 <button type="button" id="opConfirmTab" onclick="showOperatorSection('confirm')">✅ Partite da confermare</button>
 <button type="button" id="opNotifyTab" onclick="showOperatorSection('notifications')">🔔 Notifiche</button>
 <button type="button" id="opAccountsTab" onclick="showOperatorSection('accounts')">👥 Account giocatori</button>
@@ -1245,6 +1245,13 @@ html,body{overflow-x:hidden!important;}
   <div class="muted">Le votazioni archiviate non vengono cancellate: restano qui e possono essere ripristinate.</div>
   <div id="operatorVotingArchiveList" style="margin-top:10px">Caricamento…</div>
 </div>
+</div>
+</div>
+<div id="operatorVoteConsoleSection" class="hidden">
+<div class="card" style="padding:0;overflow:hidden">
+<h2 style="padding:16px 16px 0">📊 Console di controllo votazioni</h2>
+<div class="muted" style="padding:0 16px 12px">Controlla partecipazione, non votanti e stato dei dispositivi senza uscire dall’Area Riservata.</div>
+<iframe title="Console di controllo votazioni RPL" src="/royal-padel-league/console-votazioni.html" loading="lazy" referrerpolicy="same-origin" style="display:block;width:100%;height:1150px;border:0;background:#07121e;border-radius:0 0 12px 12px"></iframe>
 </div>
 </div>
 <div id="operatorNotificationsSection" class="hidden">
@@ -1989,8 +1996,7 @@ async function loadOperatorVoting(){
       console.warn("Dettagli votazioni non disponibili:",detailErr);
       if(msg){msg.className="msg";msg.textContent="⚠️ Votazioni caricate; alcuni dettagli dei voti non sono momentaneamente disponibili.";}
     }
-  }catch(e){
-    console.error(e);
+  }catch(e){    console.error(e);
     host.innerHTML='<div class="msg err">Errore caricamento votazioni: '+escOperator(e.message||e)+'</div>';
     if(archiveHost)archiveHost.innerHTML='<div class="msg err">Errore caricamento archivio: '+escOperator(e.message||e)+'</div>';
     if(msg){msg.className="msg err";msg.textContent="Errore caricamento votazioni: "+(e.message||e);}
@@ -2261,12 +2267,13 @@ window.loadPlayerAccountResetList=loadPlayerAccountResetList;
 window.resetSelectedPlayerPassword=resetSelectedPlayerPassword;
 
 function showOperatorSection(which){
-  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), p=$("operatorConfirmSection"), n=$("operatorNotificationsSection"), a=$("operatorAccountsSection");
-  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), pt=$("opConfirmTab"), nt=$("opNotifyTab"), at=$("opAccountsTab");
-  [m,c,v,p,n,a].forEach(x=>x?.classList.add("hidden"));
-  [mt,ct,vt,pt,nt,at].forEach(x=>x?.classList.remove("primary"));
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), vc=$("operatorVoteConsoleSection"), p=$("operatorConfirmSection"), n=$("operatorNotificationsSection"), a=$("operatorAccountsSection");
+  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), vct=$("opVoteConsoleTab"), pt=$("opConfirmTab"), nt=$("opNotifyTab"), at=$("opAccountsTab");
+  [m,c,v,vc,p,n,a].forEach(x=>x?.classList.add("hidden"));
+  [mt,ct,vt,vct,pt,nt,at].forEach(x=>x?.classList.remove("primary"));
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
   else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
+  else if(which==="voteconsole"){vc?.classList.remove("hidden");vct?.classList.add("primary");}
   else if(which==="confirm"){p?.classList.remove("hidden");pt?.classList.add("primary");loadOperatorPendingMatches();}
   else if(which==="notifications"){n?.classList.remove("hidden");nt?.classList.add("primary");window.rplLoadNotifyPlayers?.();window.rplLoadNotifyDeviceStatus?.();}
   else if(which==="accounts"){a?.classList.remove("hidden");at?.classList.add("primary");loadAccountImportTemplate();loadPlayerAccountResetList();}
@@ -2988,8 +2995,7 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-  async function openHistory(){
-    document.getElementById("playerAreaPage")?.classList.add("hidden");document.getElementById("playerAreaPage")?.style.setProperty("display","none","important");    const pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
+  async function openHistory(){    document.getElementById("playerAreaPage")?.classList.add("hidden");document.getElementById("playerAreaPage")?.style.setProperty("display","none","important");    const pub=$("publicPage"), admin=$("adminPage"), hist=$("historyView");
     if(!hist)return;
     pub?.classList.add("hidden");
     admin?.classList.add("hidden");
@@ -3368,7 +3374,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.12</div>
+<div id="rplVersionBadge">RPL v9.1.13</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3988,8 +3994,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     if(two){two.checked=wantsTwo;two.onchange=async()=>{
       two.disabled=true;
       const r=await sb.rpc('rpl_set_two_nights',{p_poll_week_id:week.id,p_wants_two:two.checked});
-      two.disabled=false;
-      if(r.error){two.checked=!two.checked;if(msg){msg.className='msg err';msg.textContent=r.error.message;}}
+      two.disabled=false;      if(r.error){two.checked=!two.checked;if(msg){msg.className='msg err';msg.textContent=r.error.message;}}
       else await loadPlayerVoting();
     };}
 
