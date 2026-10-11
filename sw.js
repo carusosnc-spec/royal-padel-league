@@ -1,5 +1,5 @@
-// RPL release 9.1.19
-const CACHE_NAME = "rpl-v9.1.19";
+// RPL release 9.1.23
+const CACHE_NAME = "rpl-v9.1.23";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest"];
 
 self.addEventListener("install", event => {
@@ -39,7 +39,7 @@ self.addEventListener("notificationclick", event => {
   event.notification.close();
   event.waitUntil((async()=>{
     const target=event.notification?.data?.url || "./index.html#player";
-    const absolute=new URL(target,self.location.origin).href;
+    const absolute=new URL(target,self.registration.scope).href;
     const list=await self.clients.matchAll({type:"window",includeUncontrolled:true});
     for(const client of list){
       if("navigate" in client){

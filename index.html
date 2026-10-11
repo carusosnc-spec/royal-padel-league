@@ -3454,7 +3454,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.22</div>
+<div id="rplVersionBadge">RPL v9.1.23</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3898,6 +3898,9 @@ async function loadPublicCalendar(){
           if(card && !card.classList.contains('hidden')){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
         } else if(target==='calendar'){
           const card=q('playerAssignedMatchCard');
+          if(card){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
+        } else if(target==='messages'){
+          const card=q('rplChatCard')||q('rplChatSection')||q('rplChatMessages');
           if(card){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
         }
         return false;
@@ -4980,6 +4983,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 
-<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.22";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.22";</script>
+<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.23";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.23";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
