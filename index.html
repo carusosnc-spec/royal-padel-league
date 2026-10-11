@@ -3454,7 +3454,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.23</div>
+<div id="rplVersionBadge">RPL v9.1.24</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3889,25 +3889,30 @@ async function loadPublicCalendar(){
   window.showPlayerArea=showPlayerArea;
   function rplOpenRequestedPlayerArea(){
     try{
-      const p=new URLSearchParams(location.search);
-      const target=p.get('rpl');
+      const params=new URLSearchParams(location.search);
+      const target=params.get('rpl');
       if(!target)return;
       const openTarget=()=>{
         if(target==='vote'){
           const card=q('playerVotingCard');
-          if(card && !card.classList.contains('hidden')){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
+          if(card && !card.classList.contains('hidden') && card.getClientRects().length){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
         } else if(target==='calendar'){
           const card=q('playerAssignedMatchCard');
-          if(card){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
+          if(card && card.getClientRects().length){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
         } else if(target==='messages'){
-          const card=q('rplChatCard')||q('rplChatSection')||q('rplChatMessages');
-          if(card){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
+          // Il deep link viene elaborato dopo l'autenticazione, ma la chat può
+          // terminare il caricamento delle conversazioni qualche istante dopo.
+          const card=q('rplMessagingCard');
+          const statusEl=q('rplChatStatus');
+          const statusText=(statusEl?.textContent||'').toLowerCase();
+          const ready=card && card.getClientRects().length && !statusText.includes('caricamento conversazioni');
+          if(ready){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
         }
         return false;
       };
       let tries=0;
-      const timer=setInterval(()=>{tries++;if(openTarget()||tries>=30)clearInterval(timer);},300);
-      setTimeout(()=>clearInterval(timer),10000);
+      const timer=setInterval(()=>{tries++;if(openTarget()||tries>=60)clearInterval(timer);},350);
+      setTimeout(()=>clearInterval(timer),22000);
     }catch(e){console.warn('Deep link RPL:',e);}
   }
 
@@ -4810,7 +4815,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 #rplRegolamentoClose{position:absolute!important;top:7px!important;right:8px!important;z-index:10!important;margin:0!important}
 @media(max-width:600px){#rplRegolamentoModal{padding:43px 3px 5px!important}#rplRegolamentoTrack .rpl-regolamento-slide img{width:100%!important;height:100%!important;object-fit:contain!important}.rpl-regolamento-nav{gap:14px!important}}
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.15";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.24";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -4983,6 +4988,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 
-<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.23";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.23";</script>
+<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.24";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.24";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
