@@ -1066,7 +1066,7 @@ html,body{overflow-x:hidden!important;}
           <div class="rpl-chat-thread">
             <div id="rplChatThreadTitle" class="rpl-chat-thread-title">Scegli una conversazione</div>
             <div id="rplChatMessages" class="rpl-chat-messages"><div class="rpl-chat-empty">I tuoi messaggi appariranno qui.</div></div>
-            <form id="rplChatSendForm" class="rpl-chat-compose"><textarea id="rplChatBody" rows="2" maxlength="4000" placeholder="Scrivi un messaggio…" required></textarea><button type="submit" class="primary">INVIA</button></form>
+            <div class="rpl-chat-media-tools"><label for="rplChatMediaInput">📎 FOTO / VIDEO</label><input id="rplChatMediaInput" type="file" accept="image/*,video/*" hidden><button type="button" id="rplChatVoiceBtn">🎙️ VOCALE</button><span id="rplChatMediaStatus" class="muted" style="font-size:11px;align-self:center"></span></div><form id="rplChatSendForm" class="rpl-chat-compose"><textarea id="rplChatBody" rows="2" maxlength="4000" placeholder="Scrivi un messaggio…"></textarea><button type="submit" class="primary">INVIA</button></form>
           </div>
         </div>
         <div class="rpl-chat-footnote">Usa “Segnala” per segnalare un messaggio inappropriato. Evita di condividere dati personali o password.</div>
@@ -3454,7 +3454,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.24</div>
+<div id="rplVersionBadge">RPL v9.1.25</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4814,8 +4814,14 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 .rpl-regolamento-hint{font-size:11px!important;margin:2px 0 0!important}
 #rplRegolamentoClose{position:absolute!important;top:7px!important;right:8px!important;z-index:10!important;margin:0!important}
 @media(max-width:600px){#rplRegolamentoModal{padding:43px 3px 5px!important}#rplRegolamentoTrack .rpl-regolamento-slide img{width:100%!important;height:100%!important;object-fit:contain!important}.rpl-regolamento-nav{gap:14px!important}}
+
+.rpl-chat-media-tools{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px 0;border-top:1px solid rgba(255,255,255,.06)}
+.rpl-chat-media-tools button,.rpl-chat-media-tools label{min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;border:1px solid rgba(231,185,78,.3);border-radius:9px;background:rgba(231,185,78,.08);color:#ffe18a;font-size:11px;font-weight:800;cursor:pointer}
+.rpl-chat-media-tools button:disabled{opacity:.5;cursor:wait}.rpl-chat-media{display:block;max-width:100%;width:auto;max-height:280px;border-radius:9px;margin-top:6px}.rpl-chat-media audio{max-width:100%;width:260px}.rpl-chat-attachment-name{font-size:11px;color:#c6d4df;margin-top:4px}
+@media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:1}}
+
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.24";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.25";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -4895,7 +4901,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     q('rplChatThreadTitle').textContent=room.displayTitle;
     if(render)renderRooms();
     q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Caricamento messaggi…</div>';
-    const {data:messages,error}=await client.from('rpl_messages').select('id,conversation_id,sender_player_id,body,created_at,deleted_at').eq('conversation_id',room.id).order('created_at',{ascending:false}).limit(100);
+    const {data:messages,error}=await client.from('rpl_messages').select('id,conversation_id,sender_player_id,body,created_at,deleted_at,media_path,media_type,media_name,media_duration_seconds').eq('conversation_id',room.id).order('created_at',{ascending:false}).limit(100);
     if(error){q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Impossibile leggere i messaggi di questa chat.</div>';console.error('RPL chat messages',error);return;}
     // Le ricevute vengono aggiornate da RPC sicure: il client non modifica direttamente la membership.
     const {error:deliveredError}=await client.rpc('rpl_mark_conversation_delivered',{p_conversation_id:room.id});
@@ -4914,24 +4920,34 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     let people=[];
     if(ids.length){const {data}=await sb().from('players').select('id,name,nickname').in('id',ids);people=data||[];}
     const names=new Map(people.map(p=>[String(p.id),p.name+(p.nickname?' · '+p.nickname:'' )]));
-    // Il campo last_read_at della membership consente una conferma reale di lettura
-    // per le chat private. Non mostriamo una falsa conferma di consegna push.
     const {data:members,error:membersError}=await sb().from('rpl_conversation_members').select('player_id,last_read_at,last_delivered_at,removed_at').eq('conversation_id',selectedRoomId).is('removed_at',null);
     const readBy=new Map((membersError?[]:(members||[])).map(m=>[String(m.player_id),m.last_read_at?new Date(m.last_read_at).getTime():0]));
     const deliveredBy=new Map((membersError?[]:(members||[])).map(m=>[String(m.player_id),m.last_delivered_at?new Date(m.last_delivered_at).getTime():0]));
-    const room=rooms.find(r=>String(r.id)===String(selectedRoomId));
     const recipientIds=[...readBy.keys()].filter(id=>id!==String(currentPlayerId));
     const readThrough=recipientIds.length?Math.min(...recipientIds.map(id=>readBy.get(id)||0)):0;
     const deliveredThrough=recipientIds.length?Math.min(...recipientIds.map(id=>deliveredBy.get(id)||0)):0;
-    host.innerHTML=messages.length?messages.map(m=>{
+    const rendered=[];
+    for(const m of messages){
       const mine=String(m.sender_player_id)===String(currentPlayerId);
       const body=m.deleted_at?'[Messaggio rimosso]':m.body;
+      let media='';
+      if(!m.deleted_at&&m.media_path){
+        const {data:signed,error:signedError}=await sb().storage.from('rpl-chat-media').createSignedUrl(m.media_path,3600);
+        if(!signedError&&signed?.signedUrl){
+          const url=esc(signed.signedUrl),type=String(m.media_type||'');
+          if(type.startsWith('image/'))media=`<img class="rpl-chat-media" src="${url}" alt="Foto condivisa" loading="lazy">`;
+          else if(type.startsWith('video/'))media=`<video class="rpl-chat-media" src="${url}" controls playsinline preload="metadata"></video>`;
+          else if(type.startsWith('audio/'))media=`<audio class="rpl-chat-media" src="${url}" controls preload="metadata"></audio>`;
+          else media=`<a href="${url}" target="_blank" rel="noopener">📎 ${esc(m.media_name||'Apri allegato')}</a>`;
+        } else media='<div class="rpl-chat-attachment-name">Allegato non disponibile</div>';
+      }
       const messageTime=new Date(m.created_at).getTime();
       const isRead=mine&&recipientIds.length>0&&readThrough>=messageTime;
       const isDelivered=mine&&recipientIds.length>0&&deliveredThrough>=messageTime;
       const receipt=mine?`<span class="rpl-chat-receipt ${isRead?'read':''}" title="${isRead?'Letto':isDelivered?'Consegnato':'Inviato'}" aria-label="${isRead?'Letto':isDelivered?'Consegnato':'Inviato'}">${isDelivered||isRead?'✓✓':'✓'}</span>`:'';
-      return `<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div><div class="rpl-chat-body">${esc(body)}</div><div class="rpl-chat-time"><span>${esc(dateLabel(m.created_at))}</span>${receipt}</div>${!mine&&!m.deleted_at?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</article>`;
-    }).join(''):'<div class="rpl-chat-empty">Ancora nessun messaggio. Rompi il ghiaccio! 🎾</div>';
+      rendered.push(`<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div>${body?`<div class="rpl-chat-body">${esc(body)}</div>`:''}${media}<div class="rpl-chat-time"><span>${esc(dateLabel(m.created_at))}</span>${receipt}</div>${!mine&&!m.deleted_at?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</article>`);
+    }
+    host.innerHTML=messages.length?rendered.join(''):'<div class="rpl-chat-empty">Ancora nessun messaggio. Rompi il ghiaccio! 🎾</div>';
     host.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>reportMessage(b.dataset.report)));
     host.scrollTop=host.scrollHeight;
   }
@@ -4957,13 +4973,64 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   }
   async function sendMessage(e){
     e.preventDefault();if(busy)return;
-    const body=q('rplChatBody')?.value.trim();if(!body)return;
+    const body=q('rplChatBody')?.value.trim();
+    if(!body){status('Scrivi un messaggio oppure scegli una foto/video o registra un vocale.','err');return;}
     if(!selectedRoomId){status('Scegli una conversazione prima di inviare.','err');return;}
     busy=true;const btn=q('rplChatSendForm')?.querySelector('button');if(btn)btn.disabled=true;
     const {error}=await sb().from('rpl_messages').insert({conversation_id:selectedRoomId,sender_player_id:currentPlayerId,body});
     busy=false;if(btn)btn.disabled=false;
     if(error){status('Messaggio non inviato. Potresti non essere autorizzato a scrivere in questa chat.','err');console.error('RPL send message',error);return;}
     q('rplChatBody').value='';await openRoom(selectedRoomId,false);
+  }
+  async function uploadChatMedia(file,kind='media',duration=null){
+    if(busy)return;
+    if(!selectedRoomId){status('Scegli prima una conversazione.','err');return;}
+    if(!file){return;}
+    const isImage=file.type.startsWith('image/'),isVideo=file.type.startsWith('video/'),isAudio=file.type.startsWith('audio/');
+    if(kind==='media'&&!isImage&&!isVideo){status('Scegli un file immagine o video.','err');return;}
+    if(kind==='voice'&&!isAudio){status('Formato audio non supportato dal dispositivo.','err');return;}
+    const max=isVideo?50*1024*1024:isImage?15*1024*1024:15*1024*1024;
+    if(file.size>max){status(isVideo?'Il video supera il limite di 50 MB.':'Il file supera il limite consentito.','err');return;}
+    busy=true;const input=q('rplChatMediaInput'),voiceBtn=q('rplChatVoiceBtn');if(input)input.disabled=true;if(voiceBtn)voiceBtn.disabled=true;
+    const state=q('rplChatMediaStatus');if(state)state.textContent='Caricamento…';
+    try{
+      const ext=(file.name&&file.name.includes('.')?file.name.split('.').pop():(isImage?'jpg':isVideo?'mp4':'webm')).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)||'bin';
+      const path=`${selectedRoomId}/${currentPlayerId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+      const {error:upErr}=await sb().storage.from('rpl-chat-media').upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});
+      if(upErr)throw upErr;
+      const body=isImage?'📷 Foto':isVideo?'🎬 Video':'🎙️ Messaggio vocale';
+      const {error:msgErr}=await sb().from('rpl_messages').insert({conversation_id:selectedRoomId,sender_player_id:currentPlayerId,body,media_path:path,media_type:file.type,media_name:file.name|| (kind==='voice'?'messaggio-vocale.'+ext:file.name),media_duration_seconds:duration});
+      if(msgErr){await sb().storage.from('rpl-chat-media').remove([path]);throw msgErr;}
+      if(state)state.textContent='Inviato ✓';
+      await openRoom(selectedRoomId,false);
+      setTimeout(()=>{if(state)state.textContent='';},2200);
+    }catch(err){console.error('RPL chat media upload',err);status('Invio allegato non riuscito. Verifica connessione e autorizzazioni.','err');if(state)state.textContent='';}
+    finally{busy=false;if(input)input.disabled=false;if(voiceBtn)voiceBtn.disabled=false;}
+  }
+  let voiceRecorder=null,voiceChunks=[],voiceStartedAt=0,voiceStream=null;
+  async function toggleVoiceRecording(){
+    const btn=q('rplChatVoiceBtn'),state=q('rplChatMediaStatus');if(!btn||busy)return;
+    if(voiceRecorder&&voiceRecorder.state==='recording'){voiceRecorder.stop();btn.textContent='🎙️ VOCALE';btn.disabled=true;if(state)state.textContent='Preparazione vocale…';return;}
+    if(!selectedRoomId){status('Scegli prima una conversazione.','err');return;}
+    if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined'){status('Questo browser non supporta la registrazione vocale. Aggiorna Safari o usa il selettore file audio.','err');return;}
+    try{
+      voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      const preferred=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'];
+      const mime=preferred.find(t=>MediaRecorder.isTypeSupported?.(t));
+      voiceRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
+      voiceChunks=[];voiceStartedAt=Date.now();
+      voiceRecorder.ondataavailable=e=>{if(e.data&&e.data.size)voiceChunks.push(e.data);};
+      voiceRecorder.onerror=e=>{console.error('RPL voice recorder',e);status('Errore durante la registrazione vocale.','err');};
+      voiceRecorder.onstop=async()=>{
+        const type=voiceRecorder?.mimeType||voiceChunks[0]?.type||'audio/mp4';
+        const blob=new Blob(voiceChunks,{type});
+        voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;
+        btn.disabled=false;btn.textContent='🎙️ VOCALE';
+        if(blob.size){const ext=type.includes('webm')?'webm':type.includes('ogg')?'ogg':type.includes('mpeg')?'mp3':'m4a';const file=new File([blob],`vocale-${Date.now()}.${ext}`,{type});await uploadChatMedia(file,'voice',Math.max(1,Math.round((Date.now()-voiceStartedAt)/1000)));}
+        if(state)state.textContent='';voiceRecorder=null;voiceChunks=[];
+      };
+      voiceRecorder.start();btn.textContent='⏹️ FERMA VOCALE';if(state)state.textContent='Registrazione in corso… Tocca Ferma per inviare.';
+    }catch(err){console.error('RPL microphone',err);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;status('Microfono non disponibile: consenti l’accesso al microfono nelle impostazioni del browser.','err');}
   }
   async function initialize(){
     if(started)return;
@@ -4983,11 +5050,13 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   q('rplChatType')?.addEventListener('change',renderRooms);
   q('rplChatStartPrivate')?.addEventListener('click',startPrivate);
   q('rplChatSendForm')?.addEventListener('submit',sendMessage);
+  q('rplChatMediaInput')?.addEventListener('change',e=>{const input=e.currentTarget;const file=input.files?.[0];if(file)uploadChatMedia(file,'media');input.value='';});
+  q('rplChatVoiceBtn')?.addEventListener('click',toggleVoiceRecording);
   sb()?.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){started=false;currentPlayerId=null;rooms=[];selectedRoomId=null;if(channel){sb().removeChannel(channel);channel=null;}q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Accedi per vedere i messaggi.</div>';q('rplChatRooms').innerHTML='';}});
   window.rplOpenMessages=function(){q('rplChatWorkspace')?.classList.remove('hidden');q('rplChatToggle').textContent='CHIUDI MESSAGGI';started=false;initialize();q('rplMessagingCard')?.scrollIntoView({behavior:'smooth',block:'start'});};
 })();
 </script>
 
-<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.24";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.24";</script>
+<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.25";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.24";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
