@@ -691,7 +691,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 9.1.18 - Ingrandimento foto e logo profilo pubblico -->
+<!-- RPL VERSION 9.1.19 - Correzione etichetta OGGI e link calendario notifiche -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -2488,7 +2488,7 @@ async function saveCalendarWeek(){
     finalCalendarRecipients,
     "📅 Calendario RPL aggiornato",
     "Il calendario è stato pubblicato o modificato. Controlla le tue partite nell’Area Giocatore.",
-    "?rpl=calendar#player"
+    "#calendar"
   );
   const sent=Number(notifyResult?.sent||0);
   const missing=Number(notifyResult?.missing||0);
@@ -3195,7 +3195,7 @@ function renderCalendar(matches){
   const now=new Date();
   const future=(matches||[]).map(m=>({...m,_date:matchDate(m)})).filter(m=>!Number.isNaN(m._date.getTime()) && m._date.getTime()>now.getTime()).sort((a,b)=>a._date-b._date);
   if(!future.length){box.innerHTML='<div class="rpl-public-cal-empty">Non ci sono partite programmate</div>';return;}
-  const first=future[0], firstDay=first._date.toDateString();
+  const first=future[0], today=new Date().toDateString();
   const main=`<div class="rpl-public-cal-main">
       <div class="cal-date">⭐ PROSSIMA PARTITA · ${esc(fmtDate(first._date))}</div>
       <div class="cal-time">${esc(fmtTime(first._date))}</div>
@@ -3210,7 +3210,7 @@ function renderCalendar(matches){
     </div>`;
   const rest=future.slice(1);
   const list=rest.length?`<div class="rpl-public-cal-next">PROSSIMI APPUNTAMENTI</div><div class="rpl-public-cal-list">${rest.map(m=>{
-      const same=m._date.toDateString()===firstDay;
+      const same=m._date.toDateString()===today;
       const p1=playerById(m.player_1), p2=playerById(m.player_2), p3=playerById(m.player_3), p4=playerById(m.player_4);
       const n1=p1?.name||m.player_1_name||'Giocatore', n2=p2?.name||m.player_2_name||'Giocatore';
       const n3=p3?.name||m.player_3_name||'Giocatore', n4=p4?.name||m.player_4_name||'Giocatore';
@@ -3407,7 +3407,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.18</div>
+<div id="rplVersionBadge">RPL v9.1.19</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
