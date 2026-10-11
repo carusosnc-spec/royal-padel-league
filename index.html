@@ -3458,7 +3458,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.26</div>
+<div id="rplVersionBadge">RPL v9.1.27</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4834,7 +4834,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:1}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.26";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.27";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -4948,7 +4948,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
         const {data:signed,error:signedError}=await sb().storage.from('rpl-chat-media').createSignedUrl(m.media_path,3600);
         if(!signedError&&signed?.signedUrl){
           const url=esc(signed.signedUrl),type=String(m.media_type||'');
-          if(type.startsWith('image/'))media=`<img class="rpl-chat-media rpl-chat-image-open" src="${url}" alt="Foto condivisa — tocca per ingrandire" data-rpl-full-image="${url}" data-rpl-image-name="${esc(m.media_name||'foto-rpl.jpg')}" loading="lazy">`;
+          if(type.startsWith('image/'))media=`<img class="rpl-chat-media rpl-chat-image-open" src="${url}" alt="Foto condivisa — tocca per ingrandire" data-rpl-full-image="${url}" data-rpl-image-name="${esc(m.media_name||'foto-rpl.jpg')}" onclick="window.rplOpenChatImage(this)" role="button" tabindex="0" loading="lazy">`;
           else if(type.startsWith('video/'))media=`<video class="rpl-chat-media" src="${url}" controls playsinline preload="metadata"></video>`;
           else if(type.startsWith('audio/'))media=`<audio class="rpl-chat-media" src="${url}" controls preload="metadata"></audio>`;
           else media=`<a href="${url}" target="_blank" rel="noopener">📎 ${esc(m.media_name||'Apri allegato')}</a>`;
@@ -5065,7 +5065,9 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   q('rplChatSendForm')?.addEventListener('submit',sendMessage);
   q('rplChatMediaInput')?.addEventListener('change',e=>{const input=e.currentTarget;const file=input.files?.[0];if(file)uploadChatMedia(file,'media');input.value='';});
   const imageLightbox=q('rplImageLightbox'), imageLightboxImg=q('rplImageLightboxImg');let currentFullImageUrl='',currentFullImageName='foto-rpl.jpg';
-  q('rplChatMessages')?.addEventListener('click',e=>{const img=e.target?.closest?.('[data-rpl-full-image]');if(!img)return;currentFullImageUrl=img.dataset.rplFullImage||img.src;currentFullImageName=(img.dataset.rplImageName||'foto-rpl.jpg').replace(/[\\/:*?"<>|]+/g,'_');imageLightboxImg.src=currentFullImageUrl;imageLightbox.hidden=false;document.body.style.overflow='hidden';});
+  window.rplOpenChatImage=function(img){if(!img)return;currentFullImageUrl=img.dataset.rplFullImage||img.src;currentFullImageName=(img.dataset.rplImageName||'foto-rpl.jpg').replace(/[\\/:*?"<>|]+/g,'_');imageLightboxImg.src=currentFullImageUrl;imageLightbox.hidden=false;document.body.style.overflow='hidden';};
+  q('rplChatMessages')?.addEventListener('click',e=>{const img=e.target?.closest?.('[data-rpl-full-image]');if(img)window.rplOpenChatImage(img);});
+  q('rplChatMessages')?.addEventListener('keydown',e=>{const img=e.target?.closest?.('[data-rpl-full-image]');if(img&&(e.key==='Enter'||e.key===' ')){e.preventDefault();window.rplOpenChatImage(img);}});
   const closeImageLightbox=()=>{if(imageLightbox)imageLightbox.hidden=true;if(imageLightboxImg)imageLightboxImg.src='';document.body.style.overflow='';};
   q('rplImageCloseBtn')?.addEventListener('click',closeImageLightbox);
   imageLightbox?.addEventListener('click',e=>{if(e.target===imageLightbox)closeImageLightbox();});
@@ -5077,6 +5079,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 
-<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.26";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.24";</script>
+<script id="rpl-v9127-version">document.documentElement.dataset.rplVersion="9.1.27";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.27";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
