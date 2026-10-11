@@ -981,7 +981,7 @@ html,body{overflow-x:hidden!important;}
 .rpl-chat-messages{height:320px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px}
 .rpl-chat-bubble{max-width:92%;align-self:flex-start;background:#102438;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:9px 10px;overflow-wrap:anywhere}
 .rpl-chat-bubble.mine{align-self:flex-end;background:rgba(231,185,78,.12);border-color:rgba(231,185,78,.28)}
-.rpl-chat-author{font-size:10px;font-weight:900;color:#ffd86a;margin-bottom:4px}.rpl-chat-body{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4}.rpl-chat-time{font-size:9px;color:#9da8b4;margin-top:5px;text-align:right}
+.rpl-chat-author{font-size:10px;font-weight:900;color:#ffd86a;margin-bottom:4px}.rpl-chat-body{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4}.rpl-chat-time{font-size:9px;color:#9da8b4;margin-top:5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:5px}.rpl-chat-receipt{font-size:12px;font-weight:900;letter-spacing:-2px;color:#aebac1;white-space:nowrap}.rpl-chat-receipt.read{color:#53bdeb;letter-spacing:-2px}
 .rpl-chat-report{font-size:10px;padding:4px 7px;margin-top:6px;background:transparent;border-color:rgba(255,255,255,.16);color:#c8d1da}
 .rpl-chat-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:10px;border-top:1px solid rgba(255,255,255,.08);align-items:end}
 .rpl-chat-compose textarea{resize:vertical;min-height:44px;max-height:140px;font-size:14px}.rpl-chat-compose button{min-height:44px}
@@ -3454,7 +3454,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.20</div>
+<div id="rplVersionBadge">RPL v9.1.21</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4889,6 +4889,11 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Caricamento messaggi…</div>';
     const {data:messages,error}=await client.from('rpl_messages').select('id,conversation_id,sender_player_id,body,created_at,deleted_at').eq('conversation_id',room.id).order('created_at',{ascending:false}).limit(100);
     if(error){q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Impossibile leggere i messaggi di questa chat.</div>';console.error('RPL chat messages',error);return;}
+    // Segna come letta la conversazione per questo giocatore. Le spunte blu
+    // vengono mostrate solo quando il destinatario ha effettivamente aperto la chat.
+    const readAt=new Date().toISOString();
+    const {error:readError}=await client.from('rpl_conversation_members').update({last_read_at:readAt}).eq('conversation_id',room.id).eq('player_id',currentPlayerId);
+    if(readError)console.warn('RPL chat read receipt',readError);
     await renderMessages((messages||[]).reverse());
     channel=client.channel('rpl-chat-'+room.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'rpl_messages',filter:'conversation_id=eq.'+room.id},()=>{if(String(selectedRoomId)===String(room.id))openRoom(room.id,false);}).subscribe();
   }
@@ -4897,11 +4902,20 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     const ids=[...new Set(messages.map(m=>m.sender_player_id))];
     let people=[];
     if(ids.length){const {data}=await sb().from('players').select('id,name,nickname').in('id',ids);people=data||[];}
-    const names=new Map(people.map(p=>[String(p.id),p.name+(p.nickname?' · '+p.nickname:'')]));
+    const names=new Map(people.map(p=>[String(p.id),p.name+(p.nickname?' · '+p.nickname:'' )]));
+    // Il campo last_read_at della membership consente una conferma reale di lettura
+    // per le chat private. Non mostriamo una falsa conferma di consegna push.
+    const {data:members,error:membersError}=await sb().from('rpl_conversation_members').select('player_id,last_read_at,removed_at').eq('conversation_id',selectedRoomId).is('removed_at',null);
+    const readBy=new Map((membersError?[]:(members||[])).map(m=>[String(m.player_id),m.last_read_at?new Date(m.last_read_at).getTime():0]));
+    const room=rooms.find(r=>String(r.id)===String(selectedRoomId));
+    const recipientIds=[...readBy.keys()].filter(id=>id!==String(currentPlayerId));
+    const readThrough=recipientIds.length?Math.min(...recipientIds.map(id=>readBy.get(id)||0)):0;
     host.innerHTML=messages.length?messages.map(m=>{
       const mine=String(m.sender_player_id)===String(currentPlayerId);
       const body=m.deleted_at?'[Messaggio rimosso]':m.body;
-      return `<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div><div class="rpl-chat-body">${esc(body)}</div><div class="rpl-chat-time">${esc(dateLabel(m.created_at))}</div>${!mine&&!m.deleted_at?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</article>`;
+      const isRead=mine&&room?.conversation_type==='private'&&readThrough>=new Date(m.created_at).getTime();
+      const receipt=mine?`<span class="rpl-chat-receipt ${isRead?'read':''}" title="${isRead?'Letto':'Inviato'}" aria-label="${isRead?'Letto':'Inviato'}">${isRead?'✓✓':'✓'}</span>`:'';
+      return `<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div><div class="rpl-chat-body">${esc(body)}</div><div class="rpl-chat-time"><span>${esc(dateLabel(m.created_at))}</span>${receipt}</div>${!mine&&!m.deleted_at?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</article>`;
     }).join(''):'<div class="rpl-chat-empty">Ancora nessun messaggio. Rompi il ghiaccio! 🎾</div>';
     host.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>reportMessage(b.dataset.report)));
     host.scrollTop=host.scrollHeight;
@@ -4959,6 +4973,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 
-<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.20";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.20";</script>
+<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.21";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.21";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
