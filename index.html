@@ -691,7 +691,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <style id="rpl-v6589-poll-editor-style">
 .rpl-poll-option-rows{display:grid;gap:8px}.rpl-poll-option-row{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:9px;border:1px solid rgba(231,185,78,.2);border-radius:10px;background:rgba(255,255,255,.025)}.rpl-poll-option-row label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800}.rpl-poll-option-remove{min-height:40px}@media(max-width:700px){.rpl-poll-option-row{grid-template-columns:1fr 1fr}.rpl-poll-option-remove{grid-column:2}}
 </style>
-<!-- RPL VERSION 9.1.16 - Percentuali e Top 5 compagni -->
+<!-- RPL VERSION 9.1.17 - Proposta calendario con 3 voti -->
 <style id="rpl-v65104-player-profile-style">
 .rpl-player-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .rpl-player-extra-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#dce3eb}
@@ -997,6 +997,7 @@ html,body{overflow-x:hidden!important;}
     <button id="bonusBtn">Classifica Bonus</button><button id="adminBtn">Area riservata</button>
   </div>
 </nav>
+
 
 
 <section id="playerAreaPage" class="hidden">
@@ -1996,6 +1997,7 @@ async function loadOperatorVoting(){
     /* Mostra subito le settimane, anche prima dei dettagli. */
     host.innerHTML=activeWeeks.length?activeWeeks.map(w=>renderWeek(w)).join(""):'<div class="muted">Nessuna votazione attiva.</div>';
     if(archiveHost)archiveHost.innerHTML=archivedWeeks.length?archivedWeeks.map(w=>renderWeek(w)).join(""):'<div class="muted">Nessuna votazione archiviata.</div>';
+
     /* I dettagli sono secondari: se una delle due letture fallisce, le settimane
        restano comunque visibili e mostriamo un messaggio senza lasciare "Caricamento". */
     const ids=weeks.map(w=>w.id);
@@ -2033,12 +2035,16 @@ async function generateCalendarFromPoll(weekId){
     const [wr,or,vr]=await Promise.all([sb.from("rpl_poll_weeks").select("*").eq("id",weekId).single(),sb.from("rpl_poll_options").select("*").eq("poll_week_id",weekId).order("sort_order",{ascending:true}),sb.from("rpl_poll_votes").select("*").eq("poll_week_id",weekId)]);
     if(wr.error)throw wr.error;if(or.error)throw or.error;if(vr.error)throw vr.error;
     const week=wr.data, options=or.data||[], votes=vr.data||[];
-    const complete=options.map(o=>({...o,voters:votes.filter(v=>v.option_id===o.id)})).filter(o=>o.voters.length>=Number(o.max_players||4));
-    if(!complete.length){msg.className="msg err";msg.textContent="Nessuna serata ha ancora raggiunto 4 giocatori.";return;}
-    if(!confirm(`Generare una proposta calendario per ${complete.length} serata/e complete?\n\nLa proposta sarà modificabile prima del salvataggio.`))return;
+    // Inserisci nella proposta anche le serate con 3 voti su 4: il quarto posto
+    // resta vuoto così l'operatore può aggiungere un ospite senza creare la partita a mano.
+    const eligible=options.map(o=>({...o,voters:votes.filter(v=>String(v.option_id)===String(o.id))}))
+      .filter(o=>o.voters.length>=Math.min(3,Number(o.max_players||4)));
+    if(!eligible.length){msg.className="msg err";msg.textContent="Nessuna serata ha ancora raggiunto almeno 3 giocatori.";return;}
+    if(!confirm(`Generare una proposta calendario per ${eligible.length} serata/e con almeno 3 giocatori?\n\nLe serate con 3 voti avranno il quarto posto libero per inserire un ospite. La proposta sarà modificabile prima del salvataggio.`))return;
     showOperatorSection("calendar"); $("calWeekStart").value=week.week_start; $("calWeekEnd").value=week.week_end; $("calendarWeekRows").innerHTML="";
-    complete.forEach(o=>{const ids=o.voters.slice(0,Number(o.max_players||4)).map(v=>Number(v.player_id));addCalendarRow({date:o.play_date,time:(o.start_time||"").slice(0,5),court:o.court||"",match_type:"ALL_VS_ALL",player_1:ids[0]||"",player_2:ids[1]||"",player_3:ids[2]||"",player_4:ids[3]||""});});
-    msg.className="msg ok";msg.textContent=`✅ Proposta creata: ${complete.length} partita/e. Scegli i campi e modifica, se necessario, prima di SALVA SETTIMANA.`;
+    eligible.forEach(o=>{const ids=o.voters.slice(0,Number(o.max_players||4)).map(v=>Number(v.player_id));addCalendarRow({date:o.play_date,time:(o.start_time||"").slice(0,5),court:o.court||"",match_type:"ALL_VS_ALL",player_1:ids[0]||"",player_2:ids[1]||"",player_3:ids[2]||"",player_4:ids[3]||""});});
+    const partial=eligible.filter(o=>o.voters.length<Number(o.max_players||4)).length;
+    msg.className="msg ok";msg.textContent=`✅ Proposta creata: ${eligible.length} partita/e (${partial} con posto libero per un ospite). Scegli i campi e modifica, se necessario, prima di SALVA SETTIMANA.`;
     window.scrollTo({top:$("operatorCalendarSection").offsetTop-10,behavior:"smooth"});
   }catch(e){console.error(e);msg.className="msg err";msg.textContent="Errore generazione proposta: "+(e.message||e);}
 }
@@ -2995,7 +3001,8 @@ document.addEventListener("DOMContentLoaded",()=>{ rplNormalizePublicNav();
     $("partialReset")?.addEventListener("click",()=>{
       $("partialFrom").value="";
       $("partialTo").value="";
-      $("partialRanking").innerHTML="";      $("partialSummary").textContent="Seleziona un periodo e premi CALCOLA.";
+      $("partialRanking").innerHTML="";
+      $("partialSummary").textContent="Seleziona un periodo e premi CALCOLA.";
     });
     document.querySelectorAll(".partial-preset").forEach(b=>b.addEventListener("click",()=>{
       $("partialFrom").value=b.dataset.from;
@@ -3389,7 +3396,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.16</div>
+<div id="rplVersionBadge">RPL v9.1.17</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3994,7 +4001,8 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     if(msg){msg.className='msg';msg.textContent='';}
 
     const wr=await sb.from('rpl_poll_weeks').select('*').eq('status','open').order('opens_at',{ascending:false}).limit(10);
-    if(wr.error){console.error('RPL voting weeks',wr.error);return;}    const now=new Date();
+    if(wr.error){console.error('RPL voting weeks',wr.error);return;}
+    const now=new Date();
     const week=(wr.data||[]).find(w=>new Date(w.opens_at)<=now&&now<new Date(w.closes_at));
     if(!week)return;
 
