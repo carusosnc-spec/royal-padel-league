@@ -5079,6 +5079,23 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 
-<script id="rpl-v9127-version">document.documentElement.dataset.rplVersion="9.1.27";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.27";</script>
+<script id="rpl-v9128-notification-route">
+(function(){
+  // Quando una push apre ?rpl=messages, mostra prima l'Area Giocatore.
+  // loadPlayerSession() gestisce poi autenticazione e apertura della chat quando è pronta.
+  const target=new URLSearchParams(location.search).get('rpl');
+  if(target!=='messages')return;
+  const openPlayerArea=()=>{
+    if(typeof window.showPlayerArea==='function'){
+      window.showPlayerArea();
+      return true;
+    }
+    return false;
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{if(!openPlayerArea())setTimeout(openPlayerArea,250);},{once:true});
+  else if(!openPlayerArea())setTimeout(openPlayerArea,250);
+})();
+</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.28";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.28";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
