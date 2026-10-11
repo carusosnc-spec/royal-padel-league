@@ -1065,6 +1065,7 @@ html,body{overflow-x:hidden!important;}
           <div id="rplChatRooms" class="rpl-chat-rooms" aria-label="Conversazioni"></div>
           <div class="rpl-chat-thread">
             <div id="rplChatThreadTitle" class="rpl-chat-thread-title">Scegli una conversazione</div>
+            <div id="rplChatParticipants" class="rpl-chat-participants" hidden></div>
             <div id="rplChatMessages" class="rpl-chat-messages"><div class="rpl-chat-empty">I tuoi messaggi appariranno qui.</div></div>
             <div class="rpl-chat-media-tools"><label for="rplChatMediaInput">📎 FOTO / VIDEO</label><input id="rplChatMediaInput" type="file" accept="image/*,video/*" hidden><button type="button" id="rplChatVoiceBtn">🎙️ VOCALE</button><span id="rplChatMediaStatus" class="muted" style="font-size:11px;align-self:center"></span></div><form id="rplChatSendForm" class="rpl-chat-compose"><textarea id="rplChatBody" rows="2" maxlength="4000" placeholder="Scrivi un messaggio…"></textarea><button type="submit" class="primary">INVIA</button></form>
           </div>
@@ -4883,15 +4884,31 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
       if(pids.length){const {data:p}=await client.from('players').select('id,name,nickname').in('id',pids);people=p||[];}
     }
     const names=new Map(people.map(p=>[String(p.id),p.name+(p.nickname?' · '+p.nickname:'')]));
+    // Recupera data e partecipanti reali dalla partita di calendario, non dall'ID tecnico della chat.
+    const calendarIds=[...new Set(rooms.filter(r=>r.conversation_type==='match'&&r.calendar_match_id).map(r=>String(r.calendar_match_id)))];
+    let calendarById=new Map();
+    if(calendarIds.length){
+      const {data:calendarRows,error:calendarError}=await client.from('calendar_matches').select('id,scheduled_at,player_1,player_2,player_3,player_4,court').in('id',calendarIds);
+      if(calendarError)console.warn('RPL chat calendar details',calendarError);
+      calendarById=new Map((calendarRows||[]).map(c=>[String(c.id),c]));
+    }
     rooms=rooms.map(r=>{
-      let title=r.title||'';
+      let title=r.title||'',playerNames=[];
       if(r.conversation_type==='general')title='Chat generale RPL';
-      if(r.conversation_type==='match')title='Chat partita #'+r.calendar_match_id;
+      if(r.conversation_type==='match'){
+        const match=calendarById.get(String(r.calendar_match_id));
+        const dateValue=match?.scheduled_at||r.created_at;
+        let dateText='Data da definire';
+        if(dateValue){const d=new Date(dateValue);if(!isNaN(d))dateText=d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});}
+        const matchPlayerIds=match?[match.player_1,match.player_2,match.player_3,match.player_4].filter(v=>v!==null&&v!==undefined&&String(v)!=='').map(String):members.filter(m=>String(m.conversation_id)===String(r.id)).map(m=>String(m.player_id));
+        playerNames=[...new Set(matchPlayerIds)].map(pid=>names.get(pid)).filter(Boolean);
+        title='Partita · '+dateText;
+      }
       if(r.conversation_type==='private'){
         const other=members.filter(m=>String(m.conversation_id)===String(r.id)&&String(m.player_id)!==String(currentPlayerId)).map(m=>names.get(String(m.player_id))).filter(Boolean);
         title=other[0]||'Chat privata';
       }
-      return {...r,displayTitle:title};
+      return {...r,displayTitle:title,playerNames};
     });
     renderRooms();
     if(keep&&selectedRoomId&&rooms.some(r=>String(r.id)===String(selectedRoomId)))await openRoom(selectedRoomId,false);
@@ -4903,7 +4920,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     const host=q('rplChatRooms');if(!host)return;
     const filter=q('rplChatType')?.value||'all';
     const list=rooms.filter(r=>filter==='all'||r.conversation_type===filter);
-    host.innerHTML=list.map(r=>`<button type="button" class="rpl-chat-room ${String(r.id)===String(selectedRoomId)?'active':''}" data-room="${esc(r.id)}"><strong>${esc(r.displayTitle)}</strong><small>${r.conversation_type==='general'?'Chat generale':r.conversation_type==='match'?'Chat partita':'Messaggio privato'}</small></button>`).join('')||'<div class="rpl-chat-empty">Nessuna chat in questa categoria.</div>';
+    host.innerHTML=list.map(r=>`<button type="button" class="rpl-chat-room ${String(r.id)===String(selectedRoomId)?'active':''}" data-room="${esc(r.id)}"><strong>${esc(r.displayTitle)}</strong><small>${r.conversation_type==='general'?'Chat generale':r.conversation_type==='match'?'Chat della partita':'Messaggio privato'}</small>${r.conversation_type==='match'&&r.playerNames?.length?`<span class="rpl-chat-room-players">👥 ${esc(r.playerNames.join(' · '))}</span>`:''}</button>`).join('')||'<div class="rpl-chat-empty">Nessuna chat in questa categoria.</div>';
     host.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>openRoom(b.dataset.room)));
   }
   async function openRoom(id,render=true){
@@ -4912,6 +4929,11 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     selectedRoomId=room.id;
     if(channel){await client.removeChannel(channel);channel=null;}
     q('rplChatThreadTitle').textContent=room.displayTitle;
+    const participants=q('rplChatParticipants');
+    if(participants){
+      if(room.conversation_type==='match'&&room.playerNames?.length){participants.hidden=false;participants.innerHTML='<strong>Giocatori della partita</strong><br>👥 '+esc(room.playerNames.join(' · '));}
+      else{participants.hidden=true;participants.textContent='';}
+    }
     if(render)renderRooms();
     q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Caricamento messaggi…</div>';
     const {data:messages,error}=await client.from('rpl_messages').select('id,conversation_id,sender_player_id,body,created_at,deleted_at,media_path,media_type,media_name,media_duration_seconds').eq('conversation_id',room.id).order('created_at',{ascending:false}).limit(100);
@@ -5096,6 +5118,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.28";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.28";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.29";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.29";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
