@@ -1072,6 +1072,10 @@ html,body{overflow-x:hidden!important;}
         <div class="rpl-chat-footnote">Usa “Segnala” per segnalare un messaggio inappropriato. Evita di condividere dati personali o password.</div>
       </div>
     </section>
+    <div id="rplImageLightbox" class="rpl-image-lightbox" hidden role="dialog" aria-modal="true" aria-label="Foto condivisa a schermo intero">
+      <img id="rplImageLightboxImg" alt="Foto condivisa a schermo intero">
+      <div class="rpl-image-lightbox-tools"><button type="button" id="rplImageSaveBtn">⬇️ Salva foto</button><button type="button" class="close" id="rplImageCloseBtn">✕ Chiudi</button></div>
+    </div>
     <div id="playerPasswordPanel" class="card hidden">      <div class="rpl-alert-title">🔐 PRIMO ACCESSO</div>
       <div class="muted" style="margin-bottom:10px">Per sicurezza devi sostituire la password iniziale prima di continuare.</div>
       <label>Nuova password</label><input id="playerNewPassword" type="password" minlength="8" autocomplete="new-password">
@@ -3454,7 +3458,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.25</div>
+<div id="rplVersionBadge">RPL v9.1.26</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3906,7 +3910,11 @@ async function loadPublicCalendar(){
           const statusEl=q('rplChatStatus');
           const statusText=(statusEl?.textContent||'').toLowerCase();
           const ready=card && card.getClientRects().length && !statusText.includes('caricamento conversazioni');
-          if(ready){card.scrollIntoView({behavior:'smooth',block:'start'});return true;}
+          if(ready){
+            if(typeof window.rplOpenMessages==='function') window.rplOpenMessages();
+            card.scrollIntoView({behavior:'smooth',block:'start'});
+            return true;
+          }
         }
         return false;
       };
@@ -4818,10 +4826,15 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 .rpl-chat-media-tools{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px 0;border-top:1px solid rgba(255,255,255,.06)}
 .rpl-chat-media-tools button,.rpl-chat-media-tools label{min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;border:1px solid rgba(231,185,78,.3);border-radius:9px;background:rgba(231,185,78,.08);color:#ffe18a;font-size:11px;font-weight:800;cursor:pointer}
 .rpl-chat-media-tools button:disabled{opacity:.5;cursor:wait}.rpl-chat-media{display:block;max-width:100%;width:auto;max-height:280px;border-radius:9px;margin-top:6px}.rpl-chat-media audio{max-width:100%;width:260px}.rpl-chat-attachment-name{font-size:11px;color:#c6d4df;margin-top:4px}
+.rpl-chat-image-open{cursor:zoom-in;max-width:100%;width:auto;max-height:280px;object-fit:contain}
+.rpl-image-lightbox{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px}
+.rpl-image-lightbox[hidden]{display:none!important}.rpl-image-lightbox img{max-width:100%;max-height:calc(100dvh - 110px);object-fit:contain;border-radius:8px}
+.rpl-image-lightbox-tools{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.rpl-image-lightbox-tools button,.rpl-image-lightbox-tools a{border:1px solid #777;border-radius:12px;padding:11px 16px;background:#20242a;color:#fff;font-weight:700;text-decoration:none}.rpl-image-lightbox-tools .close{background:#eee;color:#111}
+
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:1}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.25";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.26";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -4935,7 +4948,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
         const {data:signed,error:signedError}=await sb().storage.from('rpl-chat-media').createSignedUrl(m.media_path,3600);
         if(!signedError&&signed?.signedUrl){
           const url=esc(signed.signedUrl),type=String(m.media_type||'');
-          if(type.startsWith('image/'))media=`<img class="rpl-chat-media" src="${url}" alt="Foto condivisa" loading="lazy">`;
+          if(type.startsWith('image/'))media=`<img class="rpl-chat-media rpl-chat-image-open" src="${url}" alt="Foto condivisa — tocca per ingrandire" data-rpl-full-image="${url}" data-rpl-image-name="${esc(m.media_name||'foto-rpl.jpg')}" loading="lazy">`;
           else if(type.startsWith('video/'))media=`<video class="rpl-chat-media" src="${url}" controls playsinline preload="metadata"></video>`;
           else if(type.startsWith('audio/'))media=`<audio class="rpl-chat-media" src="${url}" controls preload="metadata"></audio>`;
           else media=`<a href="${url}" target="_blank" rel="noopener">📎 ${esc(m.media_name||'Apri allegato')}</a>`;
@@ -5051,12 +5064,19 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   q('rplChatStartPrivate')?.addEventListener('click',startPrivate);
   q('rplChatSendForm')?.addEventListener('submit',sendMessage);
   q('rplChatMediaInput')?.addEventListener('change',e=>{const input=e.currentTarget;const file=input.files?.[0];if(file)uploadChatMedia(file,'media');input.value='';});
+  const imageLightbox=q('rplImageLightbox'), imageLightboxImg=q('rplImageLightboxImg');let currentFullImageUrl='',currentFullImageName='foto-rpl.jpg';
+  q('rplChatMessages')?.addEventListener('click',e=>{const img=e.target?.closest?.('[data-rpl-full-image]');if(!img)return;currentFullImageUrl=img.dataset.rplFullImage||img.src;currentFullImageName=(img.dataset.rplImageName||'foto-rpl.jpg').replace(/[\\/:*?"<>|]+/g,'_');imageLightboxImg.src=currentFullImageUrl;imageLightbox.hidden=false;document.body.style.overflow='hidden';});
+  const closeImageLightbox=()=>{if(imageLightbox)imageLightbox.hidden=true;if(imageLightboxImg)imageLightboxImg.src='';document.body.style.overflow='';};
+  q('rplImageCloseBtn')?.addEventListener('click',closeImageLightbox);
+  imageLightbox?.addEventListener('click',e=>{if(e.target===imageLightbox)closeImageLightbox();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&imageLightbox&&!imageLightbox.hidden)closeImageLightbox();});
+  q('rplImageSaveBtn')?.addEventListener('click',async()=>{if(!currentFullImageUrl)return;const btn=q('rplImageSaveBtn');btn.disabled=true;try{const response=await fetch(currentFullImageUrl);if(!response.ok)throw new Error('Download foto non riuscito');const blob=await response.blob();const objectUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=objectUrl;a.download=currentFullImageName||'foto-rpl.jpg';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(objectUrl),30000);}catch(err){console.warn('Salvataggio foto RPL',err);window.open(currentFullImageUrl,'_blank','noopener');status('Apri la foto e usa Condividi → Salva immagine per salvarla sul telefono.','muted');}finally{btn.disabled=false;}});
   q('rplChatVoiceBtn')?.addEventListener('click',toggleVoiceRecording);
   sb()?.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){started=false;currentPlayerId=null;rooms=[];selectedRoomId=null;if(channel){sb().removeChannel(channel);channel=null;}q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Accedi per vedere i messaggi.</div>';q('rplChatRooms').innerHTML='';}});
   window.rplOpenMessages=function(){q('rplChatWorkspace')?.classList.remove('hidden');q('rplChatToggle').textContent='CHIUDI MESSAGGI';started=false;initialize();q('rplMessagingCard')?.scrollIntoView({behavior:'smooth',block:'start'});};
 })();
 </script>
 
-<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.25";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.24";</script>
+<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.26";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.24";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
