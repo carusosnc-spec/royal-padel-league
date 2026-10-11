@@ -964,6 +964,31 @@ html,body{overflow-x:hidden!important;}
 @media(max-width:520px){.rpl-partner-row{grid-template-columns:minmax(0,1fr) repeat(3,minmax(0,.8fr));gap:4px;padding:9px 6px}.rpl-partner-name{font-size:10px}.rpl-partner-metric{font-size:11px}.rpl-partner-metric span{font-size:8px}}
 </style>
 
+
+<style id="rpl-messaging-v9120-style">
+.rpl-chat-card{border-color:rgba(231,185,78,.5);background:linear-gradient(145deg,rgba(10,29,46,.98),rgba(3,12,21,.98))}
+.rpl-chat-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.rpl-chat-kicker{font-size:9px;letter-spacing:.2em;color:#ffd86a;font-weight:900}
+.rpl-chat-toggle{width:100%;margin-top:14px;min-height:46px}
+#rplChatWorkspace{margin-top:14px}.rpl-chat-toolbar{display:grid;grid-template-columns:1fr;gap:5px;padding:12px;border:1px solid rgba(231,185,78,.18);border-radius:12px;background:rgba(0,0,0,.15)}
+.rpl-chat-toolbar label{color:#b8c5d2;font-weight:800}.rpl-chat-toolbar select,.rpl-chat-compose textarea{width:100%;background:#071522;color:#fff;border:1px solid #34495c;border-radius:9px;padding:10px;font:inherit}
+.rpl-chat-new{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.rpl-chat-new button{white-space:nowrap}
+.rpl-chat-layout{display:grid;grid-template-columns:minmax(160px,.72fr) minmax(0,1.6fr);gap:10px;margin-top:10px;min-height:350px}
+.rpl-chat-rooms{display:grid;align-content:start;gap:6px;max-height:520px;overflow:auto}
+.rpl-chat-room{width:100%;text-align:left;padding:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.025);border-radius:10px;overflow-wrap:anywhere}
+.rpl-chat-room.active{border-color:#ffd86a;background:rgba(255,216,106,.09)}.rpl-chat-room strong{display:block;color:#fff;font-size:12px}.rpl-chat-room small{display:block;color:#9da8b4;font-size:10px;margin-top:4px}
+.rpl-chat-thread{display:flex;flex-direction:column;min-width:0;border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;background:rgba(0,0,0,.12)}
+.rpl-chat-thread-title{font-size:13px;font-weight:900;padding:12px;border-bottom:1px solid rgba(255,255,255,.08);color:#ffd86a}
+.rpl-chat-messages{height:320px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px}
+.rpl-chat-bubble{max-width:92%;align-self:flex-start;background:#102438;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:9px 10px;overflow-wrap:anywhere}
+.rpl-chat-bubble.mine{align-self:flex-end;background:rgba(231,185,78,.12);border-color:rgba(231,185,78,.28)}
+.rpl-chat-author{font-size:10px;font-weight:900;color:#ffd86a;margin-bottom:4px}.rpl-chat-body{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4}.rpl-chat-time{font-size:9px;color:#9da8b4;margin-top:5px;text-align:right}
+.rpl-chat-report{font-size:10px;padding:4px 7px;margin-top:6px;background:transparent;border-color:rgba(255,255,255,.16);color:#c8d1da}
+.rpl-chat-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:10px;border-top:1px solid rgba(255,255,255,.08);align-items:end}
+.rpl-chat-compose textarea{resize:vertical;min-height:44px;max-height:140px;font-size:14px}.rpl-chat-compose button{min-height:44px}
+.rpl-chat-empty{color:#9da8b4;font-size:12px;text-align:center;padding:24px 10px}.rpl-chat-footnote{font-size:10px;color:#9da8b4;margin-top:9px;line-height:1.4}
+@media(max-width:650px){.rpl-chat-layout{grid-template-columns:1fr;min-height:0}.rpl-chat-rooms{display:flex;max-height:none;overflow-x:auto;padding-bottom:4px}.rpl-chat-room{min-width:155px;max-width:200px}.rpl-chat-messages{height:42vh;min-height:230px;max-height:430px}.rpl-chat-compose{grid-template-columns:1fr}.rpl-chat-compose button{width:100%}}
+</style>
+
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1025,6 +1050,28 @@ html,body{overflow-x:hidden!important;}
   </div>
 
   <div id="playerDashboard" class="hidden">
+    <section id="rplMessagingCard" class="card rpl-chat-card">
+      <div class="rpl-chat-heading"><div><div class="rpl-chat-kicker">ROYAL PADEL LEAGUE</div><h2 style="margin:3px 0 4px">💬 Messaggi</h2><div class="muted">Chat riservate ai giocatori ufficiali attivi.</div></div><span class="badge">BETA</span></div>
+      <button type="button" id="rplChatToggle" class="primary rpl-chat-toggle">APRI MESSAGGI</button>
+      <div id="rplChatWorkspace" class="hidden">
+        <div class="rpl-chat-toolbar">
+          <label for="rplChatType">Tipo di chat</label>
+          <select id="rplChatType"><option value="all">Tutte le chat</option><option value="general">Chat generale</option><option value="match">Chat delle partite</option><option value="private">Chat private</option></select>
+          <label for="rplChatPlayer">Nuova chat privata</label>
+          <div class="rpl-chat-new"><select id="rplChatPlayer"><option value="">Seleziona un giocatore ufficiale…</option></select><button type="button" id="rplChatStartPrivate">AVVIA</button></div>
+        </div>
+        <div id="rplChatStatus" class="msg muted" role="status" aria-live="polite">Caricamento conversazioni…</div>
+        <div class="rpl-chat-layout">
+          <div id="rplChatRooms" class="rpl-chat-rooms" aria-label="Conversazioni"></div>
+          <div class="rpl-chat-thread">
+            <div id="rplChatThreadTitle" class="rpl-chat-thread-title">Scegli una conversazione</div>
+            <div id="rplChatMessages" class="rpl-chat-messages"><div class="rpl-chat-empty">I tuoi messaggi appariranno qui.</div></div>
+            <form id="rplChatSendForm" class="rpl-chat-compose"><textarea id="rplChatBody" rows="2" maxlength="4000" placeholder="Scrivi un messaggio…" required></textarea><button type="submit" class="primary">INVIA</button></form>
+          </div>
+        </div>
+        <div class="rpl-chat-footnote">Usa “Segnala” per segnalare un messaggio inappropriato. Evita di condividere dati personali o password.</div>
+      </div>
+    </section>
     <div id="playerPasswordPanel" class="card hidden">      <div class="rpl-alert-title">🔐 PRIMO ACCESSO</div>
       <div class="muted" style="margin-bottom:10px">Per sicurezza devi sostituire la password iniziale prima di continuare.</div>
       <label>Nuova password</label><input id="playerNewPassword" type="password" minlength="8" autocomplete="new-password">
@@ -3407,7 +3454,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.19</div>
+<div id="rplVersionBadge">RPL v9.1.20</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4762,5 +4809,156 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 </style>
 <script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.15";</script>
 
+
+<script id="rpl-messaging-v9120-script">
+(function(){
+  'use strict';
+  const q=id=>document.getElementById(id);
+  let currentPlayerId=null, rooms=[], selectedRoomId=null, channel=null, started=false, busy=false;
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const status=(msg,kind='muted')=>{const el=q('rplChatStatus');if(el){el.className='msg '+kind;el.textContent=msg;}};
+  const sb=()=>window.sb;
+  function dateLabel(v){try{return new Date(v).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+  async function getPlayer(){
+    const client=sb(); if(!client)return null;
+    const {data:{user},error:ue}=await client.auth.getUser();
+    if(ue||!user)return null;
+    const {data:account,error}=await client.from('player_accounts').select('player_id').eq('user_id',user.id).maybeSingle();
+    if(error||!account)return null;
+    const {data:player,error:pe}=await client.from('players').select('id,name,nickname,active,is_guest').eq('id',account.player_id).maybeSingle();
+    if(pe||!player||!player.active||player.is_guest)return null;
+    currentPlayerId=player.id;return player;
+  }
+  async function loadPeople(){
+    const client=sb(); if(!client)return;
+    const sel=q('rplChatPlayer'); if(!sel)return;
+    const old=sel.value;
+    const {data,error}=await client.from('players').select('id,name,nickname').eq('active',true).eq('is_guest',false).order('name');
+    if(error){console.warn('RPL chat players',error);return;}
+    sel.innerHTML='<option value="">Seleziona un giocatore ufficiale…</option>';
+    (data||[]).filter(p=>String(p.id)!==String(currentPlayerId)).forEach(p=>{
+      const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name+(p.nickname?' — '+p.nickname:'');sel.appendChild(opt);
+    });
+    if(old)sel.value=old;
+  }
+  async function loadRooms(keep=true){
+    const client=sb(); if(!client)return;
+    status('Caricamento conversazioni…');
+    const {data,error}=await client.from('rpl_conversations').select('id,conversation_type,title,calendar_match_id,created_at,closed_at').is('closed_at',null).order('created_at',{ascending:false});
+    if(error){status('Non riesco a caricare le chat. Verifica l’accesso e riprova.','err');console.error('RPL chat rooms',error);return;}
+    rooms=data||[];
+    const ids=rooms.map(r=>r.id);
+    let members=[],people=[];
+    if(ids.length){
+      const {data:m}=await client.from('rpl_conversation_members').select('conversation_id,player_id,removed_at').in('conversation_id',ids).is('removed_at',null);
+      members=m||[];
+      const pids=[...new Set(members.map(m=>m.player_id))];
+      if(pids.length){const {data:p}=await client.from('players').select('id,name,nickname').in('id',pids);people=p||[];}
+    }
+    const names=new Map(people.map(p=>[String(p.id),p.name+(p.nickname?' · '+p.nickname:'')]));
+    rooms=rooms.map(r=>{
+      let title=r.title||'';
+      if(r.conversation_type==='general')title='Chat generale RPL';
+      if(r.conversation_type==='match')title='Chat partita #'+r.calendar_match_id;
+      if(r.conversation_type==='private'){
+        const other=members.filter(m=>String(m.conversation_id)===String(r.id)&&String(m.player_id)!==String(currentPlayerId)).map(m=>names.get(String(m.player_id))).filter(Boolean);
+        title=other[0]||'Chat privata';
+      }
+      return {...r,displayTitle:title};
+    });
+    renderRooms();
+    if(keep&&selectedRoomId&&rooms.some(r=>String(r.id)===String(selectedRoomId)))await openRoom(selectedRoomId,false);
+    else if(!selectedRoomId&&rooms.length)await openRoom(rooms[0].id,false);
+    else if(!rooms.length){selectedRoomId=null;q('rplChatThreadTitle').textContent='Nessuna conversazione';q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Apri la chat generale o avvia una chat privata.</div>';status('Nessuna conversazione disponibile.','muted');}
+    if(rooms.length)status(rooms.length+' conversazion'+(rooms.length===1?'e':'i')+' disponibili.','ok');
+  }
+  function renderRooms(){
+    const host=q('rplChatRooms');if(!host)return;
+    const filter=q('rplChatType')?.value||'all';
+    const list=rooms.filter(r=>filter==='all'||r.conversation_type===filter);
+    host.innerHTML=list.map(r=>`<button type="button" class="rpl-chat-room ${String(r.id)===String(selectedRoomId)?'active':''}" data-room="${esc(r.id)}"><strong>${esc(r.displayTitle)}</strong><small>${r.conversation_type==='general'?'Chat generale':r.conversation_type==='match'?'Chat partita':'Messaggio privato'}</small></button>`).join('')||'<div class="rpl-chat-empty">Nessuna chat in questa categoria.</div>';
+    host.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>openRoom(b.dataset.room)));
+  }
+  async function openRoom(id,render=true){
+    const client=sb();if(!client)return;
+    const room=rooms.find(r=>String(r.id)===String(id));if(!room)return;
+    selectedRoomId=room.id;
+    if(channel){await client.removeChannel(channel);channel=null;}
+    q('rplChatThreadTitle').textContent=room.displayTitle;
+    if(render)renderRooms();
+    q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Caricamento messaggi…</div>';
+    const {data:messages,error}=await client.from('rpl_messages').select('id,conversation_id,sender_player_id,body,created_at,deleted_at').eq('conversation_id',room.id).order('created_at',{ascending:false}).limit(100);
+    if(error){q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Impossibile leggere i messaggi di questa chat.</div>';console.error('RPL chat messages',error);return;}
+    await renderMessages((messages||[]).reverse());
+    channel=client.channel('rpl-chat-'+room.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'rpl_messages',filter:'conversation_id=eq.'+room.id},()=>{if(String(selectedRoomId)===String(room.id))openRoom(room.id,false);}).subscribe();
+  }
+  async function renderMessages(messages){
+    const host=q('rplChatMessages');if(!host)return;
+    const ids=[...new Set(messages.map(m=>m.sender_player_id))];
+    let people=[];
+    if(ids.length){const {data}=await sb().from('players').select('id,name,nickname').in('id',ids);people=data||[];}
+    const names=new Map(people.map(p=>[String(p.id),p.name+(p.nickname?' · '+p.nickname:'')]));
+    host.innerHTML=messages.length?messages.map(m=>{
+      const mine=String(m.sender_player_id)===String(currentPlayerId);
+      const body=m.deleted_at?'[Messaggio rimosso]':m.body;
+      return `<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div><div class="rpl-chat-body">${esc(body)}</div><div class="rpl-chat-time">${esc(dateLabel(m.created_at))}</div>${!mine&&!m.deleted_at?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</article>`;
+    }).join(''):'<div class="rpl-chat-empty">Ancora nessun messaggio. Rompi il ghiaccio! 🎾</div>';
+    host.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>reportMessage(b.dataset.report)));
+    host.scrollTop=host.scrollHeight;
+  }
+  async function reportMessage(id){
+    const reason=prompt('Motivo della segnalazione:\ninsulti, molestie, spam, contenuto_inappropriato, altro','altro');
+    if(reason===null)return;
+    const allowed=['insulti','molestie','spam','contenuto_inappropriato','altro'];
+    const normalized=reason.trim().toLowerCase();
+    if(!allowed.includes(normalized)){alert('Inserisci uno dei motivi indicati: insulti, molestie, spam, contenuto_inappropriato, altro.');return;}
+    const details=prompt('Dettagli facoltativi (puoi lasciare vuoto):','')||null;
+    const {error}=await sb().from('rpl_message_reports').insert({message_id:Number(id),reporter_player_id:currentPlayerId,reason:normalized,details});
+    if(error){alert(error.code==='23505'?'Hai già segnalato questo messaggio.':'Segnalazione non inviata. Riprova più tardi.');console.error('RPL report',error);return;}
+    alert('Segnalazione inviata agli operatori RPL. Grazie.');
+  }
+  async function startPrivate(){
+    const id=q('rplChatPlayer')?.value;if(!id){status('Seleziona prima un giocatore.','err');return;}
+    const btn=q('rplChatStartPrivate');btn.disabled=true;
+    const {data,error}=await sb().rpc('rpl_start_private_conversation',{p_other_player_id:Number(id)});
+    btn.disabled=false;
+    if(error){status('Non riesco ad avviare la chat privata. Il destinatario potrebbe non avere un account attivo.','err');console.error('RPL private chat',error);return;}
+    q('rplChatType').value='all';selectedRoomId=data;await loadRooms(false);await openRoom(data);
+    status('Chat privata pronta.','ok');
+  }
+  async function sendMessage(e){
+    e.preventDefault();if(busy)return;
+    const body=q('rplChatBody')?.value.trim();if(!body)return;
+    if(!selectedRoomId){status('Scegli una conversazione prima di inviare.','err');return;}
+    busy=true;const btn=q('rplChatSendForm')?.querySelector('button');if(btn)btn.disabled=true;
+    const {error}=await sb().from('rpl_messages').insert({conversation_id:selectedRoomId,sender_player_id:currentPlayerId,body});
+    busy=false;if(btn)btn.disabled=false;
+    if(error){status('Messaggio non inviato. Potresti non essere autorizzato a scrivere in questa chat.','err');console.error('RPL send message',error);return;}
+    q('rplChatBody').value='';await openRoom(selectedRoomId,false);
+  }
+  async function initialize(){
+    if(started)return;
+    const me=await getPlayer();
+    if(!me){status('Accedi con un account di giocatore ufficiale per usare i messaggi.','err');return;}
+    started=true;
+    await loadPeople();
+    await loadRooms(false);
+  }
+  q('rplChatToggle')?.addEventListener('click',async()=>{
+    const workspace=q('rplChatWorkspace');if(!workspace)return;
+    const opening=workspace.classList.contains('hidden');
+    workspace.classList.toggle('hidden',!opening);q('rplChatToggle').textContent=opening?'CHIUDI MESSAGGI':'APRI MESSAGGI';
+    if(opening){started=false;await initialize();}
+    else if(channel){await sb().removeChannel(channel);channel=null;}
+  });
+  q('rplChatType')?.addEventListener('change',renderRooms);
+  q('rplChatStartPrivate')?.addEventListener('click',startPrivate);
+  q('rplChatSendForm')?.addEventListener('submit',sendMessage);
+  sb()?.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){started=false;currentPlayerId=null;rooms=[];selectedRoomId=null;if(channel){sb().removeChannel(channel);channel=null;}q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Accedi per vedere i messaggi.</div>';q('rplChatRooms').innerHTML='';}});
+  window.rplOpenMessages=function(){q('rplChatWorkspace')?.classList.remove('hidden');q('rplChatToggle').textContent='CHIUDI MESSAGGI';started=false;initialize();q('rplMessagingCard')?.scrollIntoView({behavior:'smooth',block:'start'});};
+})();
+</script>
+
+<script id="rpl-v9120-version">document.documentElement.dataset.rplVersion="9.1.20";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.20";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
