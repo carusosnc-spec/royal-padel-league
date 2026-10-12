@@ -984,7 +984,7 @@ html,body{overflow-x:hidden!important;}
 .rpl-chat-author{font-size:10px;font-weight:900;color:#ffd86a;margin-bottom:4px}.rpl-chat-body{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4}.rpl-chat-time{font-size:9px;color:#9da8b4;margin-top:5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:5px}.rpl-chat-receipt{font-size:12px;font-weight:900;letter-spacing:-2px;color:#aebac1;white-space:nowrap}.rpl-chat-receipt.read{color:#53bdeb;letter-spacing:-2px}
 .rpl-chat-report{font-size:10px;padding:4px 7px;margin-top:6px;background:transparent;border-color:rgba(255,255,255,.16);color:#c8d1da}
 .rpl-chat-message-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin-top:5px}.rpl-chat-forward{display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;padding:0;border:1px solid rgba(255,216,106,.25);border-radius:7px;background:rgba(255,216,106,.06);color:#ffd86a;font-size:14px;line-height:1;cursor:pointer}.rpl-chat-forward:hover{background:rgba(255,216,106,.16)}.rpl-chat-forward:focus-visible{outline:2px solid #ffd86a;outline-offset:2px}
-.rpl-forward-backdrop{position:fixed;inset:0;z-index:10020;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px}.rpl-forward-panel{width:min(100%,420px);background:#0b1c2b;border:1px solid rgba(255,216,106,.45);border-radius:16px;padding:18px;box-shadow:0 18px 55px rgba(0,0,0,.55)}.rpl-forward-panel h3{margin:0 0 8px;color:#ffd86a}.rpl-forward-panel p{font-size:12px;color:#c4d0dc}.rpl-forward-panel select{width:100%;padding:11px;background:#071522;color:#fff;border:1px solid #34495c;border-radius:9px}.rpl-forward-buttons{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}.rpl-forward-buttons button{min-height:38px;padding:8px 12px}
+.rpl-forward-backdrop[hidden]{display:none!important}.rpl-forward-backdrop{position:fixed;inset:0;z-index:10020;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px}.rpl-forward-panel{width:min(100%,420px);background:#0b1c2b;border:1px solid rgba(255,216,106,.45);border-radius:16px;padding:18px;box-shadow:0 18px 55px rgba(0,0,0,.55)}.rpl-forward-panel h3{margin:0 0 8px;color:#ffd86a}.rpl-forward-panel p{font-size:12px;color:#c4d0dc}.rpl-forward-panel select{width:100%;padding:11px;background:#071522;color:#fff;border:1px solid #34495c;border-radius:9px}.rpl-forward-buttons{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}.rpl-forward-buttons button{min-height:38px;padding:8px 12px}
 .rpl-chat-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:10px;border-top:1px solid rgba(255,255,255,.08);align-items:end}
 .rpl-chat-compose textarea{resize:vertical;min-height:44px;max-height:140px;font-size:14px}.rpl-chat-compose button{min-height:44px}
 .rpl-chat-empty{color:#9da8b4;font-size:12px;text-align:center;padding:24px 10px}.rpl-chat-footnote{font-size:10px;color:#9da8b4;margin-top:9px;line-height:1.4}
@@ -3471,7 +3471,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.31</div>
+<div id="rplVersionBadge">RPL v9.1.32</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4850,7 +4850,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.31";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.32";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5024,11 +5024,16 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
       rendered.push(`<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div>${body?`<div class="rpl-chat-body">${esc(body)}</div>`:''}${media}<div class="rpl-chat-time"><span>${esc(dateLabel(m.created_at))}</span>${receipt}</div>${!m.deleted_at?`<div class="rpl-chat-message-actions"><button type="button" class="rpl-chat-forward" data-forward="${esc(m.id)}" title="Inoltra messaggio" aria-label="Inoltra messaggio">↪</button>${!mine?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</div>`:''}</article>`);
     }
     host.innerHTML=messages.length?rendered.join(''):'<div class="rpl-chat-empty">Ancora nessun messaggio. Rompi il ghiaccio! 🎾</div>';
-    host.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>reportMessage(b.dataset.report)));
-    host.querySelectorAll('[data-forward]').forEach(b=>b.addEventListener('click',()=>openForwardDialog(b.dataset.forward)));
     host.scrollTop=host.scrollHeight;
   }
   let forwardingMessageId=null;
+  // Delegazione eventi: garantisce che le icone restino cliccabili anche dopo gli aggiornamenti realtime.
+  q('rplChatMessages')?.addEventListener('click',e=>{
+    const forward=e.target?.closest?.('[data-forward]');
+    if(forward){e.preventDefault();e.stopPropagation();openForwardDialog(forward.dataset.forward);return;}
+    const report=e.target?.closest?.('[data-report]');
+    if(report){e.preventDefault();e.stopPropagation();reportMessage(report.dataset.report);}
+  });
   function openForwardDialog(id){
     const msg=currentMessages.find(m=>String(m.id)===String(id));if(!msg||msg.deleted_at)return;
     forwardingMessageId=String(id);const back=q('rplForwardBackdrop'),sel=q('rplForwardPlayer'),note=q('rplForwardStatus');
@@ -5211,6 +5216,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.31";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.31";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.32";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.32";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
