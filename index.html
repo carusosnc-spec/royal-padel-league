@@ -1007,6 +1007,38 @@ html,body{overflow-x:hidden!important;}
 @media(max-width:360px){#playerAreaPage .rpl-player-section-v900{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}#playerAreaPage .rpl-player-toggle-v900{padding:8px;font-size:10px}}
 </style>
 
+
+<style id="rpl-v9135-player-dashboard-layout">
+/* RPL 9.1.35: dashboard giocatore a griglia, priorità al responsabile partita */
+#playerDashboard.rpl-dashboard-v9135{display:flex;flex-direction:column;gap:10px}
+#playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero{order:1;padding:10px 13px!important;margin:0!important;border-radius:13px;border:1px solid #e7b94e;background:linear-gradient(115deg,rgba(231,185,78,.22),rgba(117,63,12,.12));box-shadow:0 5px 18px rgba(0,0,0,.2)}
+#playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero h2{font-size:15px!important;margin:3px 0!important}
+#playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero .muted{font-size:11px!important}
+#playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero .rpl-responsible-button{min-height:34px!important;padding:7px 11px!important;font-size:11px!important;margin-top:7px!important}
+#rplPlayerMenuGrid{order:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;align-items:start}
+#rplPlayerMenuGrid>.rpl-player-section-v900{display:contents}
+#rplPlayerMenuGrid .rpl-player-toggle-v900{width:100%;min-width:0;min-height:58px;height:100%;padding:9px 8px;border:1px solid rgba(231,185,78,.26);border-radius:12px;background:linear-gradient(145deg,#173f69 0%,#102e50 100%);color:#fff;box-shadow:0 3px 9px rgba(0,0,0,.14);font-size:11px;line-height:1.2;display:flex;align-items:center;gap:5px}
+#rplPlayerMenuGrid .rpl-player-toggle-v900>span:first-of-type{flex:1}
+#rplPlayerMenuGrid .rpl-player-toggle-v900 .rpl-toggle-chevron{color:#f0ca58;font-size:14px;margin-left:0}
+#rplPlayerMenuGrid .rpl-player-toggle-v900.open,#rplPlayerMenuGrid .rpl-player-toggle-v900[aria-expanded="true"]{background:linear-gradient(145deg,#f4d46c 0%,#d9ad32 100%);border-color:#c99d27;color:#182b40}
+#rplPlayerMenuGrid .rpl-toggle-panel-v900{grid-column:1/-1;min-width:0;width:100%}
+#rplPlayerMenuGrid #rplMessagingCard{grid-column:auto;order:5;min-width:0;margin:0!important;padding:8px!important;border:1px solid rgba(231,185,78,.24);border-radius:12px;background:linear-gradient(145deg,#102e50,#0a1b2c);box-shadow:0 3px 9px rgba(0,0,0,.14);display:flex;flex-direction:column;justify-content:center;gap:6px} 
+#rplChatWorkspaceCard{width:100%;min-width:0;box-sizing:border-box;order:2}#rplChatWorkspaceCard.hidden{display:none!important}#rplChatWorkspaceCard #rplChatWorkspace{margin-top:0} 
+
+#rplPlayerMenuGrid #rplMessagingCard .rpl-chat-heading{margin:0;gap:7px;align-items:center}
+#rplPlayerMenuGrid #rplMessagingCard .rpl-chat-heading h2{font-size:11px!important;margin:0!important}
+#rplPlayerMenuGrid #rplMessagingCard .rpl-chat-heading .muted,#rplPlayerMenuGrid #rplMessagingCard .rpl-chat-kicker,#rplPlayerMenuGrid #rplMessagingCard .badge{display:none!important}
+#rplPlayerMenuGrid #rplMessagingCard .rpl-chat-toggle{width:100%!important;min-height:30px!important;padding:5px 6px!important;margin:0!important;font-size:9px!important;white-space:nowrap}
+
+#playerDashboard.rpl-dashboard-v9135 #playerPasskeyCard.rpl-security-compact,#playerDashboard.rpl-dashboard-v9135 #playerNotificationCard.rpl-security-compact{order:3;align-self:stretch;width:100%;box-sizing:border-box;padding:6px 8px!important;margin:0!important;border-radius:9px;background:rgba(255,255,255,.025)}
+#playerDashboard.rpl-dashboard-v9135 #playerPasskeyCard.rpl-security-compact button,#playerDashboard.rpl-dashboard-v9135 #playerNotificationCard.rpl-security-compact button{min-height:28px!important;padding:4px 7px!important;font-size:10px!important}
+#playerDashboard.rpl-dashboard-v9135 #playerPasskeyCard.rpl-security-compact .msg,#playerDashboard.rpl-dashboard-v9135 #playerNotificationCard.rpl-security-compact .rpl-notify-status{font-size:9px!important}
+#playerDashboard.rpl-dashboard-v9135 > .rpl-player-utilities-v900{order:4}
+#playerDashboard.rpl-dashboard-v9135 #playerLogoutBtn{min-height:29px!important;padding:5px 9px!important;font-size:10px!important}
+@media(max-width:700px){#rplPlayerMenuGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}#rplPlayerMenuGrid .rpl-player-toggle-v900{min-height:51px;padding:8px 7px;font-size:10px}#playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero{padding:8px 10px!important}}
+@media(max-width:350px){#rplPlayerMenuGrid .rpl-player-toggle-v900{font-size:9px;gap:3px;padding:7px 5px}}
+</style>
+
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -3487,7 +3519,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.34</div>
+<div id="rplVersionBadge">RPL v9.1.35</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4866,7 +4898,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.34";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.35";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5022,15 +5054,17 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     const names=new Map(people.map(p=>[String(p.id),p.name+(p.nickname?' · '+p.nickname:'' )]));
     const {data:members,error:membersError}=await sb().from('rpl_conversation_members').select('player_id,last_read_at,last_delivered_at,removed_at').eq('conversation_id',selectedRoomId).is('removed_at',null);
     const memberRows=membersError?[]:(members||[]);
-    const readBy=new Map(memberRows.map(m=>[String(m.player_id),m.last_read_at?new Date(m.last_read_at).getTime():0]));
-    const deliveredBy=new Map(memberRows.map(m=>[String(m.player_id),m.last_delivered_at?new Date(m.last_delivered_at).getTime():0]));
-    const recipientIds=[...readBy.keys()].filter(id=>id!==String(currentPlayerId));
-    // Per le chat private la ricevuta riguarda il destinatario effettivo; nelle chat di gruppo
-    // manteniamo la regola prudente: tutti i destinatari devono aver ricevuto/letto.
-    const roomInfo=rooms.find(r=>String(r.id)===String(selectedRoomId));
-    const privateRoom=roomInfo?.conversation_type==='private';
-    const readThrough=recipientIds.length?(privateRoom?(readBy.get(recipientIds[0])||0):Math.min(...recipientIds.map(id=>readBy.get(id)||0))):0;
-    const deliveredThrough=recipientIds.length?(privateRoom?Math.max(deliveredBy.get(recipientIds[0])||0,readBy.get(recipientIds[0])||0):Math.min(...recipientIds.map(id=>Math.max(deliveredBy.get(id)||0,readBy.get(id)||0)))):0;
+    const recipientIds=[...new Set(memberRows.map(m=>String(m.player_id)))].filter(id=>id!==String(currentPlayerId));
+    // Ricevute PER MESSAGGIO: non deduciamo più la consegna da last_delivered_at della chat.
+    // Il destinatario registra una riga in rpl_message_receipts tramite RPC sicura.
+    const messageIds=messages.map(m=>m.id);
+    let receiptRows=[];
+    if(messageIds.length){
+      const {data:rr,error:receiptQueryError}=await sb().from('rpl_message_receipts').select('message_id,player_id,delivered_at,read_at').in('message_id',messageIds);
+      if(receiptQueryError)console.warn('RPL ricevute per messaggio',receiptQueryError); else receiptRows=rr||[];
+    }
+    const receiptsByMessage=new Map();
+    receiptRows.forEach(r=>{const key=String(r.message_id);if(!receiptsByMessage.has(key))receiptsByMessage.set(key,new Map());receiptsByMessage.get(key).set(String(r.player_id),r);});
     const rendered=[];
     for(const m of messages){
       const mine=String(m.sender_player_id)===String(currentPlayerId);
@@ -5046,9 +5080,9 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
           else media=`<a href="${url}" target="_blank" rel="noopener">📎 ${esc(m.media_name||'Apri allegato')}</a>`;
         } else media='<div class="rpl-chat-attachment-name">Allegato non disponibile</div>';
       }
-      const messageTime=new Date(m.created_at).getTime();
-      const isRead=mine&&recipientIds.length>0&&readThrough>=messageTime;
-      const isDelivered=mine&&recipientIds.length>0&&deliveredThrough>=messageTime;
+      const perMessage=receiptsByMessage.get(String(m.id))||new Map();
+      const isRead=mine&&recipientIds.length>0&&recipientIds.every(id=>Boolean(perMessage.get(id)?.read_at));
+      const isDelivered=mine&&recipientIds.length>0&&recipientIds.every(id=>Boolean(perMessage.get(id)?.delivered_at||perMessage.get(id)?.read_at));
       const receipt=mine?`<span class="rpl-chat-receipt ${isRead?'read':isDelivered?'delivered':''}" title="${isRead?'Letto':isDelivered?'Consegnato':'Inviato'}" aria-label="${isRead?'Letto':isDelivered?'Consegnato':'Inviato'}">${isDelivered||isRead?'✓✓':'✓'}</span>`:'';
       rendered.push(`<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div>${body?`<div class="rpl-chat-body">${esc(body)}</div>`:''}${media}<div class="rpl-chat-time"><span>${esc(dateLabel(m.created_at))}</span>${receipt}</div>${!m.deleted_at?`<div class="rpl-chat-message-actions"><button type="button" class="rpl-chat-forward" data-forward="${esc(m.id)}" title="Inoltra messaggio" aria-label="Inoltra messaggio">↪</button>${!mine?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</div>`:''}</article>`);
     }
@@ -5197,13 +5231,11 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
       if(recentError||!recent?.length)return;
       const newestIncoming=new Map();
       recent.forEach(m=>{const key=String(m.conversation_id);if(!newestIncoming.has(key))newestIncoming.set(key,m.created_at);});
-      const memberByRoom=new Map(members.map(m=>[String(m.conversation_id),m]));
-      for(const [roomId,createdAt] of newestIncoming){
-        const member=memberByRoom.get(roomId);
-        if(member&&(!member.last_delivered_at||new Date(createdAt).getTime()>new Date(member.last_delivered_at).getTime())){
-          const {error:receiptError}=await client.rpc('rpl_mark_conversation_delivered',{p_conversation_id:Number(roomId)});
-          if(receiptError)console.warn('RPL chat delivery poll',receiptError);
-        }
+      // La RPC registra ricevute mancanti per ciascun messaggio ricevuto. Non confrontiamo
+      // created_at con l'ora della chat: quel confronto era la causa dei falsi negativi.
+      for(const roomId of newestIncoming.keys()){
+        const {error:receiptError}=await client.rpc('rpl_mark_conversation_delivered',{p_conversation_id:Number(roomId)});
+        if(receiptError)console.warn('RPL chat delivery poll',receiptError);
       }
       // Aggiorna le spunte nella chat aperta senza segnare i messaggi come letti.
       if(selectedRoomId&&currentMessages.length)await renderMessages(currentMessages);
@@ -5276,6 +5308,37 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.34";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.34";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.35";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.35";</script>
 <script src="./pair-stats.js?v=2"></script>
+
+<script id="rpl-v9135-dashboard-reorder">
+(function(){
+ function arrangeRplPlayerDashboard(){
+  const dash=document.getElementById('playerDashboard');if(!dash||dash.dataset.dashboard9135==='1')return;
+  const sections=[...dash.querySelectorAll(':scope > .rpl-player-section-v900')];
+  const chat=document.getElementById('rplMessagingCard');
+  const responsible=document.getElementById('playerResponsibleHero');
+  if(!sections.length||!chat)return;
+  const grid=document.createElement('div');grid.id='rplPlayerMenuGrid';grid.className='rpl-player-menu-grid';
+  const workspace=document.getElementById('rplChatWorkspace');
+  const workspaceCard=document.createElement('div');workspaceCard.id='rplChatWorkspaceCard';workspaceCard.className='rpl-chat-workspace-card hidden';
+  if(responsible&&responsible.parentElement===dash)responsible.insertAdjacentElement('afterend',grid);else dash.insertBefore(grid,dash.firstChild);
+  sections.forEach(el=>grid.appendChild(el));
+  if(workspace){workspaceCard.appendChild(workspace);grid.insertAdjacentElement('afterend',workspaceCard);}
+  grid.appendChild(chat);
+  const pk=document.getElementById('playerPasskeyCard'),nt=document.getElementById('playerNotificationCard');
+  const pkBtn=document.getElementById('playerRegisterPasskeyBtn'),ntBtn=document.getElementById('playerEnableNotificationsBtn');
+  if(pkBtn){pkBtn.title='Attiva Face ID, impronta o PIN';pkBtn.textContent='🔐 Accesso sicuro';}
+  if(ntBtn){ntBtn.title='Attiva le notifiche RPL';ntBtn.textContent='🔔 Notifiche';}
+  if(pk){pk.classList.add('rpl-security-compact');grid.insertAdjacentElement('afterend',pk);}
+  if(nt){nt.classList.add('rpl-security-compact');dash.appendChild(nt);}
+  dash.classList.add('rpl-dashboard-v9135','rpl-security-layout');dash.dataset.dashboard9135='1';
+  const toggle=document.getElementById('rplChatToggle');if(toggle&&!toggle.dataset.workspaceSync){toggle.dataset.workspaceSync='1';toggle.addEventListener('click',()=>{setTimeout(()=>{const w=document.getElementById('rplChatWorkspace'),wc=document.getElementById('rplChatWorkspaceCard');if(w&&wc)wc.classList.toggle('hidden',w.classList.contains('hidden'));},0);});}
+
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',arrangeRplPlayerDashboard,{once:true});else arrangeRplPlayerDashboard();
+ setTimeout(arrangeRplPlayerDashboard,0);
+})();
+</script>
+
 </body></html>
