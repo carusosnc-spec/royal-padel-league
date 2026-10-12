@@ -983,6 +983,8 @@ html,body{overflow-x:hidden!important;}
 .rpl-chat-bubble.mine{align-self:flex-end;background:rgba(231,185,78,.12);border-color:rgba(231,185,78,.28)}
 .rpl-chat-author{font-size:10px;font-weight:900;color:#ffd86a;margin-bottom:4px}.rpl-chat-body{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4}.rpl-chat-time{font-size:9px;color:#9da8b4;margin-top:5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:5px}.rpl-chat-receipt{font-size:12px;font-weight:900;letter-spacing:-2px;color:#aebac1;white-space:nowrap}.rpl-chat-receipt.read{color:#53bdeb;letter-spacing:-2px}
 .rpl-chat-report{font-size:10px;padding:4px 7px;margin-top:6px;background:transparent;border-color:rgba(255,255,255,.16);color:#c8d1da}
+.rpl-chat-message-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin-top:5px}.rpl-chat-forward{display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;padding:0;border:1px solid rgba(255,216,106,.25);border-radius:7px;background:rgba(255,216,106,.06);color:#ffd86a;font-size:14px;line-height:1;cursor:pointer}.rpl-chat-forward:hover{background:rgba(255,216,106,.16)}.rpl-chat-forward:focus-visible{outline:2px solid #ffd86a;outline-offset:2px}
+.rpl-forward-backdrop{position:fixed;inset:0;z-index:10020;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px}.rpl-forward-panel{width:min(100%,420px);background:#0b1c2b;border:1px solid rgba(255,216,106,.45);border-radius:16px;padding:18px;box-shadow:0 18px 55px rgba(0,0,0,.55)}.rpl-forward-panel h3{margin:0 0 8px;color:#ffd86a}.rpl-forward-panel p{font-size:12px;color:#c4d0dc}.rpl-forward-panel select{width:100%;padding:11px;background:#071522;color:#fff;border:1px solid #34495c;border-radius:9px}.rpl-forward-buttons{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}.rpl-forward-buttons button{min-height:38px;padding:8px 12px}
 .rpl-chat-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:10px;border-top:1px solid rgba(255,255,255,.08);align-items:end}
 .rpl-chat-compose textarea{resize:vertical;min-height:44px;max-height:140px;font-size:14px}.rpl-chat-compose button{min-height:44px}
 .rpl-chat-empty{color:#9da8b4;font-size:12px;text-align:center;padding:24px 10px}.rpl-chat-footnote{font-size:10px;color:#9da8b4;margin-top:9px;line-height:1.4}
@@ -1059,6 +1061,16 @@ html,body{overflow-x:hidden!important;}
           <select id="rplChatType"><option value="all">Tutte le chat</option><option value="general">Chat generale</option><option value="match">Chat delle partite</option><option value="private">Chat private</option></select>
           <label for="rplChatPlayer">Nuova chat privata</label>
           <div class="rpl-chat-new"><select id="rplChatPlayer"><option value="">Seleziona un giocatore ufficiale…</option></select><button type="button" id="rplChatStartPrivate">AVVIA</button></div>
+        </div>
+        <div id="rplForwardBackdrop" class="rpl-forward-backdrop" hidden>
+          <section class="rpl-forward-panel" role="dialog" aria-modal="true" aria-labelledby="rplForwardTitle">
+            <h3 id="rplForwardTitle">↪ Inoltra messaggio</h3>
+            <p>Seleziona il giocatore a cui inoltrare questo messaggio.</p>
+            <label for="rplForwardPlayer">Destinatario</label>
+            <select id="rplForwardPlayer"><option value="">Seleziona un giocatore…</option></select>
+            <div class="rpl-forward-buttons"><button type="button" id="rplForwardCancel">ANNULLA</button><button type="button" id="rplForwardConfirm" class="primary">INOLTRA</button></div>
+            <div id="rplForwardStatus" class="muted" role="status" aria-live="polite" style="font-size:12px;margin-top:9px"></div>
+          </section>
         </div>
         <div id="rplChatStatus" class="msg muted" role="status" aria-live="polite">Caricamento conversazioni…</div>
         <div class="rpl-chat-layout">
@@ -3459,7 +3471,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.30</div>
+<div id="rplVersionBadge">RPL v9.1.31</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4838,7 +4850,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.30";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.31";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -4871,6 +4883,8 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
       const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name+(p.nickname?' — '+p.nickname:'');sel.appendChild(opt);
     });
     if(old)sel.value=old;
+    const forwardSel=q('rplForwardPlayer');
+    if(forwardSel){const prior=forwardSel.value;forwardSel.innerHTML='<option value="">Seleziona un giocatore…</option>';(data||[]).filter(p=>String(p.id)!==String(currentPlayerId)).forEach(p=>{const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name+(p.nickname?' — '+p.nickname:'');forwardSel.appendChild(opt);});if(prior)forwardSel.value=prior;}
   }
   async function loadRooms(keep=true){
     const client=sb(); if(!client)return;
@@ -5007,11 +5021,46 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
       const isRead=mine&&recipientIds.length>0&&readThrough>=messageTime;
       const isDelivered=mine&&recipientIds.length>0&&deliveredThrough>=messageTime;
       const receipt=mine?`<span class="rpl-chat-receipt ${isRead?'read':isDelivered?'delivered':''}" title="${isRead?'Letto':isDelivered?'Consegnato':'Inviato'}" aria-label="${isRead?'Letto':isDelivered?'Consegnato':'Inviato'}">${isDelivered||isRead?'✓✓':'✓'}</span>`:'';
-      rendered.push(`<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div>${body?`<div class="rpl-chat-body">${esc(body)}</div>`:''}${media}<div class="rpl-chat-time"><span>${esc(dateLabel(m.created_at))}</span>${receipt}</div>${!mine&&!m.deleted_at?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</article>`);
+      rendered.push(`<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div>${body?`<div class="rpl-chat-body">${esc(body)}</div>`:''}${media}<div class="rpl-chat-time"><span>${esc(dateLabel(m.created_at))}</span>${receipt}</div>${!m.deleted_at?`<div class="rpl-chat-message-actions"><button type="button" class="rpl-chat-forward" data-forward="${esc(m.id)}" title="Inoltra messaggio" aria-label="Inoltra messaggio">↪</button>${!mine?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</div>`:''}</article>`);
     }
     host.innerHTML=messages.length?rendered.join(''):'<div class="rpl-chat-empty">Ancora nessun messaggio. Rompi il ghiaccio! 🎾</div>';
     host.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>reportMessage(b.dataset.report)));
+    host.querySelectorAll('[data-forward]').forEach(b=>b.addEventListener('click',()=>openForwardDialog(b.dataset.forward)));
     host.scrollTop=host.scrollHeight;
+  }
+  let forwardingMessageId=null;
+  function openForwardDialog(id){
+    const msg=currentMessages.find(m=>String(m.id)===String(id));if(!msg||msg.deleted_at)return;
+    forwardingMessageId=String(id);const back=q('rplForwardBackdrop'),sel=q('rplForwardPlayer'),note=q('rplForwardStatus');
+    if(!back||!sel)return;sel.value='';if(note)note.textContent='';back.hidden=false;sel.focus();
+  }
+  function closeForwardDialog(){const back=q('rplForwardBackdrop');if(back)back.hidden=true;forwardingMessageId=null;const note=q('rplForwardStatus');if(note)note.textContent='';}
+  async function forwardMessage(){
+    if(busy||!forwardingMessageId)return;
+    const target=Number(q('rplForwardPlayer')?.value);if(!target){q('rplForwardStatus').textContent='Scegli un destinatario.';return;}
+    const original=currentMessages.find(m=>String(m.id)===String(forwardingMessageId));if(!original||original.deleted_at)return;
+    const confirmBtn=q('rplForwardConfirm'),note=q('rplForwardStatus');busy=true;if(confirmBtn)confirmBtn.disabled=true;if(note)note.textContent='Inoltro in corso…';
+    try{
+      const client=sb();
+      const {data:conversationId,error:conversationError}=await client.rpc('rpl_start_private_conversation',{p_other_player_id:target});
+      if(conversationError||!conversationId)throw conversationError||new Error('Chat destinatario non disponibile');
+      const payload={conversation_id:conversationId,sender_player_id:currentPlayerId,body:original.body||'Messaggio inoltrato'};
+      if(original.media_path){
+        const {data:signed,error:signedError}=await client.storage.from('rpl-chat-media').createSignedUrl(original.media_path,300);
+        if(signedError||!signed?.signedUrl)throw signedError||new Error('Allegato originale non disponibile');
+        const response=await fetch(signed.signedUrl);if(!response.ok)throw new Error('Impossibile scaricare l’allegato originale');
+        const blob=await response.blob();const oldName=String(original.media_name||'allegato').split('/').pop();
+        const ext=(oldName.includes('.')?oldName.split('.').pop():(String(original.media_type||'').split('/')[1]||'bin')).replace(/[^a-zA-Z0-9]/g,'').slice(0,8)||'bin';
+        const path=`${conversationId}/${currentPlayerId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+        const {error:uploadError}=await client.storage.from('rpl-chat-media').upload(path,blob,{contentType:original.media_type||blob.type||'application/octet-stream',upsert:false});
+        if(uploadError)throw uploadError;
+        payload.media_path=path;payload.media_type=original.media_type;payload.media_name=oldName;payload.media_duration_seconds=original.media_duration_seconds||null;
+      }
+      const {error:insertError}=await client.from('rpl_messages').insert(payload);if(insertError)throw insertError;
+      closeForwardDialog();q('rplChatType').value='all';await loadRooms(false);await openRoom(conversationId);
+      status('Messaggio inoltrato correttamente.','ok');
+    }catch(err){console.error('RPL forward message',err);if(note)note.textContent='Inoltro non riuscito. Verifica la connessione e riprova.';}
+    finally{busy=false;if(confirmBtn)confirmBtn.disabled=false;}
   }
   async function reportMessage(id){
     const reason=prompt('Motivo della segnalazione:\ninsulti, molestie, spam, contenuto_inappropriato, altro','altro');
@@ -5125,6 +5174,9 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   });
   q('rplChatType')?.addEventListener('change',renderRooms);
   q('rplChatStartPrivate')?.addEventListener('click',startPrivate);
+  q('rplForwardCancel')?.addEventListener('click',closeForwardDialog);
+  q('rplForwardConfirm')?.addEventListener('click',forwardMessage);
+  q('rplForwardBackdrop')?.addEventListener('click',e=>{if(e.target===q('rplForwardBackdrop'))closeForwardDialog();});
   q('rplChatSendForm')?.addEventListener('submit',sendMessage);
   q('rplChatMediaInput')?.addEventListener('change',e=>{const input=e.currentTarget;const file=input.files?.[0];if(file)uploadChatMedia(file,'media');input.value='';});
   const imageLightbox=q('rplImageLightbox'), imageLightboxImg=q('rplImageLightboxImg');let currentFullImageUrl='',currentFullImageName='foto-rpl.jpg';
@@ -5159,6 +5211,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.30";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.30";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.31";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.31";</script>
 <script src="./pair-stats.js?v=2"></script>
 </body></html>
