@@ -1009,7 +1009,7 @@ html,body{overflow-x:hidden!important;}
 
 
 <style id="rpl-v9135-player-dashboard-layout">
-/* RPL 9.1.35: dashboard giocatore a griglia, priorità al responsabile partita */
+/* RPL 9.1.36: dashboard giocatore a griglia, priorità al responsabile partita */
 #playerDashboard.rpl-dashboard-v9135{display:flex;flex-direction:column;gap:10px}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero{order:1;padding:10px 13px!important;margin:0!important;border-radius:13px;border:1px solid #e7b94e;background:linear-gradient(115deg,rgba(231,185,78,.22),rgba(117,63,12,.12));box-shadow:0 5px 18px rgba(0,0,0,.2)}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero h2{font-size:15px!important;margin:3px 0!important}
@@ -3519,7 +3519,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.35</div>
+<div id="rplVersionBadge">RPL v9.1.36</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4595,7 +4595,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='731'){
+  async function rplRegisterServiceWorker(version='9.1.36'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -4898,7 +4898,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.35";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.36";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5054,9 +5054,11 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     const names=new Map(people.map(p=>[String(p.id),p.name+(p.nickname?' · '+p.nickname:'' )]));
     const {data:members,error:membersError}=await sb().from('rpl_conversation_members').select('player_id,last_read_at,last_delivered_at,removed_at').eq('conversation_id',selectedRoomId).is('removed_at',null);
     const memberRows=membersError?[]:(members||[]);
-    const recipientIds=[...new Set(memberRows.map(m=>String(m.player_id)))].filter(id=>id!==String(currentPlayerId));
-    // Ricevute PER MESSAGGIO: non deduciamo più la consegna da last_delivered_at della chat.
-    // Il destinatario registra una riga in rpl_message_receipts tramite RPC sicura.
+    const recipientRows=memberRows.filter(m=>String(m.player_id)!==String(currentPlayerId));
+    const recipientIds=[...new Set(recipientRows.map(m=>String(m.player_id)))];
+    // Preferiamo la ricevuta per singolo messaggio; fallback compatibile con le ricevute
+    // di conversazione aggiornate dal client destinatario quando il messaggio arriva.
+    const memberReceiptByPlayer=new Map(recipientRows.map(m=>[String(m.player_id),m]));
     const messageIds=messages.map(m=>m.id);
     let receiptRows=[];
     if(messageIds.length){
@@ -5081,8 +5083,19 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
         } else media='<div class="rpl-chat-attachment-name">Allegato non disponibile</div>';
       }
       const perMessage=receiptsByMessage.get(String(m.id))||new Map();
-      const isRead=mine&&recipientIds.length>0&&recipientIds.every(id=>Boolean(perMessage.get(id)?.read_at));
-      const isDelivered=mine&&recipientIds.length>0&&recipientIds.every(id=>Boolean(perMessage.get(id)?.delivered_at||perMessage.get(id)?.read_at));
+      const messageTime=Date.parse(m.created_at||'');
+      const readByRecipient=id=>{
+        const receipt=perMessage.get(id), member=memberReceiptByPlayer.get(id);
+        const readTime=Date.parse(receipt?.read_at||member?.last_read_at||'');
+        return Boolean(receipt?.read_at)||(Number.isFinite(messageTime)&&Number.isFinite(readTime)&&readTime>=messageTime);
+      };
+      const deliveredByRecipient=id=>{
+        const receipt=perMessage.get(id), member=memberReceiptByPlayer.get(id);
+        const deliveredTime=Date.parse(receipt?.delivered_at||member?.last_delivered_at||'');
+        return Boolean(receipt?.delivered_at||receipt?.read_at||member?.last_read_at)||(Number.isFinite(messageTime)&&Number.isFinite(deliveredTime)&&deliveredTime>=messageTime);
+      };
+      const isRead=mine&&recipientIds.length>0&&recipientIds.every(readByRecipient);
+      const isDelivered=mine&&recipientIds.length>0&&recipientIds.every(deliveredByRecipient);
       const receipt=mine?`<span class="rpl-chat-receipt ${isRead?'read':isDelivered?'delivered':''}" title="${isRead?'Letto':isDelivered?'Consegnato':'Inviato'}" aria-label="${isRead?'Letto':isDelivered?'Consegnato':'Inviato'}">${isDelivered||isRead?'✓✓':'✓'}</span>`:'';
       rendered.push(`<article class="rpl-chat-bubble ${mine?'mine':''}"><div class="rpl-chat-author">${esc(mine?'Tu':(names.get(String(m.sender_player_id))||'Giocatore'))}</div>${body?`<div class="rpl-chat-body">${esc(body)}</div>`:''}${media}<div class="rpl-chat-time"><span>${esc(dateLabel(m.created_at))}</span>${receipt}</div>${!m.deleted_at?`<div class="rpl-chat-message-actions"><button type="button" class="rpl-chat-forward" data-forward="${esc(m.id)}" title="Inoltra messaggio" aria-label="Inoltra messaggio">↪</button>${!mine?`<button type="button" class="rpl-chat-report" data-report="${esc(m.id)}">⚑ Segnala</button>`:''}</div>`:''}</article>`);
     }
@@ -5287,6 +5300,21 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   q('rplImageSaveBtn')?.addEventListener('click',async()=>{if(!currentFullImageUrl)return;const btn=q('rplImageSaveBtn');btn.disabled=true;try{const response=await fetch(currentFullImageUrl);if(!response.ok)throw new Error('Download foto non riuscito');const blob=await response.blob();const objectUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=objectUrl;a.download=currentFullImageName||'foto-rpl.jpg';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(objectUrl),30000);}catch(err){console.warn('Salvataggio foto RPL',err);window.open(currentFullImageUrl,'_blank','noopener');status('Apri la foto e usa Condividi → Salva immagine per salvarla sul telefono.','muted');}finally{btn.disabled=false;}});
   q('rplChatVoiceBtn')?.addEventListener('click',toggleVoiceRecording);
   sb()?.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){started=false;currentPlayerId=null;rooms=[];selectedRoomId=null;if(channel){sb().removeChannel(channel);channel=null;channelRoomId=null;}if(deliveryChannel){sb().removeChannel(deliveryChannel);deliveryChannel=null;}if(deliveryPollTimer)clearInterval(deliveryPollTimer);if(roomSortTimer)clearInterval(roomSortTimer);deliveryPollTimer=null;roomSortTimer=null;q('rplChatMessages').innerHTML='<div class="rpl-chat-empty">Accedi per vedere i messaggi.</div>';q('rplChatRooms').innerHTML='';}});
+  // Avvia le ricevute anche se il giocatore non apre il pannello Messaggi.
+  // Il watcher conferma la consegna senza marcare automaticamente i messaggi come letti.
+  let deliveryBootstrapTimer=null;
+  async function bootstrapDeliveryWatcher(){
+    if(currentPlayerId&&deliveryChannel)return;
+    const me=await getPlayer();
+    if(me){startDeliveryWatcher();if(deliveryBootstrapTimer){clearInterval(deliveryBootstrapTimer);deliveryBootstrapTimer=null;}}
+  }
+  function scheduleDeliveryBootstrap(){
+    bootstrapDeliveryWatcher().catch(err=>console.warn('RPL delivery bootstrap',err));
+    if(!deliveryBootstrapTimer)deliveryBootstrapTimer=setInterval(()=>bootstrapDeliveryWatcher().catch(err=>console.warn('RPL delivery bootstrap',err)),3000);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scheduleDeliveryBootstrap,{once:true});else scheduleDeliveryBootstrap();
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)bootstrapDeliveryWatcher().catch(()=>{});});
+
   window.rplOpenMessages=function(){q('rplChatWorkspace')?.classList.remove('hidden');q('rplChatToggle').textContent='CHIUDI MESSAGGI';started=false;initialize();q('rplMessagingCard')?.scrollIntoView({behavior:'smooth',block:'start'});};
 })();
 </script>
@@ -5308,7 +5336,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.35";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.35";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.36";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.36";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5341,4 +5369,26 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 
+<script id="rpl-auto-update-v9136">
+(function(){
+  if(!('serviceWorker' in navigator))return;
+  let reloading=false;
+  const reloadOnce=()=>{
+    if(reloading)return;reloading=true;
+    try{const key='rpl-sw-reloaded-v9136',last=Number(sessionStorage.getItem(key)||'0');if(Date.now()-last<30000){reloading=false;return;}sessionStorage.setItem(key,String(Date.now()));}catch(e){}
+    location.reload();
+  };
+  navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
+  async function checkForUpdate(){
+    try{
+      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.36',{updateViaCache:'none'});
+      await reg.update();
+      if(reg.waiting&&navigator.serviceWorker.controller){try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}}
+    }catch(e){console.debug('RPL update check non riuscito',e);}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',checkForUpdate,{once:true});else checkForUpdate();
+  setInterval(()=>{if(!document.hidden)checkForUpdate();},60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdate();});
+})();
+</script>
 </body></html>
