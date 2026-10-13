@@ -1009,7 +1009,7 @@ html,body{overflow-x:hidden!important;}
 
 
 <style id="rpl-v9135-player-dashboard-layout">
-/* RPL 9.1.41: dashboard giocatore a griglia, priorità al responsabile partita */
+/* RPL 9.1.42: dashboard giocatore a griglia, priorità al responsabile partita */
 #playerDashboard.rpl-dashboard-v9135{display:flex;flex-direction:column;gap:10px}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero{order:1;padding:10px 13px!important;margin:0!important;border-radius:13px;border:1px solid #e7b94e;background:linear-gradient(115deg,rgba(231,185,78,.22),rgba(117,63,12,.12));box-shadow:0 5px 18px rgba(0,0,0,.2)}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero h2{font-size:15px!important;margin:3px 0!important}
@@ -1109,6 +1109,35 @@ html,body{overflow-x:hidden!important;}
  .rpl-finals-status{display:inline-flex;margin-top:3px;font-size:8px;padding:2px 4px;line-height:1.15}
 }
 </style>
+
+<style id="rpl-phase2-navigation-filters">
+/* RPL 9.1.42 — Fase 2: gerarchia menu e filtri coerenti con il tema navy/oro */
+#rplMainNav .rpl-main-nav-row{gap:8px!important;align-items:stretch}
+#rplMainNav .rpl-main-menu-btn{background:#10243a!important;color:#e7edf5!important;border:1px solid #334155!important;border-radius:12px!important;box-shadow:0 3px 10px rgba(4,13,25,.12)!important;transition:background .15s,border-color .15s,color .15s}
+#rplMainNav .rpl-main-menu-btn.primary,
+#rplMainNav .rpl-main-menu-btn.open,
+#rplMainNav .rpl-main-menu-btn[aria-selected="true"],
+#rplMainNav .rpl-main-menu-btn[aria-pressed="true"]{background:#EAB308!important;color:#17202c!important;border-color:#EAB308!important;box-shadow:0 2px 9px rgba(234,179,8,.18)!important}
+#rplMainNav .rpl-main-menu-btn:hover{border-color:#EAB308!important}
+#rplMainNav .rpl-submenu-v900:not(.hidden){background:#0b1c2b!important;border:1px solid #26394d!important;border-radius:14px!important;padding:7px!important;gap:6px!important;box-shadow:0 4px 14px rgba(0,0,0,.13)!important}
+#rplMainNav .rpl-submenu-btn{min-height:34px!important;padding:0 13px!important;border:1px solid transparent!important;border-radius:999px!important;background:transparent!important;color:#aebdce!important;font-weight:750!important;font-size:12px!important;box-shadow:none!important}
+#rplMainNav .rpl-submenu-btn.primary{background:#EAB308!important;color:#17202c!important;border-color:#EAB308!important}
+#rplMainNav .rpl-submenu-btn:hover{border-color:#52657a!important;color:#fff!important;background:#1e293b!important}
+#rplMainNav .rpl-submenu-btn.primary:hover{background:#f5c51b!important;color:#17202c!important;border-color:#f5c51b!important}
+/* Dark date inputs for ranking/date-range filters; keep native controls usable on iOS. */
+input[type="date"],input[type="datetime-local"],input[type="month"],input[type="time"]{background:#1E293B!important;border:1px solid #334155!important;color:#fff!important;color-scheme:dark;border-radius:9px!important}
+input[type="date"]:focus,input[type="datetime-local"]:focus,input[type="month"]:focus,input[type="time"]:focus{outline:2px solid rgba(234,179,8,.55)!important;outline-offset:1px;border-color:#EAB308!important}
+/* Primary action: calculate. Secondary action: reset, where the page exposes these labels. */
+button#calculateBtn,button#calcBtn,button[id*="Calculate"],button[id*="calculate"],button[id*="Calcola"],button[id*="calcola"]{background:#EAB308!important;color:#17202c!important;border:1px solid #EAB308!important;font-weight:900!important}
+button#resetBtn,button[id*="Reset"],button[id*="reset"],button[id*="ResetFilters"],button[id*="resetFilters"]{background:transparent!important;color:#64748b!important;border:1px solid #64748b!important;box-shadow:none!important}
+@media(max-width:600px){
+ #rplMainNav .rpl-main-nav-row{gap:6px!important}
+ #rplMainNav .rpl-main-menu-btn{min-height:44px!important;padding:0 8px!important;font-size:11px!important;letter-spacing:0!important;border-radius:10px!important}
+ #rplMainNav .rpl-submenu-v900:not(.hidden){justify-content:flex-start!important;overflow-x:auto!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch}
+ #rplMainNav .rpl-submenu-btn{flex:0 0 auto!important;min-width:0!important;min-height:36px!important;padding:0 11px!important;font-size:11px!important;white-space:nowrap}
+}
+</style>
+
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -3594,7 +3623,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.41</div>
+<div id="rplVersionBadge">RPL v9.1.42</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4671,7 +4700,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='9.1.41'){
+  async function rplRegisterServiceWorker(version='9.1.42'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -4975,7 +5004,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.41";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.42";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5413,7 +5442,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.41";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.41";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.42";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.42";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5458,7 +5487,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
   async function checkForUpdate(){
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.41',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.42',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting&&navigator.serviceWorker.controller){try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}}
     }catch(e){console.debug('RPL update check non riuscito',e);}
