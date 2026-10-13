@@ -1,5 +1,5 @@
-// RPL release 9.1.45 — update automatico PWA
-const CACHE_NAME = "rpl-v9.1.45";
+// RPL release 9.1.46 — update automatico PWA
+const CACHE_NAME = "rpl-v9.1.46";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));

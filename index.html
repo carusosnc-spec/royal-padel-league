@@ -1096,8 +1096,8 @@ html,body{overflow-x:hidden!important;}
 .rpl-ranking-scroll table{min-width:760px!important}
 /* Zone Finals: etichetta piccola sotto al nickname, senza alterare i dati */
 .rpl-finals-status{display:inline-flex;align-items:center;gap:3px;margin-top:4px;padding:2px 5px;border-radius:5px;font-size:9px;font-weight:400;line-height:1.2;letter-spacing:.01em;white-space:normal}
-.rpl-finals-captain{color:#f6d76d;background:rgba(234,179,8,.10);border:1px solid rgba(234,179,8,.34)}
-.rpl-finals-qualified{color:#68d4e6;background:rgba(56,189,210,.09);border:1px solid rgba(56,189,210,.30)}
+.rpl-finals-captain{color:rgba(246,215,109,.78);background:rgba(234,179,8,.055);border:1px solid rgba(234,179,8,.22);opacity:.84}
+.rpl-finals-qualified{color:rgba(104,212,230,.80);background:rgba(56,189,210,.045);border:1px solid rgba(56,189,210,.20);opacity:.84}
 #publicPage tbody tr.rpl-podium-1{background:linear-gradient(90deg,rgba(234,179,8,.16),rgba(234,179,8,.025))!important;box-shadow:inset 3px 0 #d97706}
 #publicPage tbody tr.rpl-podium-2{background:linear-gradient(90deg,rgba(203,213,225,.13),rgba(203,213,225,.02))!important;box-shadow:inset 3px 0 #94a3b8}
 #publicPage tbody tr.rpl-podium-3{background:linear-gradient(90deg,rgba(194,65,12,.15),rgba(194,65,12,.02))!important;box-shadow:inset 3px 0 #c2410c}
@@ -1120,6 +1120,27 @@ html,body{overflow-x:hidden!important;}
 }
 </style>
 
+<style id="rpl-9-1-46-bonus-name-wrap-finals-light">
+/* Classifica Bonus: i nomi lunghi devono andare a capo nella propria colonna e mai invadere i punteggi. */
+#bonusPage .scroll{max-width:100%;overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+#bonusPage .scroll table{table-layout:fixed;min-width:760px}
+#bonusPage .scroll th:nth-child(1),#bonusPage .scroll td:nth-child(1){width:54px}
+#bonusPage .scroll th:nth-child(2),#bonusPage .scroll td:nth-child(2){width:260px;white-space:normal}
+#bonusPage .scroll th:nth-child(3),#bonusPage .scroll td:nth-child(3){width:112px;white-space:nowrap}
+#bonusPage .scroll td:nth-child(2)>div{min-width:0!important;width:100%;gap:8px!important}
+#bonusPage .scroll td:nth-child(2)>div>div{min-width:0!important;flex:1 1 auto;overflow:hidden;overflow-wrap:anywhere;word-break:normal}
+#bonusPage .scroll td:nth-child(2)>div>div>b{display:inline-block;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.15}
+#bonusPage .scroll td:nth-child(2) img{flex:0 0 42px}
+@media(max-width:600px){
+ #bonusPage .scroll table{min-width:700px!important;table-layout:fixed}
+ #bonusPage .scroll th:nth-child(1),#bonusPage .scroll td:nth-child(1){width:48px;padding-left:5px;padding-right:4px}
+ #bonusPage .scroll th:nth-child(2),#bonusPage .scroll td:nth-child(2){width:230px;padding-left:5px;padding-right:6px}
+ #bonusPage .scroll th:nth-child(3),#bonusPage .scroll td:nth-child(3){width:100px;padding-left:5px;padding-right:5px}
+ #bonusPage .scroll td:nth-child(2)>div>div>b{font-size:12px!important}
+ #bonusPage .scroll td:nth-child(2)>div>div>span{font-size:10px!important}
+ .rpl-finals-status{opacity:.78}
+}
+</style>
 <style id="rpl-phase2-navigation-filters">
 /* RPL 9.1.45 — Fase 2: gerarchia menu e filtri coerenti con il tema navy/oro */
 #rplMainNav .rpl-main-nav-row{gap:8px!important;align-items:stretch}
@@ -3648,7 +3669,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.45</div>
+<div id="rplVersionBadge">RPL v9.1.46</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4972,7 +4993,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   .rpl-main-menu-btn span{display:inline-block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:normal!important;min-width:0!important;}
 }
 </style>
-<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.12";</script>
+<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.46";</script>
 
 <style id="rpl-v907-player-matches-photo-fix">
 .rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
@@ -4998,7 +5019,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 .rpl-profile-photo-wrap.has-photo .rpl-profile-photo-placeholder{display:none}
 @media(max-width:600px){.rpl-profile-photo-wrap{width:96px;height:96px;flex-basis:96px}}
 </style>
-<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.12";</script>
+<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.46";</script>
 
 
 <style id="rpl-v916-regolamento-carousel-fix">
@@ -5029,7 +5050,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.45";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.46";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5467,7 +5488,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.45";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.45";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.46";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.46";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
