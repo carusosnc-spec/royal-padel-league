@@ -1009,7 +1009,7 @@ html,body{overflow-x:hidden!important;}
 
 
 <style id="rpl-v9135-player-dashboard-layout">
-/* RPL 9.1.37: dashboard giocatore a griglia, priorità al responsabile partita */
+/* RPL 9.1.38: dashboard giocatore a griglia, priorità al responsabile partita */
 #playerDashboard.rpl-dashboard-v9135{display:flex;flex-direction:column;gap:10px}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero{order:1;padding:10px 13px!important;margin:0!important;border-radius:13px;border:1px solid #e7b94e;background:linear-gradient(115deg,rgba(231,185,78,.22),rgba(117,63,12,.12));box-shadow:0 5px 18px rgba(0,0,0,.2)}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero h2{font-size:15px!important;margin:3px 0!important}
@@ -1037,6 +1037,42 @@ html,body{overflow-x:hidden!important;}
 #playerDashboard.rpl-dashboard-v9135 #playerLogoutBtn{min-height:29px!important;padding:5px 9px!important;font-size:10px!important}
 @media(max-width:700px){#rplPlayerMenuGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}#rplPlayerMenuGrid .rpl-player-toggle-v900{min-height:51px;padding:8px 7px;font-size:10px}#playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero{padding:8px 10px!important}}
 @media(max-width:350px){#rplPlayerMenuGrid .rpl-player-toggle-v900{font-size:9px;gap:3px;padding:7px 5px}}
+</style>
+
+
+<style id="rpl-phase1-ranking-refinement-v9138">
+/* Fase 1: leggibilità classifica, badge fascia e podio */
+#publicPage .scroll, #partialPage .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;border-radius:12px}
+#publicPage table, #partialPage table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+#publicPage table th,#publicPage table td,#partialPage table th,#partialPage table td{padding:12px 10px;vertical-align:middle}
+#publicPage table thead th,#partialPage table thead th{background:#0b1728;color:#ffd86a;font-weight:800;letter-spacing:.025em;border-bottom:1px solid rgba(234,179,8,.38)}
+#publicPage table tbody tr:nth-child(odd) td,#partialPage table tbody tr:nth-child(odd) td{background:#0f172a}
+#publicPage table tbody tr:nth-child(even) td,#partialPage table tbody tr:nth-child(even) td{background:#1e293b}
+#publicPage table tbody tr td:first-child,#partialPage table tbody tr td:first-child{font-weight:800}
+#publicPage .rpl-ranking-player-name,#partialPage .rpl-ranking-player-name{font-weight:700;color:#fff;letter-spacing:.005em}
+#publicPage .rpl-ranking-player-nick,#partialPage .rpl-ranking-player-info span{font-weight:600}
+#publicPage .fascia-badge,#partialPage .fascia-badge{min-width:66px;padding:5px 9px;border-radius:8px;letter-spacing:.035em;text-align:center;font-size:10px;box-shadow:inset 0 1px rgba(255,255,255,.12)}
+/* Podio: sfumature leggere, testo sempre ad alto contrasto */
+#publicPage #ranking tr:nth-child(1) td,#partialPage #partialRanking tr:nth-child(1) td{background:linear-gradient(90deg,rgba(217,119,6,.22),rgba(120,83,20,.12))!important;border-top:1px solid rgba(234,179,8,.55);border-bottom:1px solid rgba(234,179,8,.38)}
+#publicPage #ranking tr:nth-child(1) td:first-child,#partialPage #partialRanking tr:nth-child(1) td:first-child{box-shadow:inset 4px 0 #d97706;color:#ffdf70}
+#publicPage #ranking tr:nth-child(2) td,#partialPage #partialRanking tr:nth-child(2) td{background:linear-gradient(90deg,rgba(148,163,184,.20),rgba(71,85,105,.12))!important;border-bottom-color:rgba(148,163,184,.35)}
+#publicPage #ranking tr:nth-child(2) td:first-child,#partialPage #partialRanking tr:nth-child(2) td:first-child{box-shadow:inset 4px 0 #94a3b8;color:#e2e8f0}
+#publicPage #ranking tr:nth-child(3) td,#partialPage #partialRanking tr:nth-child(3) td{background:linear-gradient(90deg,rgba(194,65,12,.18),rgba(124,45,18,.10))!important;border-bottom-color:rgba(194,65,12,.35)}
+#publicPage #ranking tr:nth-child(3) td:first-child,#partialPage #partialRanking tr:nth-child(3) td:first-child{box-shadow:inset 4px 0 #c2410c;color:#fdba74}
+/* Non alterare l'evidenza dei giocatori sotto la soglia minima */
+#publicPage #ranking tr.rpl-ineligible td{filter:grayscale(1);opacity:.58}
+@media(max-width:600px){
+ #publicPage .card,#partialPage .card{padding:10px}
+ #publicPage table,#partialPage table{font-size:12px}
+ #publicPage table th,#publicPage table td,#partialPage table th,#partialPage table td{padding:10px 8px}
+ /* Sul telefono restano sempre visibili posizione, giocatore e totale punti. */
+ #publicPage table th:nth-child(n+4),#publicPage table td:nth-child(n+4),#partialPage table th:nth-child(n+4),#partialPage table td:nth-child(n+4){display:none}
+ #publicPage table th:nth-child(1),#publicPage table td:nth-child(1){width:30px}
+ #publicPage table td:nth-child(2),#partialPage table td:nth-child(2){white-space:normal;min-width:0}
+ #publicPage table td:nth-child(2)>div,#partialPage table td:nth-child(2)>div{gap:7px!important}
+ #publicPage table td:nth-child(2) img,#partialPage table td:nth-child(2) img{width:36px!important;height:36px!important;flex:0 0 36px}
+ #publicPage table td:nth-child(3) b,#partialPage table td:nth-child(3) b{font-size:16px!important}
+}
 </style>
 
 </head>
@@ -3519,7 +3555,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.37</div>
+<div id="rplVersionBadge">RPL v9.1.38</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4595,7 +4631,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='9.1.37'){
+  async function rplRegisterServiceWorker(version='9.1.38'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -4899,7 +4935,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.37";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.38";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5337,7 +5373,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.37";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.37";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.38";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.38";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5382,7 +5418,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
   async function checkForUpdate(){
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.37',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.38',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting&&navigator.serviceWorker.controller){try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}}
     }catch(e){console.debug('RPL update check non riuscito',e);}
