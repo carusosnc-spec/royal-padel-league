@@ -1009,7 +1009,7 @@ html,body{overflow-x:hidden!important;}
 
 
 <style id="rpl-v9135-player-dashboard-layout">
-/* RPL 9.1.38: dashboard giocatore a griglia, priorità al responsabile partita */
+/* RPL 9.1.39: dashboard giocatore a griglia, priorità al responsabile partita */
 #playerDashboard.rpl-dashboard-v9135{display:flex;flex-direction:column;gap:10px}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero{order:1;padding:10px 13px!important;margin:0!important;border-radius:13px;border:1px solid #e7b94e;background:linear-gradient(115deg,rgba(231,185,78,.22),rgba(117,63,12,.12));box-shadow:0 5px 18px rgba(0,0,0,.2)}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero h2{font-size:15px!important;margin:3px 0!important}
@@ -1075,6 +1075,29 @@ html,body{overflow-x:hidden!important;}
 }
 </style>
 
+
+<style id="rpl-9-1-39-finals-bonus-mobile">
+/* Hint sobrio: appare solo su smartphone in verticale */
+.rpl-rotate-hint{display:none;align-items:center;justify-content:flex-end;gap:5px;margin:6px 2px 2px;color:#9eafbf;font-size:10px;letter-spacing:.01em;line-height:1.2;opacity:.82}
+.rpl-rotate-hint span{font-size:13px;color:#d9b94f}
+@media(max-width:700px) and (orientation:portrait){.rpl-rotate-hint{display:flex}}
+/* Scorrimento statistiche completo in orizzontale, senza nascondere dati */
+.rpl-ranking-scroll{max-width:100%;overflow-x:auto!important;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.rpl-ranking-scroll table{min-width:760px!important}
+/* Zone Finals: etichetta piccola sotto al nickname, senza alterare i dati */
+.rpl-finals-status{display:inline-flex;align-items:center;gap:3px;margin-top:4px;padding:2px 5px;border-radius:5px;font-size:9px;font-weight:800;line-height:1.2;letter-spacing:.01em;white-space:normal}
+.rpl-finals-captain{color:#f6d76d;background:rgba(234,179,8,.10);border:1px solid rgba(234,179,8,.34)}
+.rpl-finals-qualified{color:#68d4e6;background:rgba(56,189,210,.09);border:1px solid rgba(56,189,210,.30)}
+#publicPage tbody tr.rpl-podium-1{background:linear-gradient(90deg,rgba(234,179,8,.16),rgba(234,179,8,.025))!important;box-shadow:inset 3px 0 #d97706}
+#publicPage tbody tr.rpl-podium-2{background:linear-gradient(90deg,rgba(203,213,225,.13),rgba(203,213,225,.02))!important;box-shadow:inset 3px 0 #94a3b8}
+#publicPage tbody tr.rpl-podium-3{background:linear-gradient(90deg,rgba(194,65,12,.15),rgba(194,65,12,.02))!important;box-shadow:inset 3px 0 #c2410c}
+#bonusPage tbody tr.rpl-bonus-podium-1{background:linear-gradient(90deg,rgba(234,179,8,.16),rgba(234,179,8,.025))!important;box-shadow:inset 3px 0 #d97706}
+#bonusPage tbody tr.rpl-bonus-podium-2{background:linear-gradient(90deg,rgba(203,213,225,.13),rgba(203,213,225,.02))!important;box-shadow:inset 3px 0 #94a3b8}
+#bonusPage tbody tr.rpl-bonus-podium-3{background:linear-gradient(90deg,rgba(194,65,12,.15),rgba(194,65,12,.02))!important;box-shadow:inset 3px 0 #c2410c}
+#publicPage tbody tr.rpl-podium-1 td:first-child,#bonusPage tbody tr.rpl-bonus-podium-1 td:first-child{color:#f6d76d}
+#publicPage tbody tr.rpl-podium-2 td:first-child,#bonusPage tbody tr.rpl-bonus-podium-2 td:first-child{color:#cbd5e1}
+#publicPage tbody tr.rpl-podium-3 td:first-child,#bonusPage tbody tr.rpl-bonus-podium-3 td:first-child{color:#fb923c}
+</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1302,7 +1325,8 @@ html,body{overflow-x:hidden!important;}
 <section id="publicPage">
 <div class="card"><div style="text-align:center;margin-bottom:14px"><div style="display:inline-block;padding:10px 24px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(180deg,rgba(231,185,78,.13),rgba(0,0,0,.12));color:var(--gold2);font-size:23px;font-weight:900;letter-spacing:.08em">👑 CLASSIFICA GENERALE</div><div style="font-size:11px;color:#9aa9b8;letter-spacing:.22em;margin-top:8px">PASSIONE • RISPETTO • AMICIZIA • COMPETIZIONE</div></div>
 <div class="muted" id="status">Connessione a Supabase…</div>
-<div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Giocatore</th><th>Totale</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Fascia</th></tr></thead><tbody id="ranking"></tbody></table></div></div>
+<div class="rpl-rotate-hint" aria-label="Ruota il telefono per vedere tutte le statistiche"><span aria-hidden="true">↻</span> Ruota il telefono per vedere tutte le statistiche</div>
+<div class="scroll rpl-ranking-scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Giocatore</th><th>Totale</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Fascia</th></tr></thead><tbody id="ranking"></tbody></table></div></div>
 </section>
 
 <section id="partialPage" class="hidden">
@@ -1326,7 +1350,8 @@ html,body{overflow-x:hidden!important;}
     <button type="button" class="partial-preset" data-from="2026-12-01" data-to="2026-12-31">DICEMBRE</button>
   </div>
   <div id="partialSummary" class="muted">Seleziona un periodo e premi CALCOLA.</div>
-  <div class="scroll" style="margin-top:10px">
+  <div class="rpl-rotate-hint" aria-label="Ruota il telefono per vedere tutte le statistiche"><span aria-hidden="true">↻</span> Ruota il telefono per vedere tutte le statistiche</div>
+<div class="scroll rpl-ranking-scroll" style="margin-top:10px">
     <table>
       <thead><tr><th>#</th><th>Giocatore</th><th>Totale</th><th>Set</th><th>PT Set</th><th>Game</th><th>Base</th><th>MVP</th><th>Imb.</th><th>Fascia</th></tr></thead>
       <tbody id="partialRanking"></tbody>
@@ -1718,11 +1743,14 @@ function render(){
       ? `<span class="rpl-set-status warning">⚠️ ${s.sets}/${s.required} set — minimo non raggiunto</span>`
       : "";
     const f=String(s.fascia||"").replace(/^F/i,"");
-    return `<tr class="${s.eligible?"":"rpl-ineligible"}">
-      <td><b>${i+1}</b></td>
+    const rank=i+1;
+    const finalsTag=s.eligible && rank<=5 ? `<span class="rpl-finals-status rpl-finals-captain">♛ Capitano Finals${rank<=3?' · Podio':''}</span>` : (s.eligible && rank<=10 ? `<span class="rpl-finals-status rpl-finals-qualified">🎟 Qualificato Finals</span>` : '');
+    const podiumClass=s.eligible && rank<=3 ? ` rpl-podium-${rank}` : '';
+    return `<tr class="${s.eligible?"":"rpl-ineligible"}${podiumClass}">
+      <td><b>${rank}</b></td>
       <td><div style="display:flex;align-items:center;gap:9px">
         <img src="${logoFile(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
-        <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span class="rpl-ranking-player-nick">${s.nick}</span>${status}</div>
+        <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span class="rpl-ranking-player-nick">${s.nick}</span>${finalsTag}${status}</div>
       </div></td>
       <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
       <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
@@ -3555,7 +3583,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.38</div>
+<div id="rplVersionBadge">RPL v9.1.39</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -3737,7 +3765,8 @@ async function loadPublicCalendar(){
      body.innerHTML=final.map((s,i)=>{
        const months=MONTHS.map(m=>{if(monthClosed(m))return `<td>${s.months[m.key]??'—'}</td>`;const prov=s.provisionalMonths?.[m.key];return `<td>${prov>0?`<b>${prov}</b> <span class="bonus-provisional">prov.</span>`:'—'}</td>`}).join('');
        const hasProv=MONTHS.some(m=>!monthClosed(m)&&Number(s.provisionalMonths?.[m.key]||0)>0);
-       return `<tr><td><b>${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer"><div><b style="color:#fff;cursor:pointer" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b>${s.bonus}</b>${hasProv?' <span class="bonus-provisional">prov.</span>':''}</td>${months}</tr>`;
+       const podium=i<3?` rpl-bonus-podium-${i+1}`:''; const medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':'';
+       return `<tr class="${podium.trim()}"><td><b>${medal}${i+1}</b></td><td><div style="display:flex;align-items:center;gap:9px"><img src="${logo(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer"><div><b style="color:#fff;cursor:pointer" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span style="color:#ffd86a;font-size:11px">${s.nick}</span></div></div></td><td><b>${s.bonus}</b>${hasProv?' <span class="bonus-provisional">prov.</span>':''}</td>${months}</tr>`;
      }).join('');
      const current=MONTHS.find(m=>now>=new Date(m.start+'T00:00:00')&&now<=monthRelease(m));
      summary.textContent=`Bonus mensile: primi 10 classificati. ${lastClosed?'Ultimo mese chiuso: '+lastClosed+'. ':''}${current?'I dati provvisori di '+current.label+' sono presi con la stessa logica della Classifica Parziale del mese in corso.':''}`;
@@ -4631,7 +4660,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='9.1.38'){
+  async function rplRegisterServiceWorker(version='9.1.39'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -4935,7 +4964,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.38";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.39";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5373,7 +5402,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.38";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.38";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.39";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.39";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5418,7 +5447,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
   async function checkForUpdate(){
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.38',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.39',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting&&navigator.serviceWorker.controller){try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}}
     }catch(e){console.debug('RPL update check non riuscito',e);}
