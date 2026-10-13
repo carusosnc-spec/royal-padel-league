@@ -1009,7 +1009,7 @@ html,body{overflow-x:hidden!important;}
 
 
 <style id="rpl-v9135-player-dashboard-layout">
-/* RPL 9.1.39: dashboard giocatore a griglia, priorità al responsabile partita */
+/* RPL 9.1.40: dashboard giocatore a griglia, priorità al responsabile partita */
 #playerDashboard.rpl-dashboard-v9135{display:flex;flex-direction:column;gap:10px}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero{order:1;padding:10px 13px!important;margin:0!important;border-radius:13px;border:1px solid #e7b94e;background:linear-gradient(115deg,rgba(231,185,78,.22),rgba(117,63,12,.12));box-shadow:0 5px 18px rgba(0,0,0,.2)}
 #playerDashboard.rpl-dashboard-v9135 #playerResponsibleHero h2{font-size:15px!important;margin:3px 0!important}
@@ -1097,6 +1097,17 @@ html,body{overflow-x:hidden!important;}
 #publicPage tbody tr.rpl-podium-1 td:first-child,#bonusPage tbody tr.rpl-bonus-podium-1 td:first-child{color:#f6d76d}
 #publicPage tbody tr.rpl-podium-2 td:first-child,#bonusPage tbody tr.rpl-bonus-podium-2 td:first-child{color:#cbd5e1}
 #publicPage tbody tr.rpl-podium-3 td:first-child,#bonusPage tbody tr.rpl-bonus-podium-3 td:first-child{color:#fb923c}
+/* Mobile portrait: keep position, player and total points visible without forcing a wide table. */
+@media(max-width:600px){
+ #publicPage .rpl-ranking-scroll table,#partialPage .rpl-ranking-scroll table{min-width:0!important;width:100%!important;table-layout:fixed}
+ #publicPage .rpl-ranking-scroll th:nth-child(1),#publicPage .rpl-ranking-scroll td:nth-child(1),#partialPage .rpl-ranking-scroll th:nth-child(1),#partialPage .rpl-ranking-scroll td:nth-child(1){display:table-cell!important;width:30px;padding-left:5px;padding-right:4px}
+ #publicPage .rpl-ranking-scroll th:nth-child(2),#publicPage .rpl-ranking-scroll td:nth-child(2),#partialPage .rpl-ranking-scroll th:nth-child(2),#partialPage .rpl-ranking-scroll td:nth-child(2){display:table-cell!important;width:auto}
+ #publicPage .rpl-ranking-scroll th:nth-child(3),#publicPage .rpl-ranking-scroll td:nth-child(3),#partialPage .rpl-ranking-scroll th:nth-child(3),#partialPage .rpl-ranking-scroll td:nth-child(3){display:table-cell!important;width:76px;padding-left:4px;padding-right:4px;text-align:right;white-space:nowrap}
+ #publicPage .rpl-ranking-scroll td:nth-child(3) b,#partialPage .rpl-ranking-scroll td:nth-child(3) b{font-size:14px!important}
+ #publicPage .rpl-ranking-scroll td:nth-child(2)>div,#partialPage .rpl-ranking-scroll td:nth-child(2)>div{min-width:0;align-items:center}
+ #publicPage .rpl-ranking-player-info,#partialPage .rpl-ranking-player-info{min-width:0;overflow-wrap:anywhere}
+ .rpl-finals-status{display:inline-flex;margin-top:3px;font-size:8px;padding:2px 4px;line-height:1.15}
+}
 </style>
 </head>
 <body><main>
@@ -1750,7 +1761,7 @@ function render(){
       <td><b>${rank}</b></td>
       <td><div style="display:flex;align-items:center;gap:9px">
         <img src="${logoFile(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
-        <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span class="rpl-ranking-player-nick">${s.nick}</span>${finalsTag}${status}</div>
+        <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span class="rpl-ranking-player-nick">${s.nick}</span>${finalsTag?`<br>${finalsTag}`:""}${status}</div>
       </div></td>
       <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
       <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
@@ -3583,7 +3594,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.39</div>
+<div id="rplVersionBadge">RPL v9.1.40</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4660,7 +4671,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='9.1.39'){
+  async function rplRegisterServiceWorker(version='9.1.40'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -4964,7 +4975,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.39";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.40";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5402,7 +5413,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.39";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.39";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.40";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.40";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5447,7 +5458,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
   async function checkForUpdate(){
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.39',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.40',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting&&navigator.serviceWorker.controller){try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}}
     }catch(e){console.debug('RPL update check non riuscito',e);}
