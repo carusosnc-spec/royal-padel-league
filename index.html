@@ -1190,7 +1190,7 @@ button#resetBtn,button[id*="Reset"],button[id*="reset"],button[id*="ResetFilters
 <style id="rpl-9-1-50-header-photo">
 /* Fase 3: fotografia notturna del campo, scurita per preservare contrasto e leggibilità. */
 header.top{
- background-image:linear-gradient(180deg,rgba(3,10,18,.20) 0%,rgba(4,15,27,.34) 50%,rgba(5,16,27,.68) 100%),url('./rpl-header-bg.webp?v=9.1.51') !important;
+ background-image:linear-gradient(180deg,rgba(3,10,18,.20) 0%,rgba(4,15,27,.34) 50%,rgba(5,16,27,.68) 100%),url('./rpl-header-bg.webp?v=9.1.52') !important;
  background-position:center,center 48% !important; background-size:cover,cover !important; background-repeat:no-repeat !important;
 }
 header.top>div:first-child img{width:136px!important;height:136px!important;max-width:none!important;box-shadow:0 0 10px rgba(231,185,78,.36),0 0 22px rgba(231,185,78,.20)!important;border-color:rgba(255,216,106,.96)!important}
@@ -3608,16 +3608,22 @@ async function downloadDistintaPDF(matchId){
     const date=dt.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"numeric"});
     const time=dt.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
     doc.text(`Data: ${date}`,35,68);doc.text(`Ora: ${time}`,92,68);doc.text(`Campo: ${m.court||"—"}`,143,68);
-    doc.setFont("helvetica","bold");doc.setTextColor(37,76,112);doc.text("Giocatori",105,79,{align:"center"});
+    // Avviso di accesso esclusivamente nelle distinte del Padel Club Calascibetta.
+    const isCalascibetta=/calascibetta/i.test(String(m.court||""));
+    if(isCalascibetta){
+      doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(170,35,35);
+      doc.text("CODICE PER ACCEDERE ALL'IMPIANTO 6076",105,76,{align:"center"});
+    }
+    doc.setFont("helvetica","bold");doc.setTextColor(37,76,112);doc.text("Giocatori",105,isCalascibetta?84:79,{align:"center"});
     doc.setFont("helvetica","normal");doc.setTextColor(45,45,45);doc.setFontSize(10);
     const labels=["A","B","C","D"];
     players.forEach((p,i)=>{
-      const x=i%2===0?55:140, y=88+Math.floor(i/2)*10;
+      const x=i%2===0?55:140, y=(isCalascibetta?91:88)+Math.floor(i/2)*10;
       doc.text(`${labels[i]}: ${p.name}${p.nickname?` — "${p.nickname}"`:""}`,x,y,{align:"center"});
     });
     doc.setFontSize(8);doc.setTextColor(110,110,110);
-    doc.text(type==="ONE_VS_ONE"?"Tipo: 1 vs 1 · 4 set":"Tipo: Tutti contro tutti · 6 set",105,108,{align:"center"});
-    let y=114;
+    doc.text(type==="ONE_VS_ONE"?"Tipo: 1 vs 1 · 4 set":"Tipo: Tutti contro tutti · 6 set",105,isCalascibetta?113:108,{align:"center"});
+    let y=isCalascibetta?119:114;
     pairs.forEach((pair,i)=>{
       if(y>270){doc.addPage();doc.setFillColor(255,255,255);doc.rect(0,0,210,297,"F");y=18;}
       doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(37,76,112);
@@ -3690,7 +3696,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.51</div>
+<div id="rplVersionBadge">RPL v9.1.52</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4768,7 +4774,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='9.1.51'){
+  async function rplRegisterServiceWorker(version='9.1.52'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -5015,7 +5021,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   .rpl-main-menu-btn span{display:inline-block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:normal!important;min-width:0!important;}
 }
 </style>
-<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.51";</script>
+<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.52";</script>
 
 <style id="rpl-v907-player-matches-photo-fix">
 .rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
@@ -5041,7 +5047,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 .rpl-profile-photo-wrap.has-photo .rpl-profile-photo-placeholder{display:none}
 @media(max-width:600px){.rpl-profile-photo-wrap{width:96px;height:96px;flex-basis:96px}}
 </style>
-<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.51";</script>
+<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.52";</script>
 
 
 <style id="rpl-v916-regolamento-carousel-fix">
@@ -5072,7 +5078,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.51";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.52";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5510,7 +5516,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.51";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.51";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.52";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.52";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
