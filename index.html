@@ -1185,13 +1185,15 @@ button#resetBtn,button[id*="Reset"],button[id*="reset"],button[id*="ResetFilters
 </style>
 
 
-<style id="rpl-9-1-47-header-identity">
-/* Fase 3: header RPL con richiami grafici al campo da padel, mantenendo il contrasto */
+
+
+<style id="rpl-9-1-50-header-photo">
+/* Fase 3: fotografia notturna del campo, scurita per preservare contrasto e leggibilità. */
 header.top{
- background-image:linear-gradient(180deg,rgba(3,10,18,.82) 0%,rgba(4,15,27,.88) 58%,rgba(5,16,27,.97) 100%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 620'%3E%3Crect width='1200' height='620' fill='%230b2534'/%3E%3Cg fill='none' stroke='%23b7d1d8' stroke-opacity='.34' stroke-width='5'%3E%3Crect x='115' y='65' width='970' height='490' rx='3'/%3E%3Cpath d='M600 65V555 M115 310H1085 M330 65V555 M870 65V555 M115 180H330 M870 180H1085 M115 440H330 M870 440H1085'/%3E%3C/g%3E%3Cg stroke='%23eab308' stroke-opacity='.35' stroke-width='3' fill='none'%3E%3Cpath d='M0 620L300 0 M1200 620L900 0'/%3E%3C/g%3E%3C/svg%3E");
- background-position:center,center 48%;background-size:cover,cover;background-repeat:no-repeat;
+ background-image:linear-gradient(180deg,rgba(3,10,18,.20) 0%,rgba(4,15,27,.34) 50%,rgba(5,16,27,.68) 100%),url('./rpl-header-bg.webp?v=9.1.50') !important;
+ background-position:center,center 48% !important; background-size:cover,cover !important; background-repeat:no-repeat !important;
 }
-header.top>div:first-child img{width:136px!important;height:136px!important;box-shadow:0 0 9px rgba(231,185,78,.38),0 0 24px rgba(231,185,78,.18)!important;border-color:rgba(255,216,106,.96)!important}
+header.top>div:first-child img{width:136px!important;height:136px!important;max-width:none!important;box-shadow:0 0 10px rgba(231,185,78,.36),0 0 22px rgba(231,185,78,.20)!important;border-color:rgba(255,216,106,.96)!important}
 @media(max-width:600px){header.top>div:first-child img{width:136px!important;height:136px!important}}
 </style>
 </head>
@@ -3679,7 +3681,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.47</div>
+<div id="rplVersionBadge">RPL v9.1.50</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4756,7 +4758,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='9.1.45'){
+  async function rplRegisterServiceWorker(version='9.1.50'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -5003,7 +5005,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   .rpl-main-menu-btn span{display:inline-block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:normal!important;min-width:0!important;}
 }
 </style>
-<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.47";</script>
+<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.50";</script>
 
 <style id="rpl-v907-player-matches-photo-fix">
 .rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
@@ -5029,7 +5031,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 .rpl-profile-photo-wrap.has-photo .rpl-profile-photo-placeholder{display:none}
 @media(max-width:600px){.rpl-profile-photo-wrap{width:96px;height:96px;flex-basis:96px}}
 </style>
-<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.47";</script>
+<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.50";</script>
 
 
 <style id="rpl-v916-regolamento-carousel-fix">
@@ -5060,7 +5062,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.47";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.50";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5498,7 +5500,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.47";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.47";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.50";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.50";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
