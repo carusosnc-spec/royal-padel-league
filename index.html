@@ -547,7 +547,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 }
 </style>
 
-<style id="rpl-calendar-history-timeline-v9155">
+<style id="rpl-calendar-history-timeline-v9156">
 .rpl-cal-history-heading{margin:22px 0 8px;color:#ffd86a;font-size:13px;font-weight:900;letter-spacing:.08em}
 .rpl-cal-history-timeline{border-left:2px solid rgba(234,179,8,.45);margin:0 0 10px 8px;padding-left:13px;display:grid;gap:9px}
 .rpl-cal-timeline-item{position:relative}.rpl-cal-timeline-dot{position:absolute;width:9px;height:9px;border-radius:50%;background:#eab308;border:2px solid #07121e;left:-20px;top:18px}
@@ -1231,6 +1231,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 .rpl-regolamento-hint{user-select:none;-webkit-user-select:none}
 </style>
 
+<style id="rpl-9-1-56-set-pairings-weather">.rpl-cal-set-score{display:block;padding:10px 12px;margin:7px 0;border-radius:10px;background:rgba(255,255,255,.045);font-size:16px}.rpl-cal-set-pairings{display:grid;grid-template-columns:1fr;gap:5px;margin-top:6px;font-size:14px;line-height:1.35}.rpl-cal-set-pairings span{display:block;overflow-wrap:anywhere}@media(max-width:600px){.rpl-cal-set-score{font-size:16px;padding:10px}.rpl-cal-set-pairings{font-size:14px}}</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -3526,7 +3527,7 @@ function renderCalendar(matches, resultRows=[], setRows=[], awardRows=[]){
     const cls=completedMatch?'rpl-cal-history-card':`rpl-public-cal-item ${same?'same-day':''}`;
     return `<div class="${cls}"><div class="rpl-public-cal-item-head"><div><div class="mini-date">${esc(fmtDayShort(m._date))}</div><div class="mini-time">${esc(fmtTime(m._date))}</div></div><div class="mini-court">📍 ${esc(m.court||'Campo da definire')}</div>${same&&!completedMatch?'<div class="rpl-cal-today">OGGI · DA GIOCARE</div>':''}</div>
       <div class="rpl-public-cal-item-match"><div class="rpl-public-cal-team"><div class="rpl-public-cal-team-logos">${miniPlayer(m.player_1)}${miniPlayer(m.player_2)}</div><div class="rpl-public-cal-team-names">${esc(names[0])} <span>•</span> ${esc(names[1])}</div></div><div class="rpl-public-cal-item-vs">VS</div><div class="rpl-public-cal-team"><div class="rpl-public-cal-team-logos">${miniPlayer(m.player_3)}${miniPlayer(m.player_4)}</div><div class="rpl-public-cal-team-names">${esc(names[2])} <span>•</span> ${esc(names[3])}</div></div></div>
-      ${completedMatch?`<div class="rpl-cal-history-label">✓ RISULTATO INSERITO</div><button type="button" class="rpl-cal-open-result" data-result-calendar="${esc(m.id)}">📊 APRI RISULTATO E STATISTICHE</button>`:`<div class="rpl-distinta-wrap">${publicDistintaButton(m.id)}</div>`}</div>`;
+      ${completedMatch?`<div class="rpl-cal-history-label">✓ RISULTATO INSERITO</div><button type="button" class="rpl-cal-open-result" data-result-calendar="${esc(m.id)}">📊 APRI RISULTATO E STATISTICHE</button>`:`${rplCalendarWeatherMarkup(m, 'upcoming-'+m.id)}<div class="rpl-distinta-wrap">${publicDistintaButton(m.id)}</div>`}</div>`;
   };
   const delayedList=delayedToday.filter(m=>!upcomingList.some(x=>String(x.id)===String(m.id))).map(m=>({...m,_delayed:true}));
   const listItems=[...delayedList,...upcomingList].sort((a,b)=>a._date-b._date);
@@ -3544,7 +3545,7 @@ function renderCalendar(matches, resultRows=[], setRows=[], awardRows=[]){
     box.querySelector('#rplMatchStatsContent').innerHTML=renderCalendarMatchStats(cm,match,setsByMatch,awardsByMatch);
     modal.classList.add('open');document.body.style.overflow='hidden';
   }));
-  initRplCalendarWeather(box,[...(first?[first]:[]),...upcomingList]).catch(e=>console.warn('Meteo calendario non disponibile',e));
+  initRplCalendarWeather(box,[...valid.filter(m=>m._date.getTime()>now.getTime()),...delayedList]).catch(e=>console.warn('Meteo calendario non disponibile',e));
 }
 function renderCalendarMatchStats(calendarMatch,match,setsByMatch,awardsByMatch){
   const sets=setsByMatch[String(match.id)]||[]; const awards=awardsByMatch[String(match.id)]||[]; const players=[1,2,3,4].map(i=>({id:Number(calendarMatch['player_'+i]),name:playerById(calendarMatch['player_'+i])?.name||calendarMatch['player_'+i+'_name']||'Giocatore',sets:0,setsPlayed:0,games:0}));
@@ -3552,7 +3553,7 @@ function renderCalendarMatchStats(calendarMatch,match,setsByMatch,awardsByMatch)
   sets.forEach(s=>{const a=Number(s.games_a)||0,b=Number(s.games_b)||0;totalGames+=a+b;const sideA=[s.pair_a_player_1,s.pair_a_player_2],sideB=[s.pair_b_player_1,s.pair_b_player_2];sideA.forEach(id=>{const p=stat.get(String(id));if(p){p.setsPlayed++;p.games+=a;if(a>b)p.sets++;}});sideB.forEach(id=>{const p=stat.get(String(id));if(p){p.setsPlayed++;p.games+=b;if(b>a)p.sets++;}});});
   const mvp=awards.filter(a=>String(a.award_type).toUpperCase()==='MVP').map(a=>playerById(a.player_id)?.name||'').filter(Boolean); const imb=awards.filter(a=>String(a.award_type).toUpperCase()==='IMBATTUTO').map(a=>playerById(a.player_id)?.name||'').filter(Boolean);
   const statCards=players.map(p=>`<div class="rpl-cal-stat-row"><b>${esc(p.name)}</b><span>🎾 Set <strong>${p.sets}</strong> / ${p.setsPlayed}</span><span>🎯 Game <strong>${p.games}</strong> / ${totalGames}</span><span>${p.setsPlayed?Math.round(p.sets/p.setsPlayed*100):0}% set vinti</span></div>`).join('');
-  const setScores=sets.map(s=>`<span class="rpl-cal-set-score">Set ${esc(s.set_number)}: <b>${Number(s.games_a)||0}–${Number(s.games_b)||0}</b></span>`).join('');
+  const setScores=sets.map(s=>{const name=id=>{const p=playerById(id);return p?.name||'Giocatore';};const a=[s.pair_a_player_1,s.pair_a_player_2].filter(v=>v!=null).map(name);const b=[s.pair_b_player_1,s.pair_b_player_2].filter(v=>v!=null).map(name);return `<div class="rpl-cal-set-score"><b>Set ${esc(s.set_number)} · ${Number(s.games_a)||0}–${Number(s.games_b)||0}</b><div class="rpl-cal-set-pairings"><span>🟦 ${esc(a.join(' & ')||'Coppia A')}</span><span>🟨 ${esc(b.join(' & ')||'Coppia B')}</span></div></div>`;}).join('');
   return `<div class="rpl-cal-stats"><div class="rpl-cal-set-scores">${setScores||'<span>Dettaglio set non disponibile</span>'}</div>${statCards}<div class="rpl-cal-awards">🏆 MVP: ${mvp.length?esc(mvp.join(', ')):'non assegnato'}</div><div class="rpl-cal-awards">🔥 Imbattuto: ${imb.length?esc(imb.join(', ')):'nessuno assegnato'}</div></div>`;
 }
 
@@ -3759,7 +3760,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.55</div>
+<div id="rplVersionBadge">RPL v9.1.56</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -5579,7 +5580,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.53";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.55";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.53";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.56";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
