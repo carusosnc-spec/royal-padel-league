@@ -1216,7 +1216,7 @@ button#resetBtn,button[id*="Reset"],button[id*="reset"],button[id*="ResetFilters
 <style id="rpl-9-1-50-header-photo">
 /* Fase 3: fotografia notturna del campo, scurita per preservare contrasto e leggibilità. */
 header.top{
- background-image:linear-gradient(180deg,rgba(3,10,18,.20) 0%,rgba(4,15,27,.34) 50%,rgba(5,16,27,.68) 100%),url('./rpl-header-bg.webp?v=9.1.60') !important;
+ background-image:linear-gradient(180deg,rgba(3,10,18,.20) 0%,rgba(4,15,27,.34) 50%,rgba(5,16,27,.68) 100%),url('./rpl-header-bg.webp?v=9.1.61') !important;
  background-position:center,center 48% !important; background-size:cover,cover !important; background-repeat:no-repeat !important;
 }
 header.top>div:first-child img{width:136px!important;height:136px!important;max-width:none!important;box-shadow:0 0 10px rgba(231,185,78,.36),0 0 22px rgba(231,185,78,.20)!important;border-color:rgba(255,216,106,.96)!important}
@@ -1323,13 +1323,13 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
   <div id="playerDashboard" class="hidden">
     <section id="rplRoyalBetCard" class="card rpl-royalbet-card">
       <div class="rpl-royalbet-head">
-        <div><div class="rpl-royalbet-kicker">ROYAL PADEL LEAGUE</div><h2>🎰 ROYAL BET</h2><div class="muted">Mercati, puntate e saldo crediti virtuali. Accedi una sola volta all’Area Giocatori.</div></div>
+        <div><div class="rpl-royalbet-kicker">ROYAL PADEL LEAGUE</div><h2>🎰 ROYAL BET LAB</h2><div class="muted">Mercati, puntate e saldo crediti virtuali. Accedi una sola volta all’Area Giocatori.</div></div>
         <span class="badge">CREDITI VIRTUALI</span>
       </div>
-      <button type="button" id="rplRoyalBetOpenBtn" class="primary rpl-royalbet-open">🎰 APRI ROYAL BET</button>
+      <button type="button" id="rplRoyalBetOpenBtn" class="primary rpl-royalbet-open">🎰 APRI ROYAL BET LAB</button>
       <div id="rplRoyalBetFrameWrap" class="hidden rpl-royalbet-frame-wrap">
-        <div class="rpl-royalbet-framebar"><span>ROYAL BET · Area giocatori</span><button type="button" id="rplRoyalBetCloseBtn" aria-label="Chiudi Royal Bet">✕ Chiudi</button></div>
-        <iframe id="rplRoyalBetFrame" title="Royal Bet" loading="lazy" src="about:blank" referrerpolicy="same-origin" allow="clipboard-read; clipboard-write"></iframe>
+        <div class="rpl-royalbet-framebar"><span>ROYAL BET LAB · Area giocatori</span><button type="button" id="rplRoyalBetCloseBtn" aria-label="Chiudi Royal Bet">✕ Chiudi</button></div>
+        <iframe id="rplRoyalBetFrame" title="Royal Bet Lab" loading="lazy" src="about:blank" referrerpolicy="same-origin" allow="clipboard-read; clipboard-write"></iframe>
       </div>
     </section>
     <section id="rplMessagingCard" class="card rpl-chat-card">
@@ -3590,7 +3590,8 @@ function renderCalendar(matches, resultRows=[], setRows=[], awardRows=[]){
     const cm=valid.find(x=>String(x.id)===String(btn.dataset.rplBet));if(!cm)return;
     box.querySelector('#rplMatchStatsTitle').textContent='ROYAL BET LAB';
     box.querySelector('#rplMatchStatsSubtitle').textContent=`${fmtDate(cm._date)} · ore ${fmtTime(cm._date)} · ${cm.court||'Campo da definire'}`;
-    box.querySelector('#rplMatchStatsContent').innerHTML=renderRoyalBetAnalysis(cm,setRows,resultRows);
+    box.querySelector('#rplMatchStatsContent').innerHTML=renderRoyalBetAnalysis(cm,setRows,resultRows)+`<div class="rpl-bet-intro" style="margin-top:12px;text-align:center"><b>VUOI GIOCARE?</b><br>Apri Royal Bet Lab nell’Area Giocatori e piazza le tue puntate con i crediti virtuali.<br><button type="button" class="primary" id="rplOpenBetLabFromCalendar" style="margin-top:10px">🎰 APRI ROYAL BET LAB E SCOMMETTI</button></div>`;
+    box.querySelector('#rplOpenBetLabFromCalendar')?.addEventListener('click',()=>{modal.classList.remove('open');document.body.style.overflow='';openPlayerAreaAndBetLab();});
     initRoyalBetPredictionHistory(cm,box,setRows,resultRows).catch(e=>console.warn('Archivio Royal Bet non disponibile',e));
     modal.classList.add('open');document.body.style.overflow='hidden';
   }));
@@ -3885,7 +3886,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.60</div>
+<div id="rplVersionBadge">RPL v9.1.61</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -4977,7 +4978,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='9.1.60'){
+  async function rplRegisterServiceWorker(version='9.1.61'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -5224,7 +5225,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   .rpl-main-menu-btn span{display:inline-block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:normal!important;min-width:0!important;}
 }
 </style>
-<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.60";</script>
+<script id="rpl-v907-version">document.documentElement.dataset.rplVersion="9.1.61";</script>
 
 <style id="rpl-v907-player-matches-photo-fix">
 .rpl-player-match-month{margin:10px 0}.rpl-player-month-btn{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#0b1825!important;color:#fff!important;border:1px solid rgba(231,185,78,.35)!important;border-radius:12px;padding:11px 13px;font-weight:900}.rpl-player-month-btn small{color:#aebdcb;font-weight:700}.rpl-player-month-list{display:grid;gap:7px;margin-top:7px}.rpl-player-match-detail{background:#07121e;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}.rpl-player-match-detail summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:11px 12px;color:#fff}.rpl-player-match-detail summary::-webkit-details-marker{display:none}.rpl-player-match-detail summary small{display:block;color:#9da8b4;margin-top:3px}.rpl-player-match-body{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}.rpl-player-match-teams{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:7px}.rpl-player-match-teams>div:first-child,.rpl-player-match-teams>div:last-child{display:grid;gap:5px}.rpl-match-vs{text-align:center;color:#ffd86a;font-weight:900}.rpl-player-match-set{display:flex;justify-content:space-between;padding:7px 9px;border:1px solid rgba(231,185,78,.15);border-radius:8px;background:rgba(255,255,255,.025)}.rpl-player-match-sets{display:grid;gap:5px;margin-top:9px}.rpl-match-award{margin-top:7px;color:#ffd86a;font-weight:800;font-size:12px}.rpl-profile-click{cursor:pointer;touch-action:manipulation}.rpl-profile-click:hover{filter:brightness(1.08)}.rpl-cal-player,.rpl-public-cal-mini-logo{cursor:pointer;touch-action:manipulation}@media(max-width:600px){.rpl-player-match-teams{grid-template-columns:1fr 24px 1fr}.rpl-player-match-detail summary{font-size:12px}.rpl-player-match-body{padding:8px}.rpl-player-month-btn{font-size:12px}}
@@ -5250,7 +5251,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 .rpl-profile-photo-wrap.has-photo .rpl-profile-photo-placeholder{display:none}
 @media(max-width:600px){.rpl-profile-photo-wrap{width:96px;height:96px;flex-basis:96px}}
 </style>
-<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.60";</script>
+<script id="rpl-v915-version">document.documentElement.dataset.rplVersion="9.1.61";</script>
 
 
 <style id="rpl-v916-regolamento-carousel-fix">
@@ -5281,7 +5282,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 @media(max-width:600px){.rpl-chat-layout{grid-template-columns:minmax(0,1fr)}.rpl-chat-rooms{max-height:145px}.rpl-chat-media{max-height:220px}.rpl-chat-media-tools button,.rpl-chat-media-tools label{flex:0 0 34px}}
 
 </style>
-<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.60";</script>
+<script id="rpl-v916-version">document.documentElement.dataset.rplVersion="9.1.61";</script>
 
 
 <script id="rpl-messaging-v9120-script">
@@ -5719,7 +5720,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.60";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.60";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.61";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.61";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5764,7 +5765,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
   async function checkForUpdate(){
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.60',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.61',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting&&navigator.serviceWorker.controller){try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}}
     }catch(e){console.debug('RPL update check non riuscito',e);}
@@ -5826,16 +5827,30 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     else {const p=$('playerAreaPage');if(p){p.classList.remove('hidden');p.style.removeProperty('display');}}
     setTimeout(()=>{const p=$('playerAreaPage');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},80);
   }
+  function openPlayerAreaAndBetLab(){
+    openPlayerAreaForBet();
+    setTimeout(()=>{
+      const dashboard=$('playerDashboard'), login=$('playerLoginCard');
+      if(dashboard&&!dashboard.classList.contains('hidden')) openBetLab();
+      else { const msg=$('playerLoginMsg'); if(msg){msg.className='msg';msg.textContent='Accedi all’Area Giocatori: dopo l’accesso potrai aprire Royal Bet Lab da qui.';} window.rplOpenBetLabAfterLogin=true; const target=$('playerDashboard'); if(target){const obs=new MutationObserver(()=>{if(!target.classList.contains('hidden')){window.rplOpenBetLabAfterLogin=false;obs.disconnect();openBetLab();}});obs.observe(target,{attributes:true,attributeFilter:['class']});} }
+    },180);
+  }
+  function openBetLab(){
+    const open=$('rplRoyalBetOpenBtn'),wrap=$('rplRoyalBetFrameWrap'),frame=$('rplRoyalBetFrame');
+    if(!open||!wrap||!frame)return;
+    wrap.classList.remove('hidden');open.classList.add('hidden');
+    if(!frame.dataset.loaded||frame.src==='about:blank'){frame.src='./royal-bet.html?v=9.1.61';frame.dataset.loaded='1';}
+    frame.onload=async()=>{try{const {data:{session}}=await window.sb.auth.getSession();if(session)frame.contentWindow.postMessage({type:'RPL_AUTH_SESSION',session:{access_token:session.access_token,refresh_token:session.refresh_token}},location.origin);}catch(e){console.warn('Sessione Royal Bet non trasferita',e);}};
+    wrap.scrollIntoView({behavior:'smooth',block:'start'});
+  }
   function init(){
     const open=$('rplRoyalBetOpenBtn'),close=$('rplRoyalBetCloseBtn'),wrap=$('rplRoyalBetFrameWrap'),frame=$('rplRoyalBetFrame');
     open?.addEventListener('click',()=>{
-      const loggedIn=!!(window.sb&&window.sb.auth);
-      if(!loggedIn){alert('Accedi prima all’Area Giocatori.');openPlayerAreaForBet();return;}
-      wrap?.classList.remove('hidden');open.classList.add('hidden');
-      if(frame&&(!frame.dataset.loaded||frame.src==='about:blank')){frame.src='./royal-bet.html';frame.dataset.loaded='1';}
-      frame?.addEventListener('load',function(){try{frame.contentDocument.querySelectorAll('a[href="./index.html"]').forEach(a=>a.target='_top');}catch(e){}},{once:true});
-      wrap?.scrollIntoView({behavior:'smooth',block:'start'});
+      const dashboard=$('playerDashboard');
+      if(!dashboard||dashboard.classList.contains('hidden')){openPlayerAreaAndBetLab();return;}
+      openBetLab();
     });
+    if(window.rplOpenBetLabAfterLogin){const observer=new MutationObserver(()=>{const d=$('playerDashboard');if(d&&!d.classList.contains('hidden')){window.rplOpenBetLabAfterLogin=false;observer.disconnect();openBetLab();}});const d=$('playerDashboard');if(d)observer.observe(d,{attributes:true,attributeFilter:['class']});}
     close?.addEventListener('click',()=>{wrap?.classList.add('hidden');open?.classList.remove('hidden');});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
