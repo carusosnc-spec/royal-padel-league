@@ -1216,7 +1216,7 @@ button#resetBtn,button[id*="Reset"],button[id*="reset"],button[id*="ResetFilters
 <style id="rpl-9-1-50-header-photo">
 /* Fase 3: fotografia notturna del campo, scurita per preservare contrasto e leggibilità. */
 header.top{
- background-image:linear-gradient(180deg,rgba(3,10,18,.20) 0%,rgba(4,15,27,.34) 50%,rgba(5,16,27,.68) 100%),url('./rpl-header-bg.webp?v=9.1.67') !important;
+ background-image:linear-gradient(180deg,rgba(3,10,18,.20) 0%,rgba(4,15,27,.34) 50%,rgba(5,16,27,.68) 100%),url('./rpl-header-bg.webp?v=9.1.68') !important;
  background-position:center,center 48% !important; background-size:cover,cover !important; background-repeat:no-repeat !important;
 }
 header.top>div:first-child img{width:136px!important;height:136px!important;max-width:none!important;box-shadow:0 0 10px rgba(231,185,78,.36),0 0 22px rgba(231,185,78,.20)!important;border-color:rgba(255,216,106,.96)!important}
@@ -1594,7 +1594,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <button type="button" id="opRoyalBetTab" onclick="showOperatorSection('royalbet')">🎰 Console Royal Bet Lab</button>
 </div>
 </div>
-<div id="operatorRoyalBetSection" class="hidden"><div class="card" style="padding:0;overflow:hidden"><h2 style="padding:16px 16px 0">🎰 Console di supervisione Royal Bet Lab</h2><div class="muted" style="padding:0 16px 12px">Mercati, quote, puntate, portafogli e operazioni di supervisione. Le modifiche sono tracciate e i rimborsi passano dal sistema crediti.</div><iframe id="rplRoyalBetOperatorFrame" title="Console Royal Bet Lab operatore" src="./royal-bet-operator.html?v=9.1.67" loading="lazy" referrerpolicy="same-origin" style="display:block;width:100%;height:1250px;border:0;background:#07121e;border-radius:0 0 12px 12px"></iframe></div></div>
+<div id="operatorRoyalBetSection" class="hidden"><div class="card" style="padding:0;overflow:hidden"><h2 style="padding:16px 16px 0">🎰 Console di supervisione Royal Bet Lab</h2><div class="muted" style="padding:0 16px 12px">Mercati, quote, puntate, portafogli e operazioni di supervisione. Le modifiche sono tracciate e i rimborsi passano dal sistema crediti.</div><iframe id="rplRoyalBetOperatorFrame" title="Console Royal Bet Lab operatore" src="./royal-bet-operator.html?v=9.1.68" loading="lazy" referrerpolicy="same-origin" style="display:block;width:100%;height:1250px;border:0;background:#07121e;border-radius:0 0 12px 12px"></iframe></div></div>
 <div id="operatorVotingSection" class="hidden">
 <div class="card">
 <h2>🗳️ Votazioni settimanali</h2>
@@ -3889,7 +3889,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.67</div>
+<div id="rplVersionBadge">RPL v9.1.68</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -5723,7 +5723,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.67";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.67";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.67";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.68";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5768,7 +5768,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
   async function checkForUpdate(){
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.67',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=9.1.68',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting&&navigator.serviceWorker.controller){try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}}
     }catch(e){console.debug('RPL update check non riuscito',e);}
@@ -5839,19 +5839,21 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     },180);
   }
   window.rplOpenPlayerAreaAndBetLab=openPlayerAreaAndBetLab;
-  window.rplSendOperatorBetSession=function(){const f=$('rplRoyalBetOperatorFrame');if(!f?.contentWindow)return;window.sb?.auth.getSession().then(({data,error})=>{if(!error&&data?.session)f.contentWindow.postMessage({type:'RPL_AUTH_SESSION',session:{access_token:data.session.access_token,refresh_token:data.session.refresh_token}},location.origin)}).catch(e=>console.warn('Sessione console Royal Bet non trasferita',e));};
-  window.addEventListener('message',ev=>{const f=$('rplRoyalBetOperatorFrame');if(ev.origin!==location.origin||ev.source!==f?.contentWindow||ev.data?.type!=='RPL_REQUEST_SESSION')return;window.rplSendOperatorBetSession();});
-  $('rplRoyalBetOperatorFrame')?.addEventListener('load',()=>window.rplSendOperatorBetSession());
-  function sendSessionToBetLab(){
-    const frame=$('rplRoyalBetFrame');if(!frame?.contentWindow)return;
-    try{window.sb.auth.getSession().then(({data,error})=>{if(!error&&data?.session)frame.contentWindow.postMessage({type:'RPL_AUTH_SESSION',session:{access_token:data.session.access_token,refresh_token:data.session.refresh_token}},location.origin);});}catch(e){console.warn('Sessione Royal Bet non trasferita',e);}
+  async function rplGetSessionPayload(){
+    try{const client=window.sb;if(!client?.auth?.getSession)throw new Error('Client Supabase principale non disponibile');const result=await client.auth.getSession();if(result.error)throw result.error;const s=result.data?.session;if(!s?.access_token||!s?.refresh_token)throw new Error('Sessione giocatore assente nella pagina principale');return {access_token:s.access_token,refresh_token:s.refresh_token};}
+    catch(e){console.warn('[Royal Bet Lab] Impossibile recuperare sessione dalla pagina principale:',e);return null;}
   }
+  async function rplSendSessionToFrame(frame){if(!frame?.contentWindow)return false;const session=await rplGetSessionPayload();if(!session)return false;try{frame.contentWindow.postMessage({type:'RPL_AUTH_SESSION',session},location.origin);return true;}catch(e){console.warn('[Royal Bet Lab] Invio sessione iframe fallito',e);return false;}}
+  window.rplSendOperatorBetSession=()=>rplSendSessionToFrame($('rplRoyalBetOperatorFrame'));
+  window.addEventListener('message',ev=>{const f=$('rplRoyalBetOperatorFrame');if(ev.origin!==location.origin||ev.source!==f?.contentWindow||ev.data?.type!=='RPL_REQUEST_SESSION')return;window.rplSendOperatorBetSession();});
+  $('rplRoyalBetOperatorFrame')?.addEventListener('load',()=>{window.rplSendOperatorBetSession();setTimeout(window.rplSendOperatorBetSession,300);setTimeout(window.rplSendOperatorBetSession,1000);});
+  function sendSessionToBetLab(){return rplSendSessionToFrame($('rplRoyalBetFrame'));}
   function openBetLab(){
     const open=$('rplRoyalBetOpenBtn'),wrap=$('rplRoyalBetFrameWrap'),frame=$('rplRoyalBetFrame');
     if(!open||!wrap||!frame)return;
     wrap.classList.remove('hidden');open.classList.add('hidden');
     if(!frame.dataset.rplSessionHandler){frame.addEventListener('load',()=>{sendSessionToBetLab();setTimeout(sendSessionToBetLab,250);setTimeout(sendSessionToBetLab,800);});frame.dataset.rplSessionHandler='1';}
-    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.67';frame.dataset.loaded='1';}
+    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.68';frame.dataset.loaded='1';}
     else sendSessionToBetLab();
     if(!window.rplBetSessionRetry){window.rplBetSessionRetry=setInterval(()=>{if(!wrap.classList.contains('hidden'))sendSessionToBetLab();},1000);}
     wrap.scrollIntoView({behavior:'smooth',block:'start'});
