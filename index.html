@@ -1323,7 +1323,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
   <div id="playerDashboard" class="hidden">
     <section id="rplRoyalBetCard" class="card rpl-royalbet-card">
       <div class="rpl-royalbet-head">
-        <div><div class="rpl-royalbet-kicker">ROYAL PADEL LEAGUE</div><h2>🎰 ROYAL BET LAB</h2><div class="muted">Mercati, puntate e saldo crediti virtuali. Accedi una sola volta all’Area Giocatori.</div></div>
+        <div><div class="rpl-royalbet-kicker">ROYAL PADEL LEAGUE</div><h2>🎰 ROYAL BET LAB</h2><div class="muted">Mercati, puntate e saldo crediti virtuali.</div></div>
         <span class="badge">CREDITI VIRTUALI</span>
       </div>
       <button type="button" id="rplRoyalBetOpenBtn" class="primary rpl-royalbet-open">🎰 APRI ROYAL BET LAB</button>
@@ -3889,7 +3889,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.63</div>
+<div id="rplVersionBadge">RPL v9.1.64</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -5723,7 +5723,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.63";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.63";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.63";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.64";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5850,9 +5850,10 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     const open=$('rplRoyalBetOpenBtn'),wrap=$('rplRoyalBetFrameWrap'),frame=$('rplRoyalBetFrame');
     if(!open||!wrap||!frame)return;
     wrap.classList.remove('hidden');open.classList.add('hidden');
-    if(!frame.dataset.rplSessionHandler){frame.addEventListener('load',()=>{sendSessionToBetLab();});frame.dataset.rplSessionHandler='1';}
-    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.63';frame.dataset.loaded='1';}
+    if(!frame.dataset.rplSessionHandler){frame.addEventListener('load',()=>{sendSessionToBetLab();setTimeout(sendSessionToBetLab,250);setTimeout(sendSessionToBetLab,800);});frame.dataset.rplSessionHandler='1';}
+    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.64';frame.dataset.loaded='1';}
     else sendSessionToBetLab();
+    if(!window.rplBetSessionRetry){window.rplBetSessionRetry=setInterval(()=>{if(!wrap.classList.contains('hidden'))sendSessionToBetLab();},1000);}
     wrap.scrollIntoView({behavior:'smooth',block:'start'});
   }
   function init(){
