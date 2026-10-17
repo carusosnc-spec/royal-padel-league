@@ -1255,11 +1255,6 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 .rpl-bet-forecast-history{border:1px solid rgba(88,201,164,.35);border-radius:13px;background:rgba(17,55,54,.24);padding:13px;margin:16px 0 4px;color:#dce7f2;font-size:13px;line-height:1.5}.rpl-bet-forecast-history>b{color:#8de3c4;font-size:14px}.rpl-bet-history-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}.rpl-bet-history-grid>div{background:rgba(255,255,255,.045);border:1px solid #2b4054;border-radius:10px;padding:10px}.rpl-bet-history-grid strong{display:block;font-size:21px;color:#ffe28a}.rpl-bet-history-grid small{display:block;color:#b8c8d7;font-size:11px}.rpl-bet-history-note{font-size:11px;color:#b8c8d7;margin:10px 0 0}
 </style>
 
-
-<style id="rpl-royalbet-integration-v1">
-.rpl-royalbet-card{border:1px solid rgba(231,185,78,.58);background:radial-gradient(circle at 100% 0,rgba(231,185,78,.12),transparent 42%),linear-gradient(145deg,#0b1d2c,#06121f)}
-.rpl-royalbet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.rpl-royalbet-head h2{color:#ffd86a;font-size:22px;margin:4px 0}.rpl-royalbet-kicker{font-size:10px;letter-spacing:.18em;font-weight:900;color:#9da8b4}.rpl-royalbet-open{width:100%;min-height:50px;margin-top:14px;font-size:14px}.rpl-royalbet-frame-wrap{margin-top:14px;border:1px solid rgba(231,185,78,.28);border-radius:12px;overflow:hidden}.rpl-royalbet-framebar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;background:#0a1723;color:#ffd86a;font-size:11px;font-weight:800}.rpl-royalbet-framebar button{padding:6px 9px;font-size:11px}.rpl-royalbet-frame-wrap iframe{display:block;width:100%;height:min(82vh,1000px);min-height:700px;border:0;background:#06121f}@media(max-width:600px){.rpl-royalbet-head{display:block}.rpl-royalbet-head .badge{display:inline-block;margin-top:8px}.rpl-royalbet-frame-wrap iframe{height:78vh;min-height:650px}}
-</style>
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
@@ -1287,7 +1282,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
     <button type="button" id="rplRankingsMenuBtn" class="rpl-main-menu-btn">🏆 <span>CLASSIFICHE</span></button>
     <button type="button" id="rplCalendarMenuBtn" class="rpl-main-menu-btn">📅 <span>CALENDARIO</span></button>
     <button type="button" id="playerAreaBtn" class="rpl-main-menu-btn">👤 <span>AREA GIOCATORE</span></button>
-    <button type="button" id="rplRoyalBetMenuBtn" class="rpl-main-menu-btn">🎰 <span>ROYAL BET</span></button>
+    <a href="./royal-bet.html" class="rpl-main-menu-btn" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">🎰 <span>ROYAL BET</span></a>
   </div>
   <div id="rplRankingsSubmenu" class="rpl-submenu-v900 hidden">
     <button type="button" id="rplRankGeneralBtn" class="rpl-submenu-btn primary">🏆 Classifica generale</button>
@@ -1322,17 +1317,6 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
   </div>
 
   <div id="playerDashboard" class="hidden">
-    <section id="rplRoyalBetCard" class="card rpl-royalbet-card">
-      <div class="rpl-royalbet-head">
-        <div><div class="rpl-royalbet-kicker">ROYAL PADEL LEAGUE</div><h2>🎰 ROYAL BET</h2><div class="muted">Mercati, puntate e saldo crediti virtuali. Accedi una sola volta all’Area Giocatori.</div></div>
-        <span class="badge">CREDITI VIRTUALI</span>
-      </div>
-      <button type="button" id="rplRoyalBetOpenBtn" class="primary rpl-royalbet-open">🎰 APRI ROYAL BET</button>
-      <div id="rplRoyalBetFrameWrap" class="hidden rpl-royalbet-frame-wrap">
-        <div class="rpl-royalbet-framebar"><span>ROYAL BET · Area giocatori</span><button type="button" id="rplRoyalBetCloseBtn" aria-label="Chiudi Royal Bet">✕ Chiudi</button></div>
-        <iframe id="rplRoyalBetFrame" title="Royal Bet" loading="lazy" src="about:blank" referrerpolicy="same-origin" allow="clipboard-read; clipboard-write"></iframe>
-      </div>
-    </section>
     <section id="rplMessagingCard" class="card rpl-chat-card">
       <div class="rpl-chat-heading"><div><div class="rpl-chat-kicker">ROYAL PADEL LEAGUE</div><h2 style="margin:3px 0 4px">💬 Messaggi</h2><div class="muted">Chat riservate ai giocatori ufficiali attivi.</div></div><span class="badge">BETA</span></div>
       <button type="button" id="rplChatToggle" class="primary rpl-chat-toggle">APRI MESSAGGI</button>
@@ -2387,7 +2371,8 @@ async function managePollWeek(action,id){const msg=$("operatorVotingMsg");if(act
 async function deleteOperatorPoll(id){return managePollWeek('delete',id)}
 async function archiveOperatorPoll(id){return managePollWeek('archive',id)}
 async function restoreOperatorPoll(id){const msg=$("operatorVotingMsg");if(!confirm('Ripristinare questa votazione nell’elenco attivo?'))return;try{const r=await sb.rpc('rpl_restore_poll_week',{p_poll_week_id:id});if(r.error)throw r.error;msg.className='msg ok';msg.textContent='↩️ Votazione ripristinata correttamente.';await loadOperatorVoting();}catch(e){console.error(e);msg.className='msg err';msg.textContent='Errore ripristino: '+(e.message||e);}}
-async function editOperatorPoll(id){const {data:w,error:we}=await sb.from('rpl_poll_weeks').select('*').eq('id',id).single();if(we){alert(we.message);return;}const {data:o,error:oe}=await sb.from('rpl_poll_options').select('*').eq('poll_week_id',id).order('sort_order');if(oe){alert(oe.message);return;}$("pollWeekStart").value=w.week_start;$("pollWeekEnd").value=w.week_end;$("pollOpensAt").value=new Date(w.opens_at).toISOString().slice(0,16);$("pollClosesAt").value=new Date(w.closes_at).toISOString().slice(0,16);const host=$("pollOptionRows");host.innerHTML='';(o||[]).forEach(x=>{let kind=x.start_time?'time':(x.label||'').includes('MATTINA')?'mattina':(x.label||'').includes('POMERIGGIO')?'pomeriggio':'sera';addPollOptionRow({date:x.play_date,time:(x.start_time||'').slice(0,5),kind,court:x.court||'__TBD__'});});const btn=document.querySelector('button[onclick="createOperatorPoll()"]');if(btn){btn.textContent='💾 SALVA MODIFICHE';btn.onclick=()=>updateOperatorPoll(id);}msg.className='msg ok';msg.textContent='✏️ Modifica caricata.';window.scrollTo({top:$("operatorVotingSection").offsetTop-10,behavior:'smooth'});}
+function pollIsoToLocalInput(iso){const d=new Date(iso);if(Number.isNaN(d.getTime()))return '';const pad=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}
+async function editOperatorPoll(id){const {data:w,error:we}=await sb.from('rpl_poll_weeks').select('*').eq('id',id).single();if(we){alert(we.message);return;}const {data:o,error:oe}=await sb.from('rpl_poll_options').select('*').eq('poll_week_id',id).order('sort_order');if(oe){alert(oe.message);return;}$("pollWeekStart").value=w.week_start;$("pollWeekEnd").value=w.week_end;$("pollOpensAt").value=pollIsoToLocalInput(w.opens_at);$("pollClosesAt").value=pollIsoToLocalInput(w.closes_at);const host=$("pollOptionRows");host.innerHTML='';(o||[]).forEach(x=>{let kind=x.start_time?'time':(x.label||'').includes('MATTINA')?'mattina':(x.label||'').includes('POMERIGGIO')?'pomeriggio':'sera';addPollOptionRow({date:x.play_date,time:(x.start_time||'').slice(0,5),kind,court:x.court||'__TBD__'});});const btn=document.querySelector('button[onclick="createOperatorPoll()"]');if(btn){btn.textContent='💾 SALVA MODIFICHE';btn.onclick=()=>updateOperatorPoll(id);}msg.className='msg ok';msg.textContent='✏️ Modifica caricata.';window.scrollTo({top:$("operatorVotingSection").offsetTop-10,behavior:'smooth'});}
 async function updateOperatorPoll(id){const msg=$("operatorVotingMsg");try{const ws=$("pollWeekStart").value,we=$("pollWeekEnd").value,op=$("pollOpensAt").value,cl=$("pollClosesAt").value;const rows=[...document.querySelectorAll('#pollOptionRows .rpl-poll-option-row')];const options=rows.map((row,i)=>{const date=row.querySelector('.poll-option-date').value,kind=row.querySelector('.poll-option-kind').value,time=row.querySelector('.poll-option-time').value,court=row.querySelector('.poll-option-court')?.value||'__TBD__';if(!date)throw new Error('Ogni opzione deve avere una data.');const d=new Date(date+'T12:00:00'),day=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}).toUpperCase(),suffix=kind==='time'?`ORE ${time}`:kind.toUpperCase();return {play_date:date,start_time:kind==='time'?time:'',label:`${day} · ${suffix}`,court,sort_order:i,max_players:4};});const r=await sb.rpc('rpl_update_poll_week',{p_poll_week_id:id,p_week_start:ws,p_week_end:we,p_opens_at:new Date(op).toISOString(),p_closes_at:new Date(cl).toISOString(),p_options:options});if(r.error)throw r.error;msg.className='msg ok';msg.textContent='✅ Votazione modificata. La notifica verrà inviata automaticamente all’orario di apertura.';await loadOperatorVoting();}catch(e){msg.className='msg err';msg.textContent='Errore modifica: '+e.message;}}
 window.editOperatorPoll=editOperatorPoll;window.updateOperatorPoll=updateOperatorPoll;
 async function generateCalendarFromPoll(weekId){
@@ -5804,29 +5789,4 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 
-
-<script id="rpl-royalbet-integration-v1-script">
-(function(){
-  const $=id=>document.getElementById(id);
-  function openPlayerAreaForBet(){
-    if(typeof window.showPlayerArea==='function')window.showPlayerArea();
-    else {const p=$('playerAreaPage');if(p){p.classList.remove('hidden');p.style.removeProperty('display');}}
-    setTimeout(()=>{const p=$('playerAreaPage');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},80);
-  }
-  function init(){
-    $('rplRoyalBetMenuBtn')?.addEventListener('click',openPlayerAreaForBet);
-    const open=$('rplRoyalBetOpenBtn'),close=$('rplRoyalBetCloseBtn'),wrap=$('rplRoyalBetFrameWrap'),frame=$('rplRoyalBetFrame');
-    open?.addEventListener('click',()=>{
-      const loggedIn=!!(window.sb&&window.sb.auth);
-      if(!loggedIn){alert('Accedi prima all’Area Giocatori.');openPlayerAreaForBet();return;}
-      wrap?.classList.remove('hidden');open.classList.add('hidden');
-      if(frame&&(!frame.dataset.loaded||frame.src==='about:blank')){frame.src='./royal-bet.html';frame.dataset.loaded='1';}
-      frame?.addEventListener('load',function(){try{frame.contentDocument.querySelectorAll('a[href="./index.html"]').forEach(a=>a.target='_top');}catch(e){}},{once:true});
-      wrap?.scrollIntoView({behavior:'smooth',block:'start'});
-    });
-    close?.addEventListener('click',()=>{wrap?.classList.add('hidden');open?.classList.remove('hidden');});
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-})();
-</script>
 </body></html>
