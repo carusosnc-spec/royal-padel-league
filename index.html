@@ -1287,7 +1287,6 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
     <button type="button" id="rplRankingsMenuBtn" class="rpl-main-menu-btn">🏆 <span>CLASSIFICHE</span></button>
     <button type="button" id="rplCalendarMenuBtn" class="rpl-main-menu-btn">📅 <span>CALENDARIO</span></button>
     <button type="button" id="playerAreaBtn" class="rpl-main-menu-btn">👤 <span>AREA GIOCATORE</span></button>
-    <button type="button" id="rplRoyalBetMenuBtn" class="rpl-main-menu-btn">🎰 <span>ROYAL BET</span></button>
   </div>
   <div id="rplRankingsSubmenu" class="rpl-submenu-v900 hidden">
     <button type="button" id="rplRankGeneralBtn" class="rpl-submenu-btn primary">🏆 Classifica generale</button>
@@ -4849,17 +4848,31 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     }catch(e){console.error('RPL player matches',e);box.innerHTML=`<div class="msg err">Errore caricamento partite: ${escP(e.message||e)}</div>`;}
   }
   async function playerLogin(){
-    const msg=q('playerLoginMsg');msg.className='msg';msg.textContent='Accesso…';
-    const phone=normalizePhone(q('playerPhone').value),password=q('playerPassword').value;
-    if(!/^\+39\d{9,10}$/.test(phone)){msg.className='msg err';msg.textContent='Inserisci un numero italiano valido.';return}
-    // Hosted Supabase requires an SMS provider to use native Phone Auth.
-    // To keep RPL free of SMS costs, players enter their phone number here,
-    // while the app maps it to a hidden technical email identity.
-    const digits=phone.replace(/^\+39/,'');
-    const technicalEmail=`rpl.${digits}@royalpadelleague.it`;
-    const {data,error}=await sb.auth.signInWithPassword({email:technicalEmail,password});
-    if(error){msg.className='msg err';msg.textContent='Accesso non riuscito: numero o password non corretti.';return}
-    playerUser=data.user;await loadPlayerSession();window.scrollTo(0,0);
+    const msg=q('playerLoginMsg'),btn=q('playerLoginBtn');
+    if(!msg)return;
+    msg.className='msg';msg.textContent='Verifica credenziali in corso…';
+    if(btn){btn.disabled=true;btn.setAttribute('aria-busy','true');}
+    try{
+      if(!window.sb?.auth)throw new Error('Servizio di accesso non inizializzato. Ricarica la pagina e riprova.');
+      const phone=normalizePhone(q('playerPhone')?.value||''),password=q('playerPassword')?.value||'';
+      if(!/^\+39\d{9,10}$/.test(phone))throw new Error('Inserisci un numero italiano valido.');
+      if(!password)throw new Error('Inserisci la password.');
+      // Il numero di telefono viene convertito nell'identità tecnica già usata da RPL.
+      const digits=phone.replace(/^\+39/,'');
+      const technicalEmail=`rpl.${digits}@royalpadelleague.it`;
+      const {data,error}=await sb.auth.signInWithPassword({email:technicalEmail,password});
+      if(error)throw new Error('Accesso non riuscito: numero o password non corretti.');
+      if(!data?.user)throw new Error('Supabase non ha restituito una sessione valida.');
+      playerUser=data.user;
+      await loadPlayerSession();
+      msg.className='msg ok';msg.textContent='Accesso effettuato.';
+      window.scrollTo(0,0);
+    }catch(e){
+      console.error('RPL player login',e);
+      msg.className='msg err';msg.textContent='❌ '+(e?.message||'Errore durante l’accesso. Riprova.');
+    }finally{
+      if(btn){btn.disabled=false;btn.removeAttribute('aria-busy');}
+    }
   }
   async function changePassword(){
     const a=q('playerNewPassword').value,b=q('playerNewPassword2').value,msg=q('playerPasswordMsg');msg.className='msg';
@@ -5125,7 +5138,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
   window.rplAutoSendNotification=rplAutoSendNotification;window.rplGetActivePlayerIds=rplGetActivePlayerIds;
   async function playerLogout(){await sb.auth.signOut();playerUser=null;playerAccount=null;playerRow=null;assignedMatch=null;q('playerDashboard')?.classList.add('hidden');q('playerLoginCard')?.classList.remove('hidden');q('playerPassword').value='';}
   function bind(){
-    q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerPasskeyLoginBtn')?.addEventListener('click',()=>rplSignInWithPasskey('player'));q('playerRegisterPasskeyBtn')?.addEventListener('click',()=>rplRegisterPasskeyForCurrentUser('playerPasskeyMsg'));q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('savePlayerProfileBtn')?.addEventListener('click',savePlayerProfile);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
+    q('playerLoginBtn')?.addEventListener('click',playerLogin);q('playerPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();playerLogin();}});q('playerPasskeyLoginBtn')?.addEventListener('click',()=>rplSignInWithPasskey('player'));q('playerRegisterPasskeyBtn')?.addEventListener('click',()=>rplRegisterPasskeyForCurrentUser('playerPasskeyMsg'));q('playerChangePasswordBtn')?.addEventListener('click',changePassword);q('savePlayerProfileBtn')?.addEventListener('click',savePlayerProfile);q('playerLogoutBtn')?.addEventListener('click',playerLogout);
     q('playerEnableNotificationsBtn')?.addEventListener('click',rplEnablePlayerNotifications);rplUpdateMobileNotificationHelp();rplUpdateNotificationButton();
     ['playerCameraInput','playerGalleryInput'].forEach(id=>q(id)?.addEventListener('change',e=>uploadAvatar(e.target.files?.[0])));
     q('playerAreaBtn')?.addEventListener('click',e=>{e.preventDefault();showPlayerArea();},true);
@@ -5814,7 +5827,6 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     setTimeout(()=>{const p=$('playerAreaPage');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},80);
   }
   function init(){
-    $('rplRoyalBetMenuBtn')?.addEventListener('click',openPlayerAreaForBet);
     const open=$('rplRoyalBetOpenBtn'),close=$('rplRoyalBetCloseBtn'),wrap=$('rplRoyalBetFrameWrap'),frame=$('rplRoyalBetFrame');
     open?.addEventListener('click',()=>{
       const loggedIn=!!(window.sb&&window.sb.auth);
