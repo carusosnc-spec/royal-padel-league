@@ -45,7 +45,9 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
    {...base,selection_key:'pair_b',selection_label:'Coppia B',theoretical_probability:0.44,odds:2.10},
    {...base,selection_key:'invalid_zero',theoretical_probability:0,odds:999}
   ];
-  const existing=[{...base,selection_key:'already_exists'}];
+  // Nessun mercato preesistente nel fixture: le due selezioni valide devono
+  // formare un gruppo completo con probabilita 0,56 + 0,44 = 1,00.
+  const existing=[];
   const out=window.RoyalBetMarketPlanner.planMarketDrafts(candidates,existing);
   const checks=[
    ['Modulo caricato',true],
