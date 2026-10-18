@@ -179,3 +179,43 @@ test('wager idempotency survives refresh through session storage', () => {
   assert.match(ui, /window\.sessionStorage\.removeItem\(storageKey\)/);
   assert.match(ui, /catch \(_\) \{ \/\* dataset remains a same-page fallback \*\//);
 });
+
+
+test('automatic ranking odds tighten as the deadline approaches without requiring operator approval', () => {
+  const vm = require('node:vm');
+  const code = fs.readFileSync('js/royal-bet-ranking-odds.js', 'utf8');
+  const sandbox = { window: {} };
+  vm.runInNewContext(code, sandbox);
+  const model = sandbox.window.RoyalBetRankingOdds;
+  const standings = [
+    { selection_key: 'player_a', selection_label: 'A', points: 100 },
+    { selection_key: 'player_b', selection_label: 'B', points: 95 },
+    { selection_key: 'player_c', selection_label: 'C', points: 80 }
+  ];
+  const early = model.calculateRankingOdds(standings, {
+    now: '2026-10-01T10:00:00+02:00',
+    opensAt: '2026-10-01T00:00:00+02:00',
+    closesAt: '2026-10-31T23:59:59+01:00'
+  });
+  const late = model.calculateRankingOdds(standings, {
+    now: '2026-10-30T10:00:00+01:00',
+    opensAt: '2026-10-01T00:00:00+02:00',
+    closesAt: '2026-10-31T23:59:59+01:00'
+  });
+  assert.ok(early.find(x => x.selection_key === 'player_a').odds < late.find(x => x.selection_key === 'player_a').odds);
+  assert.ok(early.find(x => x.selection_key === 'player_b').theoretical_probability > late.find(x => x.selection_key === 'player_b').theoretical_probability);
+  assert.equal(model.marketDeadline('season', 2027), '2027-03-31T21:59:59.999Z');
+  assert.equal(model.marketDeadline('month', 2026, 10), '2026-10-31T22:59:59.999Z');
+});
+
+test('mathematically decided ranking is never bettable', () => {
+  const vm = require('node:vm');
+  const code = fs.readFileSync('js/royal-bet-ranking-odds.js', 'utf8');
+  const sandbox = { window: {} };
+  vm.runInNewContext(code, sandbox);
+  const result = sandbox.window.RoyalBetRankingOdds.calculateRankingOdds([
+    { selection_key: 'winner', points: 100, max_points_remaining: 0 },
+    { selection_key: 'runner_up', points: 50, max_points_remaining: 20 }
+  ], { now: '2027-03-30T12:00:00+02:00', opensAt: '2026-09-15T00:00:00+02:00', closesAt: '2027-03-31T23:59:59+02:00' });
+  assert.ok(result.every(x => x.is_bettable === false && x.odds === 0));
+});
