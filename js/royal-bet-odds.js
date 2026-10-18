@@ -83,9 +83,9 @@
   function marketSelections(outcomes, overround = 0.08) {
     if (!Array.isArray(outcomes) || !outcomes.length) return [];
     const values = outcomes.map(x => Number(x && x.probability));
-    if (values.some(p => !Number.isFinite(p) || p < 0)) throw new RangeError('Ogni probabilità deve essere un numero finito non negativo.');
+    if (values.some(p => !Number.isFinite(p) || p <= 0)) throw new RangeError('Ogni esito quotato deve avere una probabilità finita maggiore di zero.');
     const total = values.reduce((n, p) => n + p, 0);
-    if (total <= 0) throw new Error('Le probabilità devono avere una somma positiva.');
+    if (!Number.isFinite(total) || total <= 0) throw new Error('Le probabilità devono avere una somma finita e positiva.');
     // Validate the margin even when an outcome has zero probability.
     if (!Number.isFinite(Number(overround)) || Number(overround) < 0 || Number(overround) > 0.25)
       throw new RangeError('Il margine deve essere compreso tra 0 e 0,25.');
