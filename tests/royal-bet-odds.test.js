@@ -71,3 +71,40 @@ test('rejects non-finite probabilities and invalid margins', () => {
     { selection_key: 'b', selection_label: 'B', probability: Number.MAX_VALUE }
   ]), /somma finita/);
 });
+
+
+test('market draft planner validates scope and removes duplicates without writing', () => {
+  const plannerSandbox = { window: {} };
+  vm.runInNewContext(fs.readFileSync('js/royal-bet-market-planner.js', 'utf8'), plannerSandbox);
+  const planner = plannerSandbox.window.RoyalBetMarketPlanner;
+  const candidate = {
+    market_scope: 'match', calendar_match_id: 22, season_key: null,
+    market_type: 'set_winner', set_number: 1,
+    selection_key: 'pair_a', selection_label: 'Coppia A',
+    theoretical_probability: 0.55, odds: 1.68
+  };
+  const result = planner.planMarketDrafts([candidate, candidate, {
+    ...candidate, selection_key: 'bad', theoretical_probability: 0
+  }], []);
+  assert.equal(result.planned.length, 1);
+  assert.equal(result.planned[0].status, 'draft');
+  assert.equal(result.writePerformed, false);
+  assert.equal(result.skipped.length, 2);
+  const repeated = planner.planMarketDrafts([candidate], [candidate]);
+  assert.equal(repeated.planned.length, 0);
+  assert.match(repeated.skipped[0].reason, /duplicato/);
+});
+
+test('market draft planner enforces match/season scope consistency', () => {
+  const plannerSandbox = { window: {} };
+  vm.runInNewContext(fs.readFileSync('js/royal-bet-market-planner.js', 'utf8'), plannerSandbox);
+  const planner = plannerSandbox.window.RoyalBetMarketPlanner;
+  const invalid = {
+    market_scope: 'match', calendar_match_id: null, season_key: '2026-27',
+    market_type: 'mvp', selection_key: 'p1', selection_label: 'Giocatore 1',
+    theoretical_probability: 0.5, odds: 1.85
+  };
+  const result = planner.planMarketDrafts([invalid], []);
+  assert.equal(result.planned.length, 0);
+  assert.match(result.skipped[0].reason, /ambito partita incoerente/);
+});
