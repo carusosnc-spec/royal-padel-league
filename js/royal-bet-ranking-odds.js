@@ -62,7 +62,11 @@
     const daysLeft = Math.max(0, (new Date(closesAt).getTime() - new Date(now).getTime()) / DAY);
     // Uncertainty shrinks as the deadline approaches. Historical performance is not
     // inferred here; the caller supplies official ranking points and remaining-point bounds.
-    const temperature = Math.max(0.12, 1.5 * Math.sqrt(Math.max(0, remaining)));
+    const scoreSpread = Math.max(1, ...clean.map(x => Math.abs(leader.points - x.points)));
+    // Scale uncertainty to the actual points spread: broad early in the period,
+    // progressively sharper near closing, without making ordinary point gaps
+    // effectively certain on day one.
+    const temperature = Math.max(0.75, scoreSpread * (0.12 + 0.9 * Math.sqrt(Math.max(0, remaining))));
     const weights = clean.map(x => Math.exp(clamp((x.points - leader.points) / temperature, -60, 0)));
     const total = weights.reduce((a, b) => a + b, 0);
     return clean.map((x, i) => {
