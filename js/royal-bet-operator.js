@@ -82,6 +82,62 @@
       }catch(e){box.textContent=e.message||'Analisi dello storico non riuscita.';box.classList.add('rbo-error');}
       finally{historyButton.disabled=false;}
     };
+    const proposalButton=root.querySelector('[data-auto-proposals]');
+    if(proposalButton) proposalButton.onclick=async()=>{
+      const box=root.querySelector('[data-proposal-result]');
+      proposalButton.disabled=true; box.hidden=false; box.textContent='Calcolo proposte in sola lettura…';
+      box.classList.remove('rbo-error');
+      try{
+        const c=sb();
+        const loadScript=src=>new Promise((resolve,reject)=>{
+          const existing=[...document.scripts].find(s=>s.src.endsWith(src));
+          if(existing){if(existing.dataset.loaded==='true'||(src.includes('odds')&&window.RoyalBetOdds)||(src.includes('planner')&&window.RoyalBetMarketPlanner)){resolve();return;}
+            existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',()=>reject(new Error('Caricamento modulo fallito: '+src)),{once:true});return;}
+          const script=document.createElement('script');script.src='./js/'+src;
+          script.onload=()=>{script.dataset.loaded='true';resolve();};
+          script.onerror=()=>reject(new Error('Impossibile caricare '+src));document.head.appendChild(script);
+        });
+        if(!window.RoyalBetOdds) await loadScript('royal-bet-odds.js');
+        if(!window.RoyalBetMarketPlanner) await loadScript('royal-bet-market-planner.js');
+        const {data:matches,error:me}=await c.from('matches').select('id,is_confirmed,approval_status').eq('is_confirmed',true).eq('approval_status','confirmed').limit(1000);
+        if(me)throw me;
+        const ids=(matches||[]).map(m=>m.id);
+        if(!ids.length)throw new Error('Non ci sono partite confermate sufficienti per elaborare proposte.');
+        const {data:sets,error:se}=await c.from('sets').select('match_id,set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b').in('match_id',ids).limit(5000);
+        if(se)throw se;
+        const history=window.RoyalBetOdds.buildConfirmedHistory(matches,sets||[]);
+        if(history.setsUsed<4)throw new Error('Campione insufficiente: servono almeno 4 set validi confermati.');
+        const {data:players,error:pe}=await c.from('players').select('id,name,nickname,active,is_guest').eq('active',true).eq('is_guest',false).limit(500);
+        if(pe)throw pe;
+        const eligible=(players||[]).filter(p=>history.players.has(String(p.id))&&history.players.get(String(p.id)).played>=2);
+        if(eligible.length<2)throw new Error('Servono almeno due giocatori attivi con almeno 2 set validi nello storico.');
+        const weights=eligible.map(p=>{
+          const s=history.players.get(String(p.id));
+          const rate=(s.wins+2)/(s.played+4);
+          const diff=s.gameDiff/Math.max(1,s.played);
+          return Math.exp(Math.max(-1.2,Math.min(1.2,(rate-.5)*2.2+Math.max(-5,Math.min(5,diff))*.06)));
+        });
+        const total=weights.reduce((a,b)=>a+b,0);
+        const probs=weights.map(w=>w/total);
+        const candidates=eligible.map((p,i)=>({
+          market_scope:'season',calendar_match_id:null,season_key:'2026-27',
+          market_type:'regular_season_champion',set_number:null,
+          selection_key:'player_'+p.id,selection_label:p.name+(p.nickname?' "'+p.nickname+'"':''),
+          theoretical_probability:Math.round(probs[i]*10000)/10000,
+          odds:window.RoyalBetOdds.odds(probs[i],0.08),
+          market_metadata:{model:'historical_individual_form_v1',history_sets:history.setsUsed,player_sets:history.players.get(String(p.id)).played,confidence:history.players.get(String(p.id)).played>=8?'medium':'low'}
+        }));
+        const {data:existing,error:ee}=await c.from('rpl_bet_markets').select('market_scope,calendar_match_id,season_key,market_type,set_number,selection_key,selection_label,theoretical_probability,odds').eq('market_scope','season').eq('season_key','2026-27').eq('market_type','regular_season_champion').limit(500);
+        if(ee)throw ee;
+        const planned=window.RoyalBetMarketPlanner.planMarketDrafts(candidates,existing||[]);
+        const proposed=planned.planned;
+        const skipped=planned.skipped.length;
+        box.innerHTML='<strong>Anteprima non pubblicata · Stagione 2026-27</strong><p>Set validi analizzati: '+history.setsUsed+'. Giocatori candidati: '+eligible.length+'. Proposte valide: '+proposed.length+'. Scartate/duplicate: '+skipped+'.</p>'+
+          (proposed.length?'<div>'+proposed.map(m=>'<div class="rbo-row"><div><strong>'+esc(m.selection_label)+'</strong><div class="rbo-muted">Probabilità teorica '+fmt(m.theoretical_probability*100)+'% · Quota indicativa '+fmt(m.odds)+' · '+esc(m.market_metadata.confidence==='low'?'campione ridotto':'campione discreto')+'</div></div><div class="rbo-muted">Bozza · nessuna scrittura</div></div>').join('')+'</div>':'<p>Nessuna nuova proposta: potrebbe esistere già il gruppo di mercato per questa stagione.</p>')+
+          '<p class="rbo-muted">Modello preliminare basato su forma individuale e differenza game; non è una previsione certificata. Il pianificatore ha confermato writePerformed=false. Nessun mercato creato o modificato.</p>';
+      }catch(e){box.textContent=e.message||'Calcolo proposte non riuscito.';box.classList.add('rbo-error');}
+      finally{proposalButton.disabled=false;}
+    };
     root.querySelectorAll('[data-save-odds]').forEach(b=>b.onclick=async()=>{
       const input=root.querySelector('[data-odds="'+b.dataset.saveOdds+'"]');
       const odds=Number(input.value);
@@ -133,8 +189,8 @@
       @media(max-width:650px){.rbo-row{grid-template-columns:1fr}.rbo-actions{align-items:center}}
     </style><section class="rbo"><div class="rbo-card"><div class="rbo-muted">ROYAL BET LAB · AREA RISERVATA</div><h2>Gestione mercati</h2>
       <div data-rbo-alert class="rbo-alert" aria-live="polite">Verifica autorizzazioni operatore…</div>
-      <div class="rbo-actions"><button class="rbo-btn" type="button" data-history-preview>Analizza storico confermato</button></div>
-      <div class="rbo-alert" data-history-result hidden aria-live="polite"></div>
+      <div class="rbo-actions"><button class="rbo-btn" type="button" data-history-preview>Analizza storico confermato</button><button class="rbo-btn" type="button" data-auto-proposals>Genera anteprima quote stagione</button></div>
+      <div class="rbo-alert" data-history-result hidden aria-live="polite"></div><div class="rbo-alert" data-proposal-result hidden aria-live="polite"></div>
       <div class="rbo-muted" data-rbo-count></div><div data-rbo-list>Caricamento mercati…</div>
     </div></section>`;
     try{await refresh(root);}catch(e){notify(root,e.message||'Impossibile caricare la console.',true);}
