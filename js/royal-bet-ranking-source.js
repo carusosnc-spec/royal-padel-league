@@ -103,10 +103,11 @@
           const close=m.closes_at || oddsModel.marketDeadline(period.scope==='month'?'month':'season',period.year,period.month||undefined);
           const rows=standings.map(p=>({selection_key:String(p.player_id),selection_label:p.selection_label,points:p.points}));
           const quoted=oddsModel.calculateRankingOdds(rows,{now:new Date().toISOString(),opensAt:m.opens_at||new Date().toISOString(),closesAt:close});
-          cache.set(cacheKey,new Map(quoted.map(q=>[q.selection_key,q])));
+          cache.set(cacheKey,{standings,quotes:new Map(quoted.map(q=>[q.selection_key,q]))});
         }
-        const person=matchSelection(m,await loadOfficialStandings(sb,period));
-        const q=person && cache.get(cacheKey).get(String(person.player_id));
+        const cached=cache.get(cacheKey);
+        const person=matchSelection(m,cached.standings);
+        const q=person && cached.quotes.get(String(person.player_id));
         if(q) { m.display_odds=q.odds; m.dynamic_quote=true; m.dynamic_quote_blocked=!q.is_bettable; m.dynamic_quote_reason=q.unbettable_reason; }
       } catch(err) {
         m.dynamic_quote_error=true;
