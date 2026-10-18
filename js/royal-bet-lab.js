@@ -82,8 +82,29 @@
     });
   }
 
+  async function ensureRankingModules() {
+    const load = (src) => new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-rbl-src="' + src + '"]');
+      if (existing) {
+        if (existing.dataset.loaded === 'true') return resolve();
+        existing.addEventListener('load', resolve, { once: true });
+        existing.addEventListener('error', reject, { once: true });
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = src;
+      script.dataset.rblSrc = src;
+      script.onload = () => { script.dataset.loaded = 'true'; resolve(); };
+      script.onerror = () => reject(new Error('Impossibile caricare il modulo quote: ' + src));
+      document.head.appendChild(script);
+    });
+    await load('./js/royal-bet-ranking-odds.js');
+    await load('./js/royal-bet-ranking-source.js');
+  }
+
   async function loadDashboard(root) {
     const sb = client();
+    await ensureRankingModules();
     const { player } = await currentPlayer();
     const [walletRes, marketsRes, wagersRes] = await Promise.all([
       sb.from('rpl_bet_wallets').select('balance,locked_credits,updated_at').eq('player_id', player.id).maybeSingle(),
