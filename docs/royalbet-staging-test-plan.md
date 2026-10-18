@@ -50,3 +50,12 @@ These checks must run against a disposable/staging Supabase project with seeded 
 - [ ] UI works on iPhone Safari in portrait and landscape.
 - [ ] Wallet, active markets, placed wagers and settled history refresh after each successful action.
 - [ ] Clear Italian error messages are shown for rejected wagers and expired sessions.
+
+### Prediction-table policy (after proposed migration)
+- [ ] Anonymous user cannot read, insert, update or delete prediction rows.
+- [ ] Official active player involved in a prediction's four-player match can read that row.
+- [ ] Official active player not involved in that match cannot read that row.
+- [ ] Guest, inactive or unlinked user cannot read prediction rows unless explicitly authorized as an operator.
+- [ ] Operator can read prediction rows for audit purposes.
+- [ ] Read checks do not fail because of missing SELECT privileges, recursive RLS, or inaccessible player_accounts/players/operators policies.
+- [ ] Browser clients cannot insert/update/delete prediction rows directly; trusted server-side generation is tested separately.
