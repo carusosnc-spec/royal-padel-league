@@ -83,16 +83,20 @@ test('market draft planner validates scope and removes duplicates without writin
     selection_key: 'pair_a', selection_label: 'Coppia A',
     theoretical_probability: 0.55, odds: 1.68
   };
-  const result = planner.planMarketDrafts([candidate, candidate, {
+  const other = { ...candidate, selection_key: 'pair_b', selection_label: 'Coppia B', theoretical_probability: 0.45, odds: 2.05 };
+  const result = planner.planMarketDrafts([candidate, other, candidate, {
     ...candidate, selection_key: 'bad', theoretical_probability: 0
   }], []);
-  assert.equal(result.planned.length, 1);
+  assert.equal(result.planned.length, 2);
   assert.equal(result.planned[0].status, 'draft');
   assert.equal(result.writePerformed, false);
   assert.equal(result.skipped.length, 2);
-  const repeated = planner.planMarketDrafts([candidate], [candidate]);
+  const repeated = planner.planMarketDrafts([candidate, other], [candidate, other]);
   assert.equal(repeated.planned.length, 0);
   assert.match(repeated.skipped[0].reason, /duplicato/);
+  const incomplete = planner.planMarketDrafts([candidate], []);
+  assert.equal(incomplete.planned.length, 0);
+  assert.match(incomplete.skipped[0].reason, /gruppo incompleto/);
 });
 
 test('market draft planner enforces match/season scope consistency', () => {
