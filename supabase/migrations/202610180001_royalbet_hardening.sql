@@ -3,17 +3,34 @@
 -- wagers, odds, or existing market rows.
 begin;
 
--- Predictions: authenticated read-only in the browser. No anon reads/writes and
--- no direct browser inserts/updates; trusted server-side generation is required.
+-- Predictions: no anon access and no direct browser inserts/updates. Reads are
+-- limited to operators and official active players participating in that match.
 drop policy if exists rpl_bet_predictions_insert on public.rpl_bet_predictions;
 drop policy if exists rpl_bet_predictions_update_future on public.rpl_bet_predictions;
 drop policy if exists rpl_bet_predictions_read on public.rpl_bet_predictions;
 
-create policy rpl_bet_predictions_read_authenticated
+create policy rpl_bet_predictions_read_authorized
   on public.rpl_bet_predictions
   for select
   to authenticated
-  using (true);
+  using (
+    exists (
+      select 1 from public.operators o
+      where o.user_id = (select auth.uid())
+    )
+    or exists (
+      select 1
+      from public.player_accounts pa
+      join public.players p on p.id = pa.player_id
+      where pa.user_id = (select auth.uid())
+        and p.active = true
+        and coalesce(p.is_guest, false) = false
+        and p.id in (
+          pair_a_player_1, pair_a_player_2,
+          pair_b_player_1, pair_b_player_2
+        )
+    )
+  );
 
 revoke all privileges on table public.rpl_bet_predictions from anon, authenticated;
 grant select on table public.rpl_bet_predictions to authenticated;
