@@ -133,3 +133,31 @@ test('historical odds only use sets linked to explicitly confirmed matches', () 
   assert.equal(history.setsUsed, 1);
   assert.equal(history.players.get('1').played, 1);
 });
+
+
+test('Royal Bet UI fails closed and routes any future wager only through the protected RPC', () => {
+  const ui = fs.readFileSync('js/royal-bet-lab.js', 'utf8');
+  assert.match(ui, /const WAGERING_ENABLED = false;/);
+  assert.match(ui, /if \(!WAGERING_ENABLED\)/);
+  assert.match(ui, /sb\.rpc\(RPC\.placeBet/);
+  assert.doesNotMatch(ui, /from\(['"]rpl_bet_wagers['"]\)\s*\.insert/);
+  assert.doesNotMatch(ui, /from\(['"]rpl_bet_wallets['"]\)\s*\.update/);
+});
+
+test('hardening migration keeps market mutations behind operator-checked RPCs', () => {
+  const migration = fs.readFileSync('supabase/migrations/202610180001_royalbet_hardening.sql', 'utf8');
+  assert.match(migration, /revoke insert, update, delete, truncate, references, trigger\s+on table public\.rpl_bet_markets from anon, authenticated/i);
+  for (const fn of [
+    'rpl_place_bet',
+    'rpl_settle_bet_market',
+    'rpl_void_bet_market',
+    'rpl_admin_cancel_bet_wager',
+    'rpl_admin_create_bet_market_group',
+    'rpl_admin_set_bet_market_status',
+    'rpl_admin_update_bet_market_odds'
+  ]) {
+    assert.match(migration, new RegExp('revoke execute on function public\\.' + fn + '\\('));
+    assert.match(migration, new RegExp('grant execute on function public\\.' + fn + '\\('));
+  }
+  assert.match(migration, /NOT applied to production/);
+});
