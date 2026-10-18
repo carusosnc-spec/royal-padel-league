@@ -50,8 +50,8 @@ Deno.serve(async (req) => {
   if (!operator && !officialPlayer) return json({ error: "Solo giocatori ufficiali attivi o operatori" }, 403);
 
   const now = new Date();
-  const seasonKey = now.getMonth() >= 8 ? `${now.getFullYear()}-${now.getFullYear()+1}` : `${now.getFullYear()-1}-${now.getFullYear()}`;
-  const startYear = Number(seasonKey.slice(0,4));
+  const startYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+  const seasonKey = `${startYear}-${String(startYear + 1).slice(-2)}`;
   const opensAt = new Date(`${startYear}-09-15T00:00:00+02:00`);
   const closesAt = new Date(`${startYear+1}-03-31T23:59:59.999+02:00`);
   const { data: markets, error: marketError } = await db.from("rpl_bet_markets")
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     .select("id,played_at,is_confirmed,approval_status").gte("played_at", `${startYear}-09-15T00:00:00+02:00`)
     .lte("played_at", `${startYear+1}-03-31T23:59:59.999+02:00`).limit(5000);
   if (matchesError) return json({ error: "Lettura partite non riuscita" }, 500);
-  const validMatches = (matches || []).filter(m => m.is_confirmed === true || m.approval_status === "approved");
+  const validMatches = (matches || []).filter(m => m.is_confirmed === true || m.approval_status === "approved" || m.approval_status === "confirmed");
   const matchIds = validMatches.map(m => m.id);
   const scores = new Map(players.map(p => [String(p.id), { id: p.id, name: p.name, points: 0, sets: 0, games: 0, setPoints: 0, mvp: 0, unbeaten: 0 }]));
   if (matchIds.length) {
