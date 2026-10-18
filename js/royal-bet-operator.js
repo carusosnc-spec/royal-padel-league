@@ -42,7 +42,7 @@
           <button class="rbo-btn" data-save-odds="${m.id}">Salva quota</button>
           ${['draft','closed'].includes(m.status)?'<button class="rbo-btn" data-status="'+m.id+'" data-next="open">Apri</button>':''}
           ${m.status==='open'?'<button class="rbo-btn" data-status="'+m.id+'" data-next="closed">Chiudi</button>':''}
-          ${['open','closed'].includes(m.status)?'<button class="rbo-btn" data-settle="'+m.id+'" data-selection="'+esc(m.selection_key)+'">Liquidare con questo esito</button><button class="rbo-btn" data-void="'+m.id+'">Annulla / rimborsa</button>':''}
+          ${['open','closed'].includes(m.status)?'<span class="rbo-muted">Liquidazione sospesa: selezionare un esito unico per l’intero gruppo.</span><button class="rbo-btn" data-void="'+m.id+'">Annulla / rimborsa</button>':''}
         </div>
       </article>`).join(''):'<div class="rbo-empty">Nessun mercato trovato.</div>';
     root.querySelector('[data-rbo-count]').textContent=rows.length+' mercati caricati';
