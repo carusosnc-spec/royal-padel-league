@@ -27,3 +27,16 @@ jobs:
           node --check js/royal-bet-market-planner.js
       - name: Run odds model tests
         run: node --test tests/royal-bet-odds.test.js
+
+      - name: Package Royal Bet Lab branch snapshot
+        if: success()
+        run: |
+          git archive --format=zip --prefix=RPL_ROYAL_BET_LAB/ HEAD -o RPL_ROYAL_BET_LAB.zip
+      - name: Upload branch snapshot
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: RPL_ROYAL_BET_LAB
+          path: RPL_ROYAL_BET_LAB.zip
+          if-no-files-found: error
+          retention-days: 14
