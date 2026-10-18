@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>Royal Bet — verifica mercati reali</title>
+<style>
+:root{color-scheme:dark;--bg:#07121e;--panel:#102235;--line:#31475b;--gold:#ffd86a;--text:#eaf1f7;--muted:#a9bac9;--ok:#9de3bb;--bad:#ffb4a9}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#17314a 0,#07121e 60%);color:var(--text);font:16px/1.5 system-ui,-apple-system,sans-serif}main{max-width:1000px;margin:auto;padding:22px 14px 48px}.brand{font-size:12px;letter-spacing:.15em;color:var(--gold);font-weight:800}h1{font-size:clamp(26px,5vw,40px);line-height:1.1}.panel,.notice{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}.notice{border-color:#80682c}.muted{color:var(--muted)}button{border:0;border-radius:10px;padding:12px 16px;background:var(--gold);color:#18202a;font-weight:800;font-size:15px;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.stat{background:#091927;border:1px solid var(--line);border-radius:12px;padding:12px}.stat b{display:block;font-size:25px;color:var(--gold)}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted)}.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}.pill{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:3px 8px;font-size:12px}.foot{font-size:13px;color:var(--muted);margin-top:22px}a{color:var(--gold)}@media(max-width:520px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.panel,.notice{padding:13px}}
+</style></head><body><main><div class="brand">ROYAL PADEL LEAGUE</div><h1>Royal Bet · Mercati reali</h1><p class="muted">Versione lettura RPC · 2</p><span class="pill">SOLA LETTURA · NESSUNA PUNTATA</span>
+<section class="notice"><b>Verifica controllata.</b><p class="muted">Questa versione legge i mercati tramite una funzione Supabase dedicata in sola lettura. Non interroga direttamente la tabella protetta e non consente puntate o modifiche.</p></section>
+<section class="panel"><button id="refresh">Leggi mercati dal database</button><p id="status" class="muted" aria-live="polite">Premi il pulsante per avviare la lettura in sola lettura.</p><div id="summary"></div></section>
+<section class="panel"><h2>Mercati trovati</h2><div id="table" class="scroll"><p class="muted">Nessuna lettura ancora eseguita.</p></div></section>
+<div class="foot">Royal Bet Lab · Accesso in sola lettura · <a href="./royal-bet.html">Torna al test simulato</a> · <a href="./index.html">Royal Padel League</a></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+const URL='https://vanbadzkxvextdvnqwtr.supabase.co';
+const KEY='sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs';
+const status=document.getElementById('status'),summary=document.getElementById('summary'),table=document.getElementById('table');
+const esc=v=>String(v==null?'—':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function showError(msg){status.className='bad';status.textContent='Lettura RPC non riuscita: '+msg+'. Non sono state eseguite scritture.';summary.innerHTML='';table.innerHTML='<p class="muted">I dati non sono stati mostrati. Non vengono aggirate le policy di sicurezza.</p>';}
+async function load(){
+status.className='muted';status.textContent='Collegamento a Supabase e lettura dei mercati…';summary.innerHTML='';table.innerHTML='';
+try{
+if(!window.supabase?.createClient)throw new Error('libreria Supabase non caricata');
+const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+const {data:payload,error}=await sb.rpc('rpl_public_market_snapshot');
+if(error)throw error;
+const data=payload?.markets;
+if(!Array.isArray(data))throw new Error('risposta del servizio di sola lettura non valida');
+const opened=data.filter(x=>x.status==='open').length,closed=data.filter(x=>x.status==='closed').length;
+status.className='ok';status.textContent='Lettura completata. Nessuna modifica al database.';
+summary.innerHTML='<div class="grid"><div class="stat"><b>'+data.length+'</b>mercati letti</div><div class="stat"><b>'+opened+'</b>aperti</div><div class="stat"><b>'+closed+'</b>chiusi</div></div><p class="muted">Limite visualizzazione: 300 righe. Conteggi riferiti alle righe effettivamente visibili alla chiave pubblica.</p>';
+if(!data.length){table.innerHTML='<p class="muted">La lettura è riuscita ma nessun mercato è visibile con i permessi pubblici attuali.</p>';return;}
+table.innerHTML='<table><thead><tr><th>ID</th><th>Stato</th><th>Ambito</th><th>Tipo</th><th>Selezione</th><th>Prob.</th><th>Quota</th><th>Chiusura</th></tr></thead><tbody>'+data.map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.status)+'</td><td>'+esc(x.market_scope==='match'?'Partita '+x.calendar_match_id:'Stagione '+x.season_key)+'</td><td>'+esc(x.market_type)+(x.set_number?' · set '+esc(x.set_number):'')+'</td><td>'+esc(x.selection_label||x.selection_key)+'</td><td>'+esc(x.theoretical_probability)+'</td><td>'+Number(x.odds).toFixed(2)+'</td><td>'+esc(x.closes_at?new Date(x.closes_at).toLocaleString('it-IT'):'—')+'</td></tr>').join('')+'</tbody></table>';
+}catch(e){showError(e?.message||String(e));}
+}
+document.getElementById('refresh').addEventListener('click',load);
+})();
+</script></body></html>
