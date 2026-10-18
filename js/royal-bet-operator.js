@@ -76,7 +76,7 @@
           .in('match_id',ids).limit(5000);
         if(setError)throw setError;
         const history=window.RoyalBetOdds.buildConfirmedHistory(matches,sets||[]);
-        box.textContent='Storico in sola lettura: '+history.confirmedMatchesUsed+' partite confermate trovate; '+history.setsUsed+' set validi utilizzati su '+history.eligibleSetRows+' set collegati. Nessun mercato creato e nessun dato modificato.';
+        const reliablePlayers=[...history.players.values()].filter(s=>s.played>=3).length;\n        const reliablePairs=[...history.pairs.values()].filter(s=>s.played>=2).length;\n        box.textContent='Storico in sola lettura: '+history.confirmedMatchesUsed+' partite confermate; '+history.setsUsed+' set validi su '+history.eligibleSetRows+' set collegati; '+history.players.size+' giocatori identificati ('+reliablePlayers+' con almeno 3 set); '+history.pairs.size+' coppie osservate ('+reliablePairs+' con almeno 2 set). I campioni ridotti saranno segnalati come poco affidabili nella futura proposta quote. Nessun mercato creato e nessun dato modificato.';
       }catch(e){box.textContent=e.message||'Analisi dello storico non riuscita.';box.classList.add('rbo-error');}
       finally{historyButton.disabled=false;}
     };
