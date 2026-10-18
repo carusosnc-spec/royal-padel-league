@@ -67,8 +67,8 @@
         ['open','closed'].includes(m.status));
       const outcomes=[...new Map(sameGroup.map(m=>[m.selection_key,m])).values()];
       if(outcomes.length<2){notify(root,'Liquidazione bloccata: non sono visibili almeno due esiti del gruppo. Aggiorna i mercati e verifica il gruppo prima di procedere.',true);return;}
-      const choices=outcomes.map(m=>m.selection_key+' — '+m.selection_label).join('\\n');
-      const winning=window.prompt('Esiti disponibili per questo gruppo:\\n'+choices+'\\n\\nInserisci la chiave esatta dell’esito vincente:',selected.selection_key);
+      const choices=outcomes.map(m=>m.selection_key+' — '+m.selection_label).join('\n');
+      const winning=window.prompt('Esiti disponibili per questo gruppo:\n'+choices+'\n\nInserisci la chiave esatta dell’esito vincente:',selected.selection_key);
       if(winning===null||!outcomes.some(m=>m.selection_key===winning.trim())){if(winning!==null)notify(root,'Chiave non valida: nessuna liquidazione eseguita.',true);return;}
       const label=outcomes.find(m=>m.selection_key===winning.trim()).selection_label;
       if(!window.confirm('Confermi la liquidazione del gruppo "'+selected.market_type+'" con esito "'+label+'"? Le puntate del gruppo saranno liquidate.'))return;
