@@ -77,7 +77,10 @@
     const [walletRes, marketsRes, wagersRes] = await Promise.all([
       sb.from('rpl_bet_wallets').select('balance,locked_credits,updated_at').eq('player_id', player.id).maybeSingle(),
       sb.from('rpl_bet_markets').select('id,calendar_match_id,market_type,set_number,selection_key,selection_label,odds,status,opens_at,closes_at,market_scope,season_key,market_metadata')
-        .eq('status','open').order('closes_at',{ascending:true,nullsFirst:false}).limit(100),
+        .eq('status','open')
+        .or('opens_at.is.null,opens_at.lte.' + new Date().toISOString())
+        .or('closes_at.is.null,closes_at.gt.' + new Date().toISOString())
+        .order('closes_at',{ascending:true,nullsFirst:false}).limit(100),
       sb.from('rpl_bet_wagers').select('id,market_id,selection_key,stake,odds_locked,potential_payout,status,settled_payout,placed_at')
         .eq('player_id',player.id).order('placed_at',{ascending:false}).limit(25)
     ]);
