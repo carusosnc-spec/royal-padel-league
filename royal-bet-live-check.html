@@ -24,11 +24,15 @@ const {data:payload,error}=await sb.rpc('rpl_public_market_snapshot');
 if(error)throw error;
 const data=payload?.markets;
 if(!Array.isArray(data))throw new Error('risposta del servizio di sola lettura non valida');
+const now=Date.now();
 const opened=data.filter(x=>x.status==='open').length,closed=data.filter(x=>x.status==='closed').length;
-status.className='ok';status.textContent='Lettura completata. Nessuna modifica al database.';
-summary.innerHTML='<div class="grid"><div class="stat"><b>'+data.length+'</b>mercati letti</div><div class="stat"><b>'+opened+'</b>aperti</div><div class="stat"><b>'+closed+'</b>chiusi</div></div><p class="muted">Limite visualizzazione: 300 righe. Conteggi riferiti alle righe effettivamente visibili alla chiave pubblica.</p>';
+const expiredOpen=data.filter(x=>x.status==='open'&&x.closes_at&&new Date(x.closes_at).getTime()<now).length;
+const missingTimeOpen=data.filter(x=>x.status==='open'&&(!x.opens_at||!x.closes_at)).length;
+const withinWindow=data.filter(x=>x.status==='open'&&x.opens_at&&x.closes_at&&new Date(x.opens_at).getTime()<=now&&new Date(x.closes_at).getTime()>now).length;
+status.className='ok';status.textContent='Lettura completata. Nessuna modifica al database. Attenzione: stato “aperto” non significa automaticamente puntabile.';
+summary.innerHTML='<div class="grid"><div class="stat"><b>'+data.length+'</b>mercati letti</div><div class="stat"><b>'+opened+'</b>aperti nel DB</div><div class="stat"><b>'+closed+'</b>chiusi nel DB</div><div class="stat"><b>'+withinWindow+'</b>nella finestra oraria</div><div class="stat"><b>'+expiredOpen+'</b>aperti ma scaduti</div><div class="stat"><b>'+missingTimeOpen+'</b>aperti senza orari completi</div></div><p class="muted">La finestra oraria è solo un controllo informativo: non abilita puntate. Limite visualizzazione: 300 righe.</p>';
 if(!data.length){table.innerHTML='<p class="muted">La lettura è riuscita ma nessun mercato è visibile con i permessi pubblici attuali.</p>';return;}
-table.innerHTML='<table><thead><tr><th>ID</th><th>Stato</th><th>Ambito</th><th>Tipo</th><th>Selezione</th><th>Prob.</th><th>Quota</th><th>Chiusura</th></tr></thead><tbody>'+data.map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.status)+'</td><td>'+esc(x.market_scope==='match'?'Partita '+x.calendar_match_id:'Stagione '+x.season_key)+'</td><td>'+esc(x.market_type)+(x.set_number?' · set '+esc(x.set_number):'')+'</td><td>'+esc(x.selection_label||x.selection_key)+'</td><td>'+esc(x.theoretical_probability)+'</td><td>'+Number(x.odds).toFixed(2)+'</td><td>'+esc(x.closes_at?new Date(x.closes_at).toLocaleString('it-IT'):'—')+'</td></tr>').join('')+'</tbody></table>';
+table.innerHTML='<table><thead><tr><th>ID</th><th>Stato</th><th>Ambito</th><th>Tipo</th><th>Selezione</th><th>Prob.</th><th>Quota</th><th>Chiusura</th></tr></thead><tbody>'+data.map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.status==='open'&&x.closes_at&&new Date(x.closes_at).getTime()<Date.now()?'APERTО · SCADUTO':x.status==='open'&&(!x.opens_at||!x.closes_at)?'APERTO · ORARI MANCANTI':x.status)+'</td><td>'+esc(x.market_scope==='match'?'Partita '+x.calendar_match_id:'Stagione '+x.season_key)+'</td><td>'+esc(x.market_type)+(x.set_number?' · set '+esc(x.set_number):'')+'</td><td>'+esc(x.selection_label||x.selection_key)+'</td><td>'+esc(x.theoretical_probability)+'</td><td>'+Number(x.odds).toFixed(2)+'</td><td>'+esc(x.closes_at?new Date(x.closes_at).toLocaleString('it-IT'):'—')+'</td></tr>').join('')+'</tbody></table>';
 }catch(e){showError(e?.message||String(e));}
 }
 document.getElementById('refresh').addEventListener('click',load);
