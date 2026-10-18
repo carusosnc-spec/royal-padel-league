@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     if (!row) continue;
     const index = rows.findIndex(p => String(p.id) === String(row.id));
     const q = quotes[index];
-    const patch: Record<string, unknown> = { updated_at: now.toISOString(), theoretical_probability: q.probability, odds: q.odds };
+    const patch: Record<string, unknown> = { updated_at: now.toISOString(), quote_calculated_at: now.toISOString(), theoretical_probability: q.probability, odds: q.odds };
     if (q.expired) patch.status = "closed";
     if (!q.open && !q.expired) continue;
     const { error } = await db.from("rpl_bet_markets").update(patch).eq("id",market.id).eq("status","open");
