@@ -170,3 +170,12 @@ test('wager UI reuses idempotency key for an unchanged retry intent', () => {
   assert.match(ui, /delete btn\.dataset\.idempotencyKey/);
   assert.match(ui, /delete btn\.dataset\.betIntent/);
 });
+
+test('wager idempotency survives refresh through session storage', () => {
+  const ui = fs.readFileSync('js/royal-bet-lab.js', 'utf8');
+  assert.match(ui, /royalbet:idempotency:/);
+  assert.match(ui, /window\.sessionStorage\.getItem\(storageKey\)/);
+  assert.match(ui, /window\.sessionStorage\.setItem\(storageKey, btn\.dataset\.idempotencyKey\)/);
+  assert.match(ui, /window\.sessionStorage\.removeItem\(storageKey\)/);
+  assert.match(ui, /catch \(_\) \{ \/\* dataset remains a same-page fallback \*\//);
+});
