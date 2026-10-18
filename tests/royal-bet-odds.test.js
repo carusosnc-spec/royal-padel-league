@@ -40,6 +40,10 @@ test('rejects invalid pair inputs, repeated players, and empty probability mass'
   assert.throws(() => odds.estimatePairWin(history, [1], [2, 3]));
   assert.throws(() => odds.estimatePairWin(history, [1, 2], [2, 3]));
   assert.throws(() => odds.marketSelections([{ selection_key: 'x', selection_label: 'X', probability: 0 }]));
+  assert.throws(() => odds.marketSelections([
+    { selection_key: 'a', selection_label: 'A', probability: 1 },
+    { selection_key: 'b', selection_label: 'B', probability: 0 }
+  ]), /maggiore di zero/);
 });
 
 test('only valid padel set scores and distinct players enter historical data', () => {
@@ -62,4 +66,8 @@ test('rejects non-finite probabilities and invalid margins', () => {
   assert.throws(() => odds.marketSelections([
     { selection_key: 'a', selection_label: 'A', probability: NaN }
   ]));
+  assert.throws(() => odds.marketSelections([
+    { selection_key: 'a', selection_label: 'A', probability: Number.MAX_VALUE },
+    { selection_key: 'b', selection_label: 'B', probability: Number.MAX_VALUE }
+  ]), /somma finita/);
 });
