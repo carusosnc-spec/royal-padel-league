@@ -52,8 +52,20 @@
       historyButton.disabled=true; box.hidden=false; box.textContent='Lettura dello storico confermato…';
       try{
         const c=sb();
+        if(!window.RoyalBetOdds || typeof window.RoyalBetOdds.buildConfirmedHistory!=='function'){
+          // index.html currently loads the player and operator modules only.
+          // Load the read-only odds helper on demand so the history preview works
+          // without requiring a risky edit to the large production HTML file.
+          await new Promise((resolve,reject)=>{
+            const script=document.createElement('script');
+            script.src='./js/royal-bet-odds.js';
+            script.onload=resolve;
+            script.onerror=()=>reject(new Error('Impossibile caricare il modulo storico quote.'));
+            document.head.appendChild(script);
+          });
+        }
         if(!window.RoyalBetOdds || typeof window.RoyalBetOdds.buildConfirmedHistory!=='function')
-          throw new Error('Modulo storico quote non caricato.');
+          throw new Error('Modulo storico quote non disponibile dopo il caricamento.');
         const {data:matches,error:matchError}=await c.from('matches')
           .select('id,is_confirmed,approval_status').eq('is_confirmed',true).eq('approval_status','confirmed').limit(1000);
         if(matchError)throw matchError;
