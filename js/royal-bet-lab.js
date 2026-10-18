@@ -106,6 +106,14 @@
     const sb = client();
     await ensureRankingModules();
     const { player } = await currentPlayer();
+    // Server-side refresh is best-effort until the Edge Function is deployed.
+    // The wager RPC remains the authority for wallet/market validation.
+    try {
+      const refresh = await sb.functions.invoke('royal-bet-refresh-quotes', { body: {} });
+      if (refresh.error) console.warn('Royal Bet quote refresh unavailable; using current saved quotes.', refresh.error);
+    } catch (refreshError) {
+      console.warn('Royal Bet quote refresh unavailable; using current saved quotes.', refreshError);
+    }
     const [walletRes, marketsRes, wagersRes] = await Promise.all([
       sb.from('rpl_bet_wallets').select('balance,locked_credits,updated_at').eq('player_id', player.id).maybeSingle(),
       sb.from('rpl_bet_markets').select('id,calendar_match_id,market_type,set_number,selection_key,selection_label,odds,status,opens_at,closes_at,market_scope,season_key,market_metadata')
