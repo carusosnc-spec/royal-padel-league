@@ -18,10 +18,18 @@
   }
 
   function marketDeadline(scope, year, month) {
-    if (scope === 'season') return new Date(year, 2, 31, 23, 59, 59, 999).toISOString();
-    if (scope === 'month' && Number.isInteger(month) && month >= 1 && month <= 12)
-      return new Date(year, month, 0, 23, 59, 59, 999).toISOString();
-    throw new TypeError('Specificare scope season oppure month con anno e mese validi.');
+    if (!Number.isInteger(year) || year < 2020 || year > 2100)
+      throw new TypeError('Anno non valido.');
+    let m, day;
+    if (scope === 'season') { m = 3; day = 31; }
+    else if (scope === 'month' && Number.isInteger(month) && month >= 1 && month <= 12) {
+      m = month;
+      day = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    } else throw new TypeError('Specificare scope season oppure month con anno e mese validi.');
+    // Italy local end-of-day: UTC+1 in winter; UTC+2 during daylight-saving months.
+    // October's final day is after the EU daylight-saving switch.
+    const offset = (m >= 4 && m <= 9) || m === 3 ? '+02:00' : '+01:00';
+    return new Date(year+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0')+'T23:59:59.999'+offset).toISOString();
   }
 
   // standings: [{selection_key, selection_label, points, max_points_remaining?}]
