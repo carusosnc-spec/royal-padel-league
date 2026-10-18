@@ -7,6 +7,9 @@
   'use strict';
 
   const RPC = { placeBet: 'rpl_place_bet' };
+  // Fail-closed safety switch: keep real-credit wagering disabled until the live
+  // end-to-end checks are explicitly approved. Read-only dashboard remains usable.
+  const WAGERING_ENABLED = false;
   const MARKET_NAMES = {
     set_winner: 'Vincitore set',
     set_exact_score: 'Risultato esatto',
@@ -101,7 +104,7 @@
           <button data-tab="markets" aria-selected="true">Mercati aperti</button>
           <button data-tab="wagers" aria-selected="false">Le mie puntate</button>
         </div>
-        <div id="rbl-alert" aria-live="polite"></div>
+        <div id="rbl-alert" aria-live="polite">${WAGERING_ENABLED ? "" : '<div class="rbl-alert">Modalità verifica: consultazione attiva, puntate temporaneamente disabilitate.</div>'}</div>
         <div id="rbl-markets" class="rbl-card">
           ${markets.length ? markets.map(m => `
             <article class="rbl-market">
@@ -111,7 +114,7 @@
                 <div class="rbl-muted">${m.market_scope === 'season' ? 'Mercato stagione' : (m.calendar_match_id ? 'Partita #'+m.calendar_match_id : 'Mercato generale')}${m.set_number ? ' · Set '+m.set_number : ''}</div>
                 <label class="rbl-muted" for="rbl-stake-${m.id}">Puntata (crediti)</label><br>
                 <input class="rbl-input" id="rbl-stake-${m.id}" type="number" min="1" step="1" inputmode="numeric" value="10">
-                <button class="rbl-btn" data-bet="${m.id}" data-selection="${esc(m.selection_key)}">Punta</button>
+                <button class="rbl-btn" data-bet="${m.id}" data-selection="${esc(m.selection_key)}" ${WAGERING_ENABLED ? "" : "disabled"}>${WAGERING_ENABLED ? "Punta" : "Prove non attive"}</button>
               </div>
               <div class="rbl-odd"><span class="rbl-muted">Quota</span><strong>${fmt(m.odds)}</strong></div>
             </article>`).join('') : '<div class="rbl-empty">Non ci sono mercati aperti al momento.</div>'}
@@ -133,6 +136,11 @@
       root.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b === btn)));
     }));
     root.querySelectorAll('[data-bet]').forEach(btn => btn.addEventListener('click', async () => {
+      if (!WAGERING_ENABLED) {
+        const alert = root.querySelector('#rbl-alert');
+        alert.innerHTML = '<div class="rbl-alert rbl-error">Le puntate sono disabilitate durante la verifica del sistema.</div>';
+        return;
+      }
       const marketId = Number(btn.dataset.bet);
       const input = root.querySelector('#rbl-stake-' + marketId);
       const stake = Number(input && input.value);
