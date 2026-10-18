@@ -31,12 +31,12 @@ jobs:
       - name: Package Royal Bet Lab branch snapshot
         if: success()
         run: |
-          git archive --format=zip --prefix=RPL_ROYAL_BET_LAB/ HEAD -o RPL_ROYAL_BET_LAB_v9.1.79.zip
+          git archive --format=zip --prefix=RPL_ROYAL_BET_LAB/ HEAD -o RPL_ROYAL_BET_LAB_v9.1.80.zip
       - name: Upload branch snapshot
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: RPL_ROYAL_BET_LAB_v9.1.79
-          path: RPL_ROYAL_BET_LAB_v9.1.79.zip
+          name: RPL_ROYAL_BET_LAB_v9.1.80
+          path: RPL_ROYAL_BET_LAB_v9.1.80.zip
           if-no-files-found: error
           retention-days: 14
