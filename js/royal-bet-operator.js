@@ -46,6 +46,28 @@
         </div>
       </article>`).join(''):'<div class="rbo-empty">Nessun mercato trovato.</div>';
     root.querySelector('[data-rbo-count]').textContent=rows.length+' mercati caricati';
+    const historyButton=root.querySelector('[data-history-preview]');
+    if(historyButton) historyButton.onclick=async()=>{
+      const box=root.querySelector('[data-history-result]');
+      historyButton.disabled=true; box.hidden=false; box.textContent='Lettura dello storico confermato…';
+      try{
+        const c=sb();
+        if(!window.RoyalBetOdds || typeof window.RoyalBetOdds.buildConfirmedHistory!=='function')
+          throw new Error('Modulo storico quote non caricato.');
+        const {data:matches,error:matchError}=await c.from('matches')
+          .select('id,is_confirmed,approval_status').eq('is_confirmed',true).eq('approval_status','confirmed').limit(1000);
+        if(matchError)throw matchError;
+        const ids=(matches||[]).map(m=>m.id);
+        if(!ids.length){box.textContent='Nessuna partita confermata disponibile per il calcolo.';return;}
+        const {data:sets,error:setError}=await c.from('sets')
+          .select('match_id,set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b')
+          .in('match_id',ids).limit(5000);
+        if(setError)throw setError;
+        const history=window.RoyalBetOdds.buildConfirmedHistory(matches,sets||[]);
+        box.textContent='Storico in sola lettura: '+history.confirmedMatchesUsed+' partite confermate trovate; '+history.setsUsed+' set validi utilizzati su '+history.eligibleSetRows+' set collegati. Nessun mercato creato e nessun dato modificato.';
+      }catch(e){box.textContent=e.message||'Analisi dello storico non riuscita.';box.classList.add('rbo-error');}
+      finally{historyButton.disabled=false;}
+    };
     root.querySelectorAll('[data-save-odds]').forEach(b=>b.onclick=async()=>{
       const input=root.querySelector('[data-odds="'+b.dataset.saveOdds+'"]');
       const odds=Number(input.value);
@@ -97,6 +119,8 @@
       @media(max-width:650px){.rbo-row{grid-template-columns:1fr}.rbo-actions{align-items:center}}
     </style><section class="rbo"><div class="rbo-card"><div class="rbo-muted">ROYAL BET LAB · AREA RISERVATA</div><h2>Gestione mercati</h2>
       <div data-rbo-alert class="rbo-alert" aria-live="polite">Verifica autorizzazioni operatore…</div>
+      <div class="rbo-actions"><button class="rbo-btn" type="button" data-history-preview>Analizza storico confermato</button></div>
+      <div class="rbo-alert" data-history-result hidden aria-live="polite"></div>
       <div class="rbo-muted" data-rbo-count></div><div data-rbo-list>Caricamento mercati…</div>
     </div></section>`;
     try{await refresh(root);}catch(e){notify(root,e.message||'Impossibile caricare la console.',true);}
