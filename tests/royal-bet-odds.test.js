@@ -112,3 +112,24 @@ test('market draft planner enforces match/season scope consistency', () => {
   assert.equal(result.planned.length, 0);
   assert.match(result.skipped[0].reason, /ambito partita incoerente/);
 });
+
+
+test('historical odds only use sets linked to explicitly confirmed matches', () => {
+  const matches = [
+    { id: 10, is_confirmed: true, approval_status: 'confirmed' },
+    { id: 11, is_confirmed: false, approval_status: 'pending' },
+    { id: 12, is_confirmed: true, approval_status: 'pending' }
+  ];
+  const sets = [
+    set({ match_id: 10 }),
+    set({ match_id: 11, games_a: 0, games_b: 6 }),
+    set({ match_id: 12, games_a: 6, games_b: 1 }),
+    set({ match_id: 999, games_a: 6, games_b: 2 }),
+    set({ match_id: 10, games_a: 3, games_b: 4 })
+  ];
+  const history = odds.buildConfirmedHistory(matches, sets);
+  assert.equal(history.confirmedMatchesUsed, 1);
+  assert.equal(history.eligibleSetRows, 2);
+  assert.equal(history.setsUsed, 1);
+  assert.equal(history.players.get('1').played, 1);
+});
