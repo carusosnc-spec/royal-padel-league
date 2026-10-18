@@ -257,3 +257,38 @@ test('ranking cannot be declared mathematically decided when any remaining-point
   assert.ok(result.every(x => x.is_bettable === true));
   assert.ok(result.every(x => x.odds > 0));
 });
+
+
+test('official ranking adapter resolves monthly markets stored in season scope metadata', () => {
+  const vm = require('node:vm');
+  const code = fs.readFileSync('js/royal-bet-ranking-source.js', 'utf8');
+  const sandbox = { window: {} };
+  vm.runInNewContext(code, sandbox);
+  const source = sandbox.window.RoyalBetRankingSource;
+  const period = source.resolvePeriod({
+    market_scope: 'season',
+    season_key: '2026-2027',
+    market_metadata: { period_scope: 'month', year: 2026, month: 10 }
+  }, new Date('2026-10-18T12:00:00+02:00'));
+  assert.equal(period.scope, 'month');
+  assert.equal(period.year, 2026);
+  assert.equal(period.month, 10);
+  assert.equal(period.start, '2026-10-01');
+  assert.equal(period.end, '2026-10-31');
+});
+
+test('official ranking adapter resolves season period from the season key', () => {
+  const vm = require('node:vm');
+  const code = fs.readFileSync('js/royal-bet-ranking-source.js', 'utf8');
+  const sandbox = { window: {} };
+  vm.runInNewContext(code, sandbox);
+  const period = sandbox.window.RoyalBetRankingSource.resolvePeriod({
+    market_scope: 'season',
+    season_key: '2026-2027',
+    market_metadata: {}
+  }, new Date('2026-10-18T12:00:00+02:00'));
+  assert.equal(period.scope, 'season');
+  assert.equal(period.year, 2026);
+  assert.equal(period.start, '2026-09-15');
+  assert.equal(period.end, '2027-03-31');
+});
