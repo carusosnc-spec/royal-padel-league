@@ -28,7 +28,7 @@
   async function loadOfficialStandings(sb, period) {
     const [playersR, matchesR] = await Promise.all([
       sb.from('players').select('id,name,nickname,active,is_guest').eq('active',true),
-      sb.from('matches').select('id,played_at').order('played_at',{ascending:true}).limit(5000)
+      sb.from('matches').select('id,played_at,is_confirmed,approval_status').order('played_at',{ascending:true}).limit(5000)
     ]);
     if (playersR.error) throw playersR.error;
     if (matchesR.error) throw matchesR.error;
@@ -38,7 +38,8 @@
       ? period.year+'-'+String(period.month).padStart(2,'0')+'-'+String(new Date(Date.UTC(period.year,period.month,0)).getUTCDate()).padStart(2,'0')
       : period.end;
     const matches = (matchesR.data || []).filter(m => {
-      if (!m.played_at) return false;
+      // Only confirmed official results may influence live quotes.
+      if (m.is_confirmed !== true || m.approval_status !== 'confirmed' || !m.played_at) return false;
       const day = dateKey(m.played_at);
       return day >= start && day <= end;
     });
