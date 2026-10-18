@@ -90,7 +90,7 @@
 
   async function quoteMarkets(sb, markets, oddsModel) {
     const targets=(markets||[]).filter(m =>
-      ['regular_season_champion','bonus_ranking_champion'].includes(m.market_type) &&
+      ['regular_season_champion'].includes(m.market_type) &&
       ['season','month'].includes(m.market_scope));
     if(!targets.length) return markets || [];
     const cache=new Map();
