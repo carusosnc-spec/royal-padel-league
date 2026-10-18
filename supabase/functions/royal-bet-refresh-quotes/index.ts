@@ -11,7 +11,8 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
 function quote(points: number[], nowMs: number, openMs: number, closeMs: number) {
-  if (nowMs >= closeMs || nowMs < openMs) return points.map(() => ({ probability: 0, odds: 0, open: false }));
+  if (nowMs >= closeMs) return points.map(() => ({ probability: 0, odds: 0, open: false, expired: true }));
+  if (nowMs < openMs) return points.map(() => ({ probability: 0, odds: 0, open: false, expired: false }));
   const leader = Math.max(...points);
   const spread = Math.max(1, ...points.map(p => Math.abs(leader - p)));
   const remaining = Math.max(0, Math.min(1, (closeMs - nowMs) / Math.max(1, closeMs - openMs)));
@@ -20,7 +21,7 @@ function quote(points: number[], nowMs: number, openMs: number, closeMs: number)
   const total = weights.reduce((a, b) => a + b, 0);
   return weights.map(w => {
     const probability = w / total;
-    return { probability: Math.round(probability * 10000) / 10000, odds: Math.round((1 / Math.max(probability, 0.0001) / 1.08) * 100) / 100, open: true };
+    return { probability: Math.round(probability * 10000) / 10000, odds: Math.round((1 / Math.max(probability, 0.0001) / 1.08) * 100) / 100, open: true, expired: false };
   });
 }
 
@@ -112,8 +113,9 @@ Deno.serve(async (req) => {
     if (!row) continue;
     const index = rows.findIndex(p => String(p.id) === String(row.id));
     const q = quotes[index];
-    const patch = { updated_at: now.toISOString(), theoretical_probability: q.probability, odds: q.odds };
-    if (!q.open) patch.status = "closed";
+    const patch: Record<string, unknown> = { updated_at: now.toISOString(), theoretical_probability: q.probability, odds: q.odds };
+    if (q.expired) patch.status = "closed";
+    if (!q.open && !q.expired) continue;
     const { error } = await db.from("rpl_bet_markets").update(patch).eq("id",market.id).eq("status","open");
     if (error) return json({ error: "Aggiornamento quote interrotto; mercato non attivato", updated }, 500);
     updated++;
