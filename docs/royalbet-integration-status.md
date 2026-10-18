@@ -83,3 +83,6 @@ Le RPC attuali usano `SECURITY DEFINER`. Le definizioni ispezionate controllano 
 - Il generatore non deve aprire automaticamente mercati né inserire direttamente righe dal browser. Prima fase prevista: pianificatore dry-run che produca proposte deterministiche, controlli di duplicato e motivi di esclusione; solo dopo test e autorizzazione server-side le proposte potranno essere salvate come draft.
 - Per mercati match, il generatore deve richiedere coppie per set già definite dal calendario o un input esplicito dell'operatore. In assenza di questa informazione deve fermarsi senza generare mercati di vincitore set. Per i mercati di stagione, la chiave stagione e la definizione ufficiale del vincitore/podio devono essere esplicite e non dedotte da una data presunta.
 - La protezione dei pronostici e la generazione automatica sono due attività distinte: la migrazione di hardening resta solo proposta e non è stata applicata a produzione.
+
+
+- Rafforzata nella migrazione proposta la policy di lettura dei pronostici: accesso previsto soltanto per operatori e giocatori ufficiali attivi coinvolti nella partita. Anche questa modifica resta non applicata e deve essere verificata con utenti di staging, soprattutto per confermare che le policy di lettura su player_accounts, players e operators consentano i controlli senza ricorsione o blocchi imprevisti.
