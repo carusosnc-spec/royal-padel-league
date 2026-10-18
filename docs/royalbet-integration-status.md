@@ -65,3 +65,11 @@ Le RPC attuali usano `SECURITY DEFINER`. Le definizioni ispezionate controllano 
 - Le policy attualmente presenti su `rpl_bet_predictions` consentono SELECT a `anon, authenticated` e anche INSERT/UPDATE a tali ruoli. È una superficie di accesso troppo ampia: la migrazione proposta rimuove le policy di scrittura e limita la lettura agli autenticati. La migrazione resta NON applicata.
 - Il modulo player aveva un separatore di riga letterale che avrebbe causato errore di sintassi: corretto nel commit `cd607dd`.
 - Controllo sintattico JavaScript superato per i tre moduli e il test. Eseguita anche una prova isolata del motore quote con dati sintetici: probabilità complementari, somma delle probabilità pari a 1 e quote superiori a 1. Il test runner Node e i test end-to-end non sono ancora stati eseguiti.
+
+
+## Verifica dell'integrazione precedente — 18 ottobre 2026
+
+- Ispezionato il pacchetto corrente `RPL_RIMOZIONE_ROYAL_BET_LAB_v9.1.76.zip` e confrontato con `RPL_Royal_Bet_Lab_v9.1.70.zip`. Il pacchetto corrente contiene pagine Royal Bet disattivate e ha rimosso dal `index.html` il collegamento nell'Area Giocatori, la scheda nella console operatore e il bridge di sessione dell'iframe.
+- La vecchia versione 9.1.70 includeva un bridge `postMessage` per trasferire la sessione Supabase dalla pagina RPL alle pagine Royal Bet, senza richiedere un nuovo accesso. Il ripristino integrale di quell'`index.html` non è una soluzione sicura: è una versione precedente e può perdere modifiche introdotte dopo la 9.1.70.
+- La pagina storica salva inoltre pronostici in `rpl_bet_predictions` dal client; le policy attuali consentono ancora scritture ai ruoli anonimo/autenticato. Non va riattivata alla cieca prima di aver limitato le policy e verificato quali schermate dipendono da tali scritture.
+- Decisione: mantenere il ramo di lavoro separato e portare il bridge di sessione nella versione corrente, senza sostituire l'`index.html` intero. Prima del rilascio servono montaggio puntuale, test con sessione reale in staging e verifica che il resto della RPL non cambi.
