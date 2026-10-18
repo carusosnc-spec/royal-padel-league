@@ -57,8 +57,15 @@
 
     const ranked = [...clean].sort((a, b) => b.points - a.points);
     const leader = ranked[0];
-    const clinched = leader.max_points_remaining != null &&
+    const allRemainingKnown = clean.every(x => x.max_points_remaining != null);
+    const clinched = allRemainingKnown &&
       ranked.slice(1).every(x => leader.points > x.points + x.max_points_remaining);
+    const nowMs = new Date(now).getTime();
+    const opensMs = new Date(opensAt).getTime();
+    const closesMs = new Date(closesAt).getTime();
+    const expired = nowMs >= closesMs;
+    const notOpen = nowMs < opensMs;
+    const marketBlocked = expired || notOpen || clinched;
     const daysLeft = Math.max(0, (new Date(closesAt).getTime() - new Date(now).getTime()) / DAY);
     // Uncertainty shrinks as the deadline approaches. Historical performance is not
     // inferred here; the caller supplies official ranking points and remaining-point bounds.
@@ -71,17 +78,16 @@
     const total = weights.reduce((a, b) => a + b, 0);
     return clean.map((x, i) => {
       const probability = clinched ? (x.selection_key === leader.selection_key ? 1 : 0) : weights[i] / total;
-      const unbettable = clinched && x.selection_key !== leader.selection_key ||
-        (x.selection_key === leader.selection_key && clinched);
-      // A resolved market is not offered for betting: UI can display odds 0 and reject wagers.
-      const odds = unbettable ? 0 : round(1 / Math.max(probability, 0.0001) / 1.08, 2);
+      // Expired, not-yet-open, and mathematically decided markets cannot accept wagers.
+      const odds = marketBlocked ? 0 : round(1 / Math.max(probability, 0.0001) / 1.08, 2);
+      const reason = expired ? 'mercato scaduto' : notOpen ? 'mercato non ancora aperto' : clinched ? 'classifica matematicamente definita' : null;
       return {
         selection_key: x.selection_key,
         selection_label: x.selection_label,
         theoretical_probability: round(probability),
         odds,
-        is_bettable: !clinched,
-        unbettable_reason: clinched ? 'classifica matematicamente definita' : null,
+        is_bettable: !marketBlocked,
+        unbettable_reason: reason,
         remaining_fraction: round(remaining),
         days_left: round(daysLeft, 2)
       };
