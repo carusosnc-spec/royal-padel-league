@@ -143,7 +143,7 @@
       btn.disabled = true;
       alert.innerHTML = '<div class="rbl-alert">Invio puntata in corso…</div>';
       try {
-        const idem = 'rbl-' + player.id + '-' + marketId + '-' + btn.dataset.selection + '-' + crypto.randomUUID();
+        const randomId = (window.crypto && typeof window.crypto.randomUUID === 'function') ? window.crypto.randomUUID() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));\n        const idem = 'rbl-' + player.id + '-' + marketId + '-' + btn.dataset.selection + '-' + randomId;
         const { error } = await sb.rpc(RPC.placeBet, {
           p_market_id: marketId,
           p_selection_key: btn.dataset.selection,
