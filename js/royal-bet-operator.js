@@ -85,24 +85,20 @@
     const proposalButton=root.querySelector('[data-auto-proposals]');
     if(proposalButton) proposalButton.onclick=async()=>{
       const box=root.querySelector('[data-proposal-result]');
-      proposalButton.disabled=true; box.hidden=false; box.textContent='Calcolo proposte in sola lettura…';
-      box.classList.remove('rbo-error');
+      proposalButton.disabled=true; box.hidden=false; box.textContent='Confronto quote in sola lettura…'; box.classList.remove('rbo-error');
       try{
         const c=sb();
         const loadScript=src=>new Promise((resolve,reject)=>{
           const existing=[...document.scripts].find(s=>s.src.endsWith(src));
-          if(existing){if(existing.dataset.loaded==='true'||(src.includes('odds')&&window.RoyalBetOdds)||(src.includes('planner')&&window.RoyalBetMarketPlanner)){resolve();return;}
-            existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',()=>reject(new Error('Caricamento modulo fallito: '+src)),{once:true});return;}
+          if(existing){resolve();return;}
           const script=document.createElement('script');script.src='./js/'+src;
-          script.onload=()=>{script.dataset.loaded='true';resolve();};
-          script.onerror=()=>reject(new Error('Impossibile caricare '+src));document.head.appendChild(script);
+          script.onload=resolve;script.onerror=()=>reject(new Error('Impossibile caricare '+src));document.head.appendChild(script);
         });
         if(!window.RoyalBetOdds) await loadScript('royal-bet-odds.js');
-        if(!window.RoyalBetMarketPlanner) await loadScript('royal-bet-market-planner.js');
         const {data:matches,error:me}=await c.from('matches').select('id,is_confirmed,approval_status').eq('is_confirmed',true).eq('approval_status','confirmed').limit(1000);
         if(me)throw me;
         const ids=(matches||[]).map(m=>m.id);
-        if(!ids.length)throw new Error('Non ci sono partite confermate sufficienti per elaborare proposte.');
+        if(!ids.length)throw new Error('Nessuna partita confermata disponibile.');
         const {data:sets,error:se}=await c.from('sets').select('match_id,set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b').in('match_id',ids).limit(5000);
         if(se)throw se;
         const history=window.RoyalBetOdds.buildConfirmedHistory(matches,sets||[]);
@@ -110,35 +106,35 @@
         const {data:players,error:pe}=await c.from('players').select('id,name,nickname,active,is_guest').eq('active',true).eq('is_guest',false).limit(500);
         if(pe)throw pe;
         const eligible=(players||[]).filter(p=>history.players.has(String(p.id))&&history.players.get(String(p.id)).played>=2);
-        if(eligible.length<2)throw new Error('Servono almeno due giocatori attivi con almeno 2 set validi nello storico.');
-        const weights=eligible.map(p=>{
-          const s=history.players.get(String(p.id));
-          const rate=(s.wins+2)/(s.played+4);
-          const diff=s.gameDiff/Math.max(1,s.played);
+        if(eligible.length<2)throw new Error('Campione insufficiente per confrontare le quote.');
+        const raw=eligible.map(p=>{
+          const st=history.players.get(String(p.id));
+          const rate=(st.wins+2)/(st.played+4);
+          const diff=st.gameDiff/Math.max(1,st.played);
           return Math.exp(Math.max(-1.2,Math.min(1.2,(rate-.5)*2.2+Math.max(-5,Math.min(5,diff))*.06)));
         });
-        const total=weights.reduce((a,b)=>a+b,0);
-        const probs=weights.map(w=>w/total);
-        const candidates=eligible.map((p,i)=>({
-          market_scope:'season',calendar_match_id:null,season_key:'2026-27',
-          market_type:'regular_season_champion',set_number:null,
-          selection_key:'player_'+p.id,selection_label:p.name+(p.nickname?' "'+p.nickname+'"':''),
-          theoretical_probability:Math.round(probs[i]*10000)/10000,
-          odds:window.RoyalBetOdds.odds(probs[i],0.08),
-          market_metadata:{model:'historical_individual_form_v1',history_sets:history.setsUsed,player_sets:history.players.get(String(p.id)).played,confidence:history.players.get(String(p.id)).played>=8?'medium':'low'}
-        }));
-        const {data:existing,error:ee}=await c.from('rpl_bet_markets').select('market_scope,calendar_match_id,season_key,market_type,set_number,selection_key,selection_label,theoretical_probability,odds').eq('market_scope','season').eq('season_key','2026-27').eq('market_type','regular_season_champion').limit(500);
+        const total=raw.reduce((a,b)=>a+b,0);
+        const {data:existing,error:ee}=await c.from('rpl_bet_markets').select('selection_key,selection_label,theoretical_probability,odds,status').eq('market_scope','season').eq('season_key','2026-27').eq('market_type','regular_season_champion').limit(500);
         if(ee)throw ee;
-        const planned=window.RoyalBetMarketPlanner.planMarketDrafts(candidates,existing||[]);
-        const proposed=planned.planned;
-        const skipped=planned.skipped.length;
-        box.innerHTML='<strong>Anteprima non pubblicata · Stagione 2026-27</strong><p>Set validi analizzati: '+history.setsUsed+'. Giocatori candidati: '+eligible.length+'. Proposte valide: '+proposed.length+'. Scartate/duplicate: '+skipped+'.</p>'+
-          (proposed.length?'<div>'+proposed.map(m=>'<div class="rbo-row"><div><strong>'+esc(m.selection_label)+'</strong><div class="rbo-muted">Probabilità teorica '+fmt(m.theoretical_probability*100)+'% · Quota indicativa '+fmt(m.odds)+' · '+esc(m.market_metadata.confidence==='low'?'campione ridotto':'campione discreto')+'</div></div><div class="rbo-muted">Bozza · nessuna scrittura</div></div>').join('')+'</div>':'<p>Nessuna nuova proposta: potrebbe esistere già il gruppo di mercato per questa stagione.</p>')+
-          '<p class="rbo-muted">Modello preliminare basato su forma individuale e differenza game; non è una previsione certificata. Il pianificatore ha confermato writePerformed=false. Nessun mercato creato o modificato.</p>';
-      }catch(e){box.textContent=e.message||'Calcolo proposte non riuscito.';box.classList.add('rbo-error');}
+        const byKey=new Map((existing||[]).map(m=>[String(m.selection_key),m]));
+        const rows=eligible.map((p,i)=>{
+          const probability=raw[i]/total;
+          const modelOdds=window.RoyalBetOdds.odds(probability,0.08);
+          const current=byKey.get('player_'+p.id);
+          return {label:p.name+(p.nickname?' “'+p.nickname+'”':''),probability,modelOdds,current,sets:history.players.get(String(p.id)).played};
+        }).sort((a,b)=>b.probability-a.probability);
+        const present=rows.filter(r=>r.current).length;
+        box.innerHTML='<strong>Audit quote · stagione 2026/27 · sola lettura</strong><p>Set validi: '+history.setsUsed+' · Giocatori con almeno 2 set: '+eligible.length+' · Quote esistenti confrontate: '+present+'/'+rows.length+'.</p>'+
+          '<div>'+rows.map(r=>{
+            const oldP=Number(r.current&&r.current.theoretical_probability);
+            const oldO=Number(r.current&&r.current.odds);
+            const delta=Number.isFinite(oldO)&&oldO>0?r.modelOdds-oldO:null;
+            const status=!r.current?'Nessuna quota esistente':delta!==null&&Math.abs(delta)>=0.5?'Differenza da revisionare': 'Vicino alla quota attuale';
+            return '<div class="rbo-row"><div><strong>'+esc(r.label)+'</strong><div class="rbo-muted">'+r.sets+' set storici · Modello '+fmt(r.probability*100)+'% (quota '+fmt(r.modelOdds)+')</div><div class="rbo-muted">Attuale: '+(r.current?fmt(oldP*100)+'% · quota '+fmt(oldO)+' · '+esc(r.current.status):'non presente')+'</div></div><div class="rbo-muted">'+esc(status)+(delta!==null?' · scarto quota '+(delta>0?'+':'')+fmt(delta):'')+'</div></div>';
+          }).join('')+'</div><p class="rbo-muted">Stima preliminare basata su forma individuale e differenza game; non considera ancora tutte le regole di classifica RPL e non è una previsione certificata. Nessuna scrittura eseguita: le quote non sono state modificate.</p>';
+      }catch(e){box.textContent=e.message||'Confronto quote non riuscito.';box.classList.add('rbo-error');}
       finally{proposalButton.disabled=false;}
-    };
-    root.querySelectorAll('[data-save-odds]').forEach(b=>b.onclick=async()=>{
+    };    root.querySelectorAll('[data-save-odds]').forEach(b=>b.onclick=async()=>{
       const input=root.querySelector('[data-odds="'+b.dataset.saveOdds+'"]');
       const odds=Number(input.value);
       if(!Number.isFinite(odds)||odds<=1||odds>1000){notify(root,'Quota non valida: deve essere maggiore di 1 e non superiore a 1000.',true);return;}
