@@ -32,3 +32,10 @@ Questi campi corrispondono allo schema della tabella `sets`. Il chiamante deve f
 
 ## Passaggio successivo necessario
 Il servizio di generazione deve leggere set approvati, costruire le selezioni ammissibili per il tipo di mercato, calcolare le quote, chiamare la RPC amministrativa di creazione gruppo e rendere l'operazione idempotente. La pubblicazione automatica resta disattivata fino al collaudo in staging.
+
+
+## Pianificatore di bozze idempotente
+
+`js/royal-bet-market-planner.js` aggiunge `window.RoyalBetMarketPlanner.planMarketDrafts(candidates, existing)`. È una funzione pura: non accede a Supabase, non scrive righe e non apre mercati. Valida tipi, ambito match/stagione, set, probabilità e quote; elimina duplicati sia rispetto ai mercati già forniti sia all'interno del lotto; restituisce righe candidate con `status: 'draft'`, `writePerformed: false` e motivi per ogni riga scartata.
+
+Il pianificatore è intenzionalmente a valle del calcolo probabilistico: non inventa accoppiamenti o selezioni. Prima di collegarlo a una RPC, il chiamante deve fornire soltanto selezioni derivabili dai dati ufficiali e il servizio server-side dovrà ripetere i controlli di autorizzazione e unicità. Non è un generatore automatico già collegato al database.
