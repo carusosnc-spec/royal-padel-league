@@ -57,10 +57,21 @@
     });
     root.querySelectorAll('[data-settle]').forEach(b=>b.onclick=async()=>{
       const marketId=Number(b.dataset.settle);
-      const suggested=b.dataset.selection;
-      const winning=window.prompt('Chiave dell’esito vincente per tutto il gruppo di mercati:',suggested);
-      if(winning===null||!winning.trim())return;
-      if(!window.confirm('Confermi la liquidazione del gruppo di mercati usando l’esito "'+winning.trim()+'"? Questa operazione accredita le vincite.'))return;
+      const selected=rows.find(m=>Number(m.id)===marketId);
+      if(!selected)return;
+      const sameGroup=rows.filter(m=>m.market_scope===selected.market_scope &&
+        m.market_type===selected.market_type &&
+        (m.market_scope==='season' ? m.season_key===selected.season_key :
+          Number(m.calendar_match_id)===Number(selected.calendar_match_id)) &&
+        (m.set_number||null)===(selected.set_number||null) &&
+        ['open','closed'].includes(m.status));
+      const outcomes=[...new Map(sameGroup.map(m=>[m.selection_key,m])).values()];
+      if(outcomes.length<2){notify(root,'Liquidazione bloccata: non sono visibili almeno due esiti del gruppo. Aggiorna i mercati e verifica il gruppo prima di procedere.',true);return;}
+      const choices=outcomes.map(m=>m.selection_key+' — '+m.selection_label).join('\\n');
+      const winning=window.prompt('Esiti disponibili per questo gruppo:\\n'+choices+'\\n\\nInserisci la chiave esatta dell’esito vincente:',selected.selection_key);
+      if(winning===null||!outcomes.some(m=>m.selection_key===winning.trim())){if(winning!==null)notify(root,'Chiave non valida: nessuna liquidazione eseguita.',true);return;}
+      const label=outcomes.find(m=>m.selection_key===winning.trim()).selection_label;
+      if(!window.confirm('Confermi la liquidazione del gruppo "'+selected.market_type+'" con esito "'+label+'"? Le puntate del gruppo saranno liquidate.'))return;
       await action(root,async()=>sb().rpc('rpl_settle_bet_market',{p_market_id:marketId,p_winning_selection_key:winning.trim()}),'Mercato liquidato.');
     });
     root.querySelectorAll('[data-void]').forEach(b=>b.onclick=async()=>{
