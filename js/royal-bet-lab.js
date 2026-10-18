@@ -71,6 +71,17 @@
       </style>`;
   }
 
+  async function loadScriptOnce(src, test) {
+    if (test()) return;
+    await new Promise((resolve,reject)=>{
+      const existing=[...document.scripts].find(s=>s.src && s.src.endsWith(src));
+      if(existing){existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',()=>reject(new Error('Caricamento '+src+' non riuscito.')),{once:true});return;}
+      const script=document.createElement('script');script.src=src;script.onload=resolve;
+      script.onerror=()=>reject(new Error('Caricamento '+src+' non riuscito.'));
+      document.head.appendChild(script);
+    });
+  }
+
   async function loadDashboard(root) {
     const sb = client();
     const { player } = await currentPlayer();
@@ -90,6 +101,13 @@
     const wallet = walletRes.data;
     const markets = marketsRes.data || [];
     const wagers = wagersRes.data || [];
+    try {
+      await loadScriptOnce('./js/royal-bet-ranking-odds.js',()=>!!window.RoyalBetRankingOdds);
+      await loadScriptOnce('./js/royal-bet-ranking-source.js',()=>!!window.RoyalBetRankingSource);
+      await window.RoyalBetRankingSource.quoteMarkets(sb,markets,window.RoyalBetRankingOdds);
+    } catch (quoteError) {
+      console.warn('Royal Bet: preventivo dinamico non disponibile; mostro le quote salvate.', quoteError);
+    }
     const balance = wallet ? wallet.balance : 0;
     const locked = wallet ? wallet.locked_credits : 0;
 
