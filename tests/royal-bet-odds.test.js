@@ -219,3 +219,41 @@ test('mathematically decided ranking is never bettable', () => {
   ], { now: '2027-03-30T12:00:00+02:00', opensAt: '2026-09-15T00:00:00+02:00', closesAt: '2027-03-31T23:59:59+02:00' });
   assert.ok(result.every(x => x.is_bettable === false && x.odds === 0));
 });
+
+
+test('expired and not-yet-open ranking markets reject betting automatically', () => {
+  const vm = require('node:vm');
+  const code = fs.readFileSync('js/royal-bet-ranking-odds.js', 'utf8');
+  const sandbox = { window: {} };
+  vm.runInNewContext(code, sandbox);
+  const model = sandbox.window.RoyalBetRankingOdds;
+  const standings = [
+    { selection_key: 'a', points: 10 },
+    { selection_key: 'b', points: 8 }
+  ];
+  const expired = model.calculateRankingOdds(standings, {
+    now: '2026-11-01T00:00:00+01:00',
+    opensAt: '2026-10-01T00:00:00+02:00',
+    closesAt: '2026-10-31T23:59:59+01:00'
+  });
+  assert.ok(expired.every(x => x.is_bettable === false && x.odds === 0 && x.unbettable_reason === 'mercato scaduto'));
+  const future = model.calculateRankingOdds(standings, {
+    now: '2026-10-01T00:00:00+02:00',
+    opensAt: '2026-10-02T00:00:00+02:00',
+    closesAt: '2026-10-31T23:59:59+01:00'
+  });
+  assert.ok(future.every(x => x.is_bettable === false && x.odds === 0 && x.unbettable_reason === 'mercato non ancora aperto'));
+});
+
+test('ranking cannot be declared mathematically decided when any remaining-points bound is unknown', () => {
+  const vm = require('node:vm');
+  const code = fs.readFileSync('js/royal-bet-ranking-odds.js', 'utf8');
+  const sandbox = { window: {} };
+  vm.runInNewContext(code, sandbox);
+  const result = sandbox.window.RoyalBetRankingOdds.calculateRankingOdds([
+    { selection_key: 'winner', points: 100, max_points_remaining: 0 },
+    { selection_key: 'runner_up', points: 50 }
+  ], { now: '2027-03-30T12:00:00+02:00', opensAt: '2026-09-15T00:00:00+02:00', closesAt: '2027-03-31T23:59:59+02:00' });
+  assert.ok(result.every(x => x.is_bettable === true));
+  assert.ok(result.every(x => x.odds > 0));
+});
