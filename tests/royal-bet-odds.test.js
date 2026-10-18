@@ -202,7 +202,7 @@ test('automatic ranking odds tighten as the deadline approaches without requirin
     opensAt: '2026-10-01T00:00:00+02:00',
     closesAt: '2026-10-31T23:59:59+01:00'
   });
-  assert.ok(early.find(x => x.selection_key === 'player_a').odds < late.find(x => x.selection_key === 'player_a').odds);
+  assert.ok(early.find(x => x.selection_key === 'player_a').odds > late.find(x => x.selection_key === 'player_a').odds);
   assert.ok(early.find(x => x.selection_key === 'player_b').theoretical_probability > late.find(x => x.selection_key === 'player_b').theoretical_probability);
   assert.equal(model.marketDeadline('season', 2027), '2027-03-31T21:59:59.999Z');
   assert.equal(model.marketDeadline('month', 2026, 10), '2026-10-31T22:59:59.999Z');
