@@ -158,10 +158,14 @@
         // uncertain network outcome. Clear it only when the intent changes or
         // the server confirms success.
         const intent = [player.id, marketId, btn.dataset.selection, stake].join(':');
+        const storageKey = 'royalbet:idempotency:' + encodeURIComponent(intent);
+        let savedKey = '';
+        try { savedKey = window.sessionStorage.getItem(storageKey) || ''; } catch (_) { /* storage can be unavailable in private contexts */ }
         if (btn.dataset.betIntent !== intent || !btn.dataset.idempotencyKey) {
           const randomId = (window.crypto && typeof window.crypto.randomUUID === 'function') ? window.crypto.randomUUID() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
           btn.dataset.betIntent = intent;
-          btn.dataset.idempotencyKey = 'rbl-' + player.id + '-' + marketId + '-' + btn.dataset.selection + '-' + randomId;
+          btn.dataset.idempotencyKey = savedKey || ('rbl-' + player.id + '-' + marketId + '-' + btn.dataset.selection + '-' + randomId);
+          try { window.sessionStorage.setItem(storageKey, btn.dataset.idempotencyKey); } catch (_) { /* dataset remains a same-page fallback */ }
         }
         const idem = btn.dataset.idempotencyKey;
         const { error } = await sb.rpc(RPC.placeBet, {
@@ -171,6 +175,7 @@
           p_idempotency_key: idem
         });
         if (error) throw error;
+        try { window.sessionStorage.removeItem(storageKey); } catch (_) { /* no-op when storage is unavailable */ }
         delete btn.dataset.idempotencyKey;
         delete btn.dataset.betIntent;
         alert.innerHTML = '<div class="rbl-alert">Puntata registrata. Aggiorno saldo e storico…</div>';
