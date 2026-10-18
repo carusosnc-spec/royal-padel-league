@@ -82,6 +82,51 @@
       }catch(e){box.textContent=e.message||'Analisi dello storico non riuscita.';box.classList.add('rbo-error');}
       finally{historyButton.disabled=false;}
     };
+    const matchAuditButton=root.querySelector('[data-match-audit]');
+    if(matchAuditButton) matchAuditButton.onclick=async()=>{
+      const box=root.querySelector('[data-match-audit-result]');
+      matchAuditButton.disabled=true; box.hidden=false; box.classList.remove('rbo-error');
+      box.textContent='Controllo mercati delle prossime partite in sola lettura…';
+      try{
+        const c=sb();
+        const {data:fixtures,error:fe}=await c.from('calendar_matches')
+          .select('id,scheduled_at,court,player_1,player_2,player_3,player_4,player_1_name,player_2_name,player_3_name,player_4_name,result_match_id')
+          .gte('scheduled_at',new Date().toISOString()).order('scheduled_at',{ascending:true}).limit(50);
+        if(fe)throw fe;
+        const upcoming=(fixtures||[]).filter(m=>!m.result_match_id);
+        if(!upcoming.length){box.textContent='Nessuna partita futura senza risultato trovata. Nessun dato modificato.';return;}
+        const ids=upcoming.map(m=>m.id);
+        const {data:markets,error:qe}=await c.from('rpl_bet_markets')
+          .select('id,calendar_match_id,market_type,selection_key,selection_label,odds,status,market_scope')
+          .eq('market_scope','match').in('calendar_match_id',ids).limit(1000);
+        if(qe)throw qe;
+        const marketRows=markets||[];
+        const types=['mvp','unbeaten','most_sets_won','fewest_sets_won'];
+        const report=upcoming.map(m=>{
+          const ps=[m.player_1,m.player_2,m.player_3,m.player_4].map(v=>v==null?'':String(v));
+          const unique=new Set(ps.filter(Boolean));
+          const groups=types.map(type=>{
+            const rows=marketRows.filter(x=>Number(x.calendar_match_id)===Number(m.id)&&x.market_type===type);
+            const selections=new Set(rows.map(x=>String(x.selection_key)));
+            const expected=new Set(ps.filter(Boolean).map(v=>'player_'+v));
+            const missing=[...expected].filter(k=>!selections.has(k));
+            const duplicates=rows.length-selections.size;
+            const open=rows.filter(x=>x.status==='open').length;
+            const valid=unique.size===4&&ps.every(Boolean)&&expected.size===4;
+            return {type,rows,missing,duplicates,open,valid};
+          });
+          return {m,groups,validPlayers:unique.size===4&&ps.every(Boolean)};
+        });
+        const fmtDate=v=>v?new Date(v).toLocaleString('it-IT',{dateStyle:'medium',timeStyle:'short'}):'Data da definire';
+        box.innerHTML='<strong>Audit mercati partita · sola lettura</strong><p>Partite future senza risultato: '+report.length+' · mercati esaminati: '+marketRows.length+'. Per ogni mercato sono attesi 4 esiti giocatore distinti. Il controllo non crea né apre mercati.</p>'+
+          report.map(({m,groups,validPlayers})=>{
+            const bad=groups.reduce((n,g)=>n+(!validPlayers||g.missing.length||g.duplicates||g.rows.length!==4?1:0),0);
+            return '<div class="rbo-row"><div><strong>Partita #'+esc(m.id)+' · '+esc(fmtDate(m.scheduled_at))+'</strong><div>'+esc(m.court||'Campo non indicato')+'</div><div class="rbo-muted">'+[m.player_1_name,m.player_2_name,m.player_3_name,m.player_4_name].filter(Boolean).map(esc).join(' · ')+'</div><div class="rbo-muted">'+(validPlayers?'4 giocatori distinti':'ATTENZIONE: elenco giocatori incompleto o duplicato')+'</div></div><div><strong>'+(bad?'Da verificare: '+bad+' gruppi':'Gruppi completi')+'</strong>'+groups.map(g=>'<div class="rbo-muted">'+esc(g.type)+': '+g.rows.length+'/4 esiti · '+g.open+' aperti'+(g.missing.length?' · mancanti '+g.missing.length:'')+(g.duplicates?' · duplicati '+g.duplicates:'')+'</div>').join('')+'</div></div>';
+          }).join('')+
+          '<p class="rbo-muted">Nota: con la formula RPL a compagni rotanti, questo audit controlla soltanto i mercati individuali (MVP, imbattuto, più/meno set). Non assume coppie fisse né genera mercati di risultato per abbinamenti non ancora definiti. Nessuna scrittura eseguita.</p>';
+      }catch(e){box.textContent=e.message||'Audit mercati partita non riuscito.';box.classList.add('rbo-error');}
+      finally{matchAuditButton.disabled=false;}
+    };
     const proposalButton=root.querySelector('[data-auto-proposals]');
     if(proposalButton) proposalButton.onclick=async()=>{
       const box=root.querySelector('[data-proposal-result]');
@@ -185,8 +230,8 @@
       @media(max-width:650px){.rbo-row{grid-template-columns:1fr}.rbo-actions{align-items:center}}
     </style><section class="rbo"><div class="rbo-card"><div class="rbo-muted">ROYAL BET LAB · AREA RISERVATA</div><h2>Gestione mercati</h2>
       <div data-rbo-alert class="rbo-alert" aria-live="polite">Verifica autorizzazioni operatore…</div>
-      <div class="rbo-actions"><button class="rbo-btn" type="button" data-history-preview>Analizza storico confermato</button><button class="rbo-btn" type="button" data-auto-proposals>Genera anteprima quote stagione</button></div>
-      <div class="rbo-alert" data-history-result hidden aria-live="polite"></div><div class="rbo-alert" data-proposal-result hidden aria-live="polite"></div>
+      <div class="rbo-actions"><button class="rbo-btn" type="button" data-history-preview>Analizza storico confermato</button><button class="rbo-btn" type="button" data-auto-proposals>Genera anteprima quote stagione</button><button class="rbo-btn" type="button" data-match-audit>Controlla mercati prossime partite</button></div>
+      <div class="rbo-alert" data-history-result hidden aria-live="polite"></div><div class="rbo-alert" data-proposal-result hidden aria-live="polite"></div><div class="rbo-alert" data-match-audit-result hidden aria-live="polite"></div>
       <div class="rbo-muted" data-rbo-count></div><div data-rbo-list>Caricamento mercati…</div>
     </div></section>`;
     try{await refresh(root);}catch(e){notify(root,e.message||'Impossibile caricare la console.',true);}
