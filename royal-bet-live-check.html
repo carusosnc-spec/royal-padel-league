@@ -20,10 +20,10 @@ status.className='muted';status.textContent='Collegamento a Supabase e lettura d
 try{
 if(!window.supabase?.createClient)throw new Error('libreria Supabase non caricata');
 const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
-const fields='id,market_scope,calendar_match_id,season_key,market_type,set_number,selection_key,selection_label,theoretical_probability,odds,status,opens_at,closes_at';
-const {data,error}=await sb.from('rpl_bet_markets').select(fields).order('status').order('market_scope').order('market_type').limit(300);
+const {data:payload,error}=await sb.rpc('rpl_public_market_snapshot');
 if(error)throw error;
-if(!data)throw new Error('risposta senza dati');
+const data=payload?.markets;
+if(!Array.isArray(data))throw new Error('risposta del servizio di sola lettura non valida');
 const opened=data.filter(x=>x.status==='open').length,closed=data.filter(x=>x.status==='closed').length;
 status.className='ok';status.textContent='Lettura completata. Nessuna modifica al database.';
 summary.innerHTML='<div class="grid"><div class="stat"><b>'+data.length+'</b>mercati letti</div><div class="stat"><b>'+opened+'</b>aperti</div><div class="stat"><b>'+closed+'</b>chiusi</div></div><p class="muted">Limite visualizzazione: 300 righe. Conteggi riferiti alle righe effettivamente visibili alla chiave pubblica.</p>';
