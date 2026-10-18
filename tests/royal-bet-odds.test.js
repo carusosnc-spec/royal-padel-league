@@ -7,30 +7,59 @@ const sandbox = { window: {} };
 vm.runInNewContext(fs.readFileSync('js/royal-bet-odds.js', 'utf8'), sandbox);
 const odds = sandbox.window.RoyalBetOdds;
 
+const set = (overrides = {}) => ({
+  pair_a_player_1: 1, pair_a_player_2: 2,
+  pair_b_player_1: 3, pair_b_player_2: 4,
+  games_a: 6, games_b: 3, ...overrides
+});
+
 test('probabilities and odds stay in valid ranges', () => {
   const history = odds.buildHistory([
-    {pair_a_player_1:1,pair_a_player_2:2,pair_b_player_1:3,pair_b_player_2:4,games_a:6,games_b:3},
-    {pair_a_player_1:1,pair_a_player_2:2,pair_b_player_1:3,pair_b_player_2:4,games_a:6,games_b:4},
-    {pair_a_player_1:3,pair_a_player_2:4,pair_b_player_1:1,pair_b_player_2:2,games_a:6,games_b:2}
+    set(), set({ games_a: 6, games_b: 4 }),
+    set({ pair_a_player_1: 3, pair_a_player_2: 4, pair_b_player_1: 1, pair_b_player_2: 2, games_a: 6, games_b: 2 })
   ]);
-  const estimate = odds.estimatePairWin(history,[1,2],[3,4]);
+  const estimate = odds.estimatePairWin(history, [1, 2], [3, 4]);
   assert.ok(estimate.probabilityA >= 0.08 && estimate.probabilityA <= 0.92);
   assert.ok(Math.abs(estimate.probabilityA + estimate.probabilityB - 1) < 1e-12);
   assert.ok(odds.odds(estimate.probabilityA) > 1);
+  assert.equal(estimate.historySets, 3);
 });
 
 test('market selections are normalized', () => {
   const rows = odds.marketSelections([
-    {selection_key:'a',selection_label:'A',probability:0.6},
-    {selection_key:'b',selection_label:'B',probability:0.4}
+    { selection_key: 'a', selection_label: 'A', probability: 0.6 },
+    { selection_key: 'b', selection_label: 'B', probability: 0.4 }
   ]);
-  assert.equal(rows.length,2);
-  assert.ok(Math.abs(rows.reduce((n,x)=>n+x.theoretical_probability,0)-1)<0.00011);
-  assert.ok(rows.every(x=>x.odds>1));
+  assert.equal(rows.length, 2);
+  assert.ok(Math.abs(rows.reduce((n, x) => n + x.theoretical_probability, 0) - 1) < 0.00011);
+  assert.ok(rows.every(x => x.odds > 1));
 });
 
-test('rejects invalid pair inputs and empty probability mass', () => {
+test('rejects invalid pair inputs, repeated players, and empty probability mass', () => {
   const history = odds.buildHistory([]);
-  assert.throws(() => odds.estimatePairWin(history,[1],[2,3]));
-  assert.throws(() => odds.marketSelections([{selection_key:'x',selection_label:'X',probability:0}]));
+  assert.throws(() => odds.estimatePairWin(history, [1], [2, 3]));
+  assert.throws(() => odds.estimatePairWin(history, [1, 2], [2, 3]));
+  assert.throws(() => odds.marketSelections([{ selection_key: 'x', selection_label: 'X', probability: 0 }]));
+});
+
+test('only valid padel set scores and distinct players enter historical data', () => {
+  const history = odds.buildHistory([
+    set(),
+    set({ games_a: 3, games_b: 4 }), // unfinished / invalid result
+    set({ games_a: null, games_b: 0 }), // missing score must not become 0-0
+    set({ pair_b_player_2: 1 }), // same player appears twice
+    set({ games_a: 7, games_b: 4 }), // invalid padel score
+    set({ games_a: 7, games_b: 6 }) // valid tiebreak set
+  ]);
+  assert.equal(history.setsUsed, 2);
+  assert.equal(history.players.get('1').played, 2);
+});
+
+test('rejects non-finite probabilities and invalid margins', () => {
+  assert.throws(() => odds.odds(NaN));
+  assert.throws(() => odds.odds(0));
+  assert.throws(() => odds.odds(0.5, 0.5));
+  assert.throws(() => odds.marketSelections([
+    { selection_key: 'a', selection_label: 'A', probability: NaN }
+  ]));
 });
