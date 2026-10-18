@@ -42,3 +42,15 @@ jobs:
           path: RPL_ROYAL_BET_LAB_v9.1.82.zip
           if-no-files-found: error
           retention-days: 14
+
+  edge-function-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check server quote function
+        run: deno check supabase/functions/royal-bet-refresh-quotes/index.ts
