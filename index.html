@@ -1299,6 +1299,13 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
   </div>
 
   <div id="playerDashboard" class="hidden">
+    <section id="royalBetPlayerCard" class="card" style="margin-bottom:14px;border:1px solid rgba(213,243,106,.32)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div><div style="color:#d5f36a;font-weight:900;letter-spacing:.08em">ROYAL BET LAB</div><div class="muted">Crediti virtuali · mercati e pronostici RPL</div></div>
+        <button type="button" id="royalBetPlayerToggle" class="primary">🎯 APRI ROYAL BET</button>
+      </div>
+      <div id="royal-bet-lab" class="hidden" style="margin-top:14px"></div>
+    </section>
     <section id="rplMessagingCard" class="card rpl-chat-card">
       <div class="rpl-chat-heading"><div><div class="rpl-chat-kicker">ROYAL PADEL LEAGUE</div><h2 style="margin:3px 0 4px">💬 Messaggi</h2><div class="muted">Chat riservate ai giocatori ufficiali attivi.</div></div><span class="badge">BETA</span></div>
       <button type="button" id="rplChatToggle" class="primary rpl-chat-toggle">APRI MESSAGGI</button>
@@ -1558,6 +1565,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <button type="button" id="opConfirmTab" onclick="showOperatorSection('confirm')">✅ Partite da confermare</button>
 <button type="button" id="opNotifyTab" onclick="showOperatorSection('notifications')">🔔 Notifiche</button>
 <button type="button" id="opAccountsTab" onclick="showOperatorSection('accounts')">👥 Account giocatori</button>
+<button type="button" id="opRoyalBetTab" onclick="showOperatorSection('royalbet')">🎯 Royal Bet Lab</button>
 </div>
 </div>
 <div id="operatorVotingSection" class="hidden">
@@ -1623,6 +1631,13 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <div id="rplNotifyDeviceStatus" class="muted">Controllo…</div>
 <div id="rplNotifyDeviceList" class="rpl-device-list"></div>
 </div>
+</div>
+</div>
+<div id="royalBetOperatorSection" class="hidden">
+<div class="card">
+  <h2>🎯 Royal Bet Lab · Console operatore</h2>
+  <div class="muted">Gestione quote e mercati virtuali. Ogni liquidazione accredita crediti virtuali: controlla l'esito prima di confermare.</div>
+  <div id="royal-bet-operator" style="margin-top:12px"></div>
 </div>
 </div>
 <div id="operatorAccountsSection" class="hidden">
@@ -2616,16 +2631,17 @@ window.loadPlayerAccountResetList=loadPlayerAccountResetList;
 window.resetSelectedPlayerPassword=resetSelectedPlayerPassword;
 
 function showOperatorSection(which){
-  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), vc=$("operatorVoteConsoleSection"), p=$("operatorConfirmSection"), n=$("operatorNotificationsSection"), a=$("operatorAccountsSection");
-  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), vct=$("opVoteConsoleTab"), pt=$("opConfirmTab"), nt=$("opNotifyTab"), at=$("opAccountsTab");
-  [m,c,v,vc,p,n,a].forEach(x=>x?.classList.add("hidden"));
-  [mt,ct,vt,vct,pt,nt,at].forEach(x=>x?.classList.remove("primary"));
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), vc=$("operatorVoteConsoleSection"), p=$("operatorConfirmSection"), n=$("operatorNotificationsSection"), a=$("operatorAccountsSection"), rb=$("royalBetOperatorSection");
+  const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), vct=$("opVoteConsoleTab"), pt=$("opConfirmTab"), nt=$("opNotifyTab"), at=$("opAccountsTab"), rbt=$("opRoyalBetTab");
+  [m,c,v,vc,p,n,a,rb].forEach(x=>x?.classList.add("hidden"));
+  [mt,ct,vt,vct,pt,nt,at,rbt].forEach(x=>x?.classList.remove("primary"));
   if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
   else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
   else if(which==="voteconsole"){vc?.classList.remove("hidden");vct?.classList.add("primary");}
   else if(which==="confirm"){p?.classList.remove("hidden");pt?.classList.add("primary");loadOperatorPendingMatches();}
   else if(which==="notifications"){n?.classList.remove("hidden");nt?.classList.add("primary");window.rplLoadNotifyPlayers?.();window.rplLoadNotifyDeviceStatus?.();}
   else if(which==="accounts"){a?.classList.remove("hidden");at?.classList.add("primary");loadAccountImportTemplate();loadPlayerAccountResetList();}
+  else if(which==="royalbet"){rb?.classList.remove("hidden");rbt?.classList.add("primary");window.mountRoyalBetOperator?.();}
   else{m?.classList.remove("hidden");mt?.classList.add("primary");}
 }
 
@@ -5697,6 +5713,33 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   const overlay=document.getElementById('rplRegolamentoOverlay');if(overlay)observer.observe(overlay,{attributes:true,attributeFilter:['class']});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initRegolamentoZoom);else initRegolamentoZoom();
+})();
+</script>
+<script src="./js/royal-bet-lab.js"></script>
+<script src="./js/royal-bet-operator.js"></script>
+<script>
+(function(){
+  let playerMounted=false, operatorMounted=false;
+  const playerBtn=document.getElementById("royalBetPlayerToggle");
+  const playerRoot=document.getElementById("royal-bet-lab");
+  if(playerBtn && playerRoot){
+    playerBtn.addEventListener("click",async()=>{
+      const opening=playerRoot.classList.contains("hidden");
+      playerRoot.classList.toggle("hidden",!opening);
+      playerBtn.textContent=opening?"CHIUDI ROYAL BET":"🎯 APRI ROYAL BET";
+      if(opening && !playerMounted){
+        playerRoot.innerHTML='<div class="muted">Caricamento Royal Bet Lab…</div>';
+        try{await window.RoyalBetLab.mount(playerRoot);playerMounted=true;}
+        catch(e){playerRoot.innerHTML='<div class="msg err"></div>';playerRoot.querySelector('.msg').textContent=e?.message||'Impossibile caricare Royal Bet Lab.';}
+      }
+    });
+  }
+  window.mountRoyalBetOperator=async function(){
+    const root=document.getElementById("royal-bet-operator");
+    if(!root||operatorMounted)return;
+    try{await window.RoyalBetOperator.mount(root);operatorMounted=true;}
+    catch(e){root.innerHTML='<div class="msg err"></div>';root.querySelector('.msg').textContent=e?.message||'Impossibile caricare la console Royal Bet.';}
+  };
 })();
 </script>
 </body></html>
