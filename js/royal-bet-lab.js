@@ -132,12 +132,14 @@
               <div>
                 <strong>${esc(MARKET_NAMES[m.market_type] || m.market_type)}</strong>
                 <div>${esc(m.selection_label)}</div>
-                <div class="rbl-muted">${m.market_scope === 'season' ? 'Mercato stagione' : (m.calendar_match_id ? 'Partita #'+m.calendar_match_id : 'Mercato generale')}${m.set_number ? ' · Set '+m.set_number : ''}</div>
+                <div class="rbl-muted">${m.market_scope === 'season' ? 'Mercato stagione' : (m.market_scope === 'month' ? 'Mercato mensile' : (m.calendar_match_id ? 'Partita #'+m.calendar_match_id : 'Mercato generale'))}${m.set_number ? ' · Set '+m.set_number : ''}</div>
+                ${m.dynamic_quote ? '<div class="rbl-muted">Quota ricalcolata dalla classifica ufficiale · anteprima non salvata</div>' : ''}
+                ${m.dynamic_quote_error ? '<div class="rbl-muted">Quota dinamica non disponibile</div>' : ''}
                 <label class="rbl-muted" for="rbl-stake-${m.id}">Puntata (crediti)</label><br>
                 <input class="rbl-input" id="rbl-stake-${m.id}" type="number" min="1" step="1" inputmode="numeric" value="10">
                 <button class="rbl-btn" data-bet="${m.id}" data-selection="${esc(m.selection_key)}" ${WAGERING_ENABLED ? "" : "disabled"}>${WAGERING_ENABLED ? "Punta" : "Prove non attive"}</button>
               </div>
-              <div class="rbl-odd"><span class="rbl-muted">Quota</span><strong>${fmt(m.odds)}</strong></div>
+              <div class="rbl-odd"><span class="rbl-muted">${m.dynamic_quote ? 'Quota live*' : 'Quota'}</span><strong>${fmt(m.dynamic_quote ? m.display_odds : m.odds)}</strong></div>
             </article>`).join('') : '<div class="rbl-empty">Non ci sono mercati aperti al momento.</div>'}
         </div>
         <div id="rbl-wagers" class="rbl-card" hidden>
