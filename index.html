@@ -1741,6 +1741,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <script>
 const SUPABASE_URL="https://vanbadzkxvextdvnqwtr.supabase.co";
 const SUPABASE_KEY="sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs";
+// Royal Bet Lab integration package v9.1.71
 const RPL_VAPID_PUBLIC_KEY="BBnDg3GBNrM0rK17CUHivSHPbH-7tPfNQ8n8gk0aKtt_-h9q37GnSUQJYqp659248XtSZg13jLgSKDnqX6HToJE";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{experimental:{passkey:true}}}); window.sb=sb;
 
@@ -5853,7 +5854,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     if(!open||!wrap||!frame)return;
     wrap.classList.remove('hidden');open.classList.add('hidden');
     if(!frame.dataset.rplSessionHandler){frame.addEventListener('load',()=>{sendSessionToBetLab();setTimeout(sendSessionToBetLab,250);setTimeout(sendSessionToBetLab,800);});frame.dataset.rplSessionHandler='1';}
-    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.69';frame.dataset.loaded='1';}
+    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.71';frame.dataset.loaded='1';}
     else sendSessionToBetLab();
     if(!window.rplBetSessionRetry){window.rplBetSessionRetry=setInterval(()=>{if(!wrap.classList.contains('hidden'))sendSessionToBetLab();},1000);}
     wrap.scrollIntoView({behavior:'smooth',block:'start'});
