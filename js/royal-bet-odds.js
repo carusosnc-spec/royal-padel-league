@@ -45,6 +45,20 @@
     return { players, pairs, setsUsed };
   }
 
+  // Join sets to their parent match and accept only explicitly confirmed results.
+  // This is a pure filter: callers still must query the official tables read-only.
+  function buildConfirmedHistory(matches, sets) {
+    const confirmed = new Set((matches || []).filter(m => m && m.is_confirmed === true &&
+      String(m.approval_status || '').toLowerCase() === 'confirmed' && m.id != null)
+      .map(m => String(m.id)));
+    const eligibleSets = (sets || []).filter(s => s && s.match_id != null && confirmed.has(String(s.match_id)));
+    return {
+      ...buildHistory(eligibleSets),
+      confirmedMatchesUsed: confirmed.size,
+      eligibleSetRows: eligibleSets.length
+    };
+  }
+
   function individualStrength(history, id) {
     const s = history.players.get(String(id));
     if (!s) return 0;
@@ -99,5 +113,5 @@
       };
     });
   }
-  window.RoyalBetOdds = Object.freeze({ buildHistory, estimatePairWin, odds, marketSelections });
+  window.RoyalBetOdds = Object.freeze({ buildHistory, buildConfirmedHistory, estimatePairWin, odds, marketSelections });
 })();
