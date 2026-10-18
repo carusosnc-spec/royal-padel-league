@@ -154,8 +154,16 @@
       btn.disabled = true;
       alert.innerHTML = '<div class="rbl-alert">Invio puntata in corso…</div>';
       try {
-        const randomId = (window.crypto && typeof window.crypto.randomUUID === 'function') ? window.crypto.randomUUID() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
-        const idem = 'rbl-' + player.id + '-' + marketId + '-' + btn.dataset.selection + '-' + randomId;
+        // Reuse the same idempotency key if a request is retried after an
+        // uncertain network outcome. Clear it only when the intent changes or
+        // the server confirms success.
+        const intent = [player.id, marketId, btn.dataset.selection, stake].join(':');
+        if (btn.dataset.betIntent !== intent || !btn.dataset.idempotencyKey) {
+          const randomId = (window.crypto && typeof window.crypto.randomUUID === 'function') ? window.crypto.randomUUID() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
+          btn.dataset.betIntent = intent;
+          btn.dataset.idempotencyKey = 'rbl-' + player.id + '-' + marketId + '-' + btn.dataset.selection + '-' + randomId;
+        }
+        const idem = btn.dataset.idempotencyKey;
         const { error } = await sb.rpc(RPC.placeBet, {
           p_market_id: marketId,
           p_selection_key: btn.dataset.selection,
@@ -163,6 +171,8 @@
           p_idempotency_key: idem
         });
         if (error) throw error;
+        delete btn.dataset.idempotencyKey;
+        delete btn.dataset.betIntent;
         alert.innerHTML = '<div class="rbl-alert">Puntata registrata. Aggiorno saldo e storico…</div>';
         await loadDashboard(root);
       } catch (e) {
