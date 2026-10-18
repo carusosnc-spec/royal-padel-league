@@ -9,13 +9,13 @@
     'most_sets_won', 'fewest_sets_won', 'regular_season_champion',
     'bonus_ranking_champion', 'finals_champion', 'finals_podium'
   ]);
-  const keyOf = row => [
+  const groupOf = row => [
     row.market_scope,
     row.market_scope === 'match' ? String(row.calendar_match_id) : String(row.season_key),
     row.market_type,
-    row.set_number == null ? '' : String(row.set_number),
-    String(row.selection_key)
+    row.set_number == null ? '' : String(row.set_number)
   ].join('|');
+  const keyOf = row => groupOf(row) + '|' + String(row.selection_key);
   function validate(row) {
     if (!row || typeof row !== 'object') return 'riga non valida';
     if (!ALLOWED_TYPES.has(row.market_type)) return 'tipo mercato non supportato';
@@ -69,6 +69,27 @@
           requires_operator_review: true
         }
       });
+    }
+    // A market group is publishable only when its outcomes are represented together
+    // and probabilities form a distribution. Existing rows may complete a draft group.
+    const groups = new Map();
+    for (const row of [...(existing || []), ...planned]) {
+      if (!row || validate(row)) continue;
+      const group = groupOf(row);
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push(row);
+    }
+    for (const [group, rows] of groups) {
+      const plannedKeys = new Set(planned.filter(row => groupOf(row) === group).map(keyOf));
+      if (!plannedKeys.size) continue;
+      const probs = rows.map(row => Number(row.theoretical_probability));
+      const total = probs.reduce((sum, p) => sum + p, 0);
+      if (rows.length < 2 || probs.some(p => !Number.isFinite(p) || p <= 0 || p >= 1) ||
+          !Number.isFinite(total) || Math.abs(total - 1) > 0.02) {
+        const rejected = planned.filter(row => groupOf(row) === group);
+        for (const row of rejected) skipped.push({ candidate: row, reason: 'gruppo incompleto o probabilità non sommate a 1 (tolleranza 0,02)' });
+        for (let i = planned.length - 1; i >= 0; i--) if (groupOf(planned[i]) === group) planned.splice(i, 1);
+      }
     }
     return { planned, skipped, writePerformed: false };
   }
