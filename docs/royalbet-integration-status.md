@@ -55,3 +55,13 @@ Le RPC attuali usano `SECURITY DEFINER`. Le definizioni ispezionate controllano 
 4. Implementare il generatore idempotente di mercati e quote basate sullo storico RPL.
 5. Implementare il trigger/processo di liquidazione solo dopo la convalida ufficiale dei risultati.
 6. Aprire una pull request; non unire a `main` prima della verifica funzionale e mobile.
+
+
+## Verifiche tecniche aggiuntive — 18 ottobre 2026
+
+- Confrontate le query del modulo con le colonne reali di `rpl_bet_markets`, `rpl_bet_wagers`, `rpl_bet_wallets`, `rpl_bet_wallet_transactions`, `rpl_bet_predictions`, `player_accounts`, `matches`, `sets`, `match_awards` e `calendar_matches`: i campi usati dal pannello giocatore esistono nello schema corrente.
+- Verificati gli argomenti delle RPC chiamate dal pannello e dalla console: `rpl_place_bet(p_market_id, p_selection_key, p_stake, p_idempotency_key)`, `rpl_admin_update_bet_market_odds(p_market_id, p_odds)`, `rpl_admin_set_bet_market_status(p_market_id, p_new_status)`, `rpl_settle_bet_market(p_market_id, p_winning_selection_key)`, `rpl_void_bet_market(p_market_id, p_reason)`.
+- La liquidazione è una RPC `SECURITY DEFINER` e verifica che l'utente autenticato appartenga a `operators`. Liquida l'intero gruppo identificato da ambito, tipo, set, partita e stagione, quindi la selezione vincente va confermata con attenzione.
+- Le policy attualmente presenti su `rpl_bet_predictions` consentono SELECT a `anon, authenticated` e anche INSERT/UPDATE a tali ruoli. È una superficie di accesso troppo ampia: la migrazione proposta rimuove le policy di scrittura e limita la lettura agli autenticati. La migrazione resta NON applicata.
+- Il modulo player aveva un separatore di riga letterale che avrebbe causato errore di sintassi: corretto nel commit `cd607dd`.
+- Controllo sintattico JavaScript superato per i tre moduli e il test. Eseguita anche una prova isolata del motore quote con dati sintetici: probabilità complementari, somma delle probabilità pari a 1 e quote superiori a 1. Il test runner Node e i test end-to-end non sono ancora stati eseguiti.
