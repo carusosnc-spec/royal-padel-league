@@ -24,3 +24,10 @@
 - Verify expired markets close and future markets remain untouched.
 - Verify a wager stores the current database odds in `odds_locked`, and the wallet/ledger remains unchanged when a wager is rejected.
 - Do not enable wagering until the function and RPC have been validated together. `WAGERING_ENABLED` remains false.
+
+## Database-side quote freshness gate (development branch)
+- Migration `202610180002_royalbet_quote_freshness.sql` adds `quote_calculated_at` and updates `rpl_place_bet` to lock the market row during placement.
+- For `regular_season_champion`, the RPC rejects missing/stale (>10 minutes) server-calculated quotes and invalid odds before touching the wallet.
+- The Edge Function writes `quote_calculated_at` whenever it refreshes an open season market.
+- This migration has NOT been applied to Supabase. The RPC behavior must be tested in a disposable/test environment or reviewed before production migration.
+- Idempotent retries return the original wager without a second debit, preserving the existing behavior.
