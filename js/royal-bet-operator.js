@@ -55,6 +55,14 @@
     root.querySelectorAll('[data-status]').forEach(b=>b.onclick=async()=>{
       await action(root,async()=>sb().rpc('rpl_admin_set_bet_market_status',{p_market_id:Number(b.dataset.status),p_new_status:b.dataset.next}),'Stato aggiornato.');
     });
+    root.querySelectorAll('[data-settle]').forEach(b=>b.onclick=async()=>{
+      const marketId=Number(b.dataset.settle);
+      const suggested=b.dataset.selection;
+      const winning=window.prompt('Chiave dell’esito vincente per tutto il gruppo di mercati:',suggested);
+      if(winning===null||!winning.trim())return;
+      if(!window.confirm('Confermi la liquidazione del gruppo di mercati usando l’esito "'+winning.trim()+'"? Questa operazione accredita le vincite.'))return;
+      await action(root,async()=>sb().rpc('rpl_settle_bet_market',{p_market_id:marketId,p_winning_selection_key:winning.trim()}),'Mercato liquidato.');
+    });
     root.querySelectorAll('[data-void]').forEach(b=>b.onclick=async()=>{
       const reason=window.prompt('Motivo dell’annullamento e rimborso:');
       if(reason===null)return;
