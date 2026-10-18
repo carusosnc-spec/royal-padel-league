@@ -161,3 +161,12 @@ test('hardening migration keeps market mutations behind operator-checked RPCs', 
   }
   assert.match(migration, /NOT applied to production/);
 });
+
+
+test('wager UI reuses idempotency key for an unchanged retry intent', () => {
+  const ui = fs.readFileSync('js/royal-bet-lab.js', 'utf8');
+  assert.match(ui, /btn\.dataset\.betIntent !== intent \|\| !btn\.dataset\.idempotencyKey/);
+  assert.match(ui, /const idem = btn\.dataset\.idempotencyKey/);
+  assert.match(ui, /delete btn\.dataset\.idempotencyKey/);
+  assert.match(ui, /delete btn\.dataset\.betIntent/);
+});
