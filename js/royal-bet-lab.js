@@ -99,7 +99,12 @@
     if (marketsRes.error) throw marketsRes.error;
     if (wagersRes.error) throw wagersRes.error;
     const wallet = walletRes.data;
-    const markets = marketsRes.data || [];
+    let markets = marketsRes.data || [];
+    // Read-only live quote calculation from official, confirmed RPL results.
+    // It never writes prices to the database and is not the security boundary for wagers.
+    if (window.RoyalBetRankingSource && window.RoyalBetRankingOdds) {
+      markets = await window.RoyalBetRankingSource.quoteMarkets(sb, markets, window.RoyalBetRankingOdds);
+    }
     const wagers = wagersRes.data || [];
     try {
       await loadScriptOnce('./js/royal-bet-ranking-odds.js',()=>!!window.RoyalBetRankingOdds);
@@ -125,7 +130,7 @@
           <button data-tab="markets" aria-selected="true">Mercati aperti</button>
           <button data-tab="wagers" aria-selected="false">Le mie puntate</button>
         </div>
-        <div id="rbl-alert" aria-live="polite">${WAGERING_ENABLED ? "" : '<div class="rbl-alert">Modalità verifica: consultazione attiva, puntate temporaneamente disabilitate.</div>'}</div>
+        <div id="rbl-alert" aria-live="polite">${WAGERING_ENABLED ? "" : '<div class="rbl-alert">Modalità verifica: quote dinamiche dalla classifica ufficiale confermata; puntate temporaneamente disabilitate.</div>'}</div>
         <div id="rbl-markets" class="rbl-card">
           ${markets.length ? markets.map(m => `
             <article class="rbl-market">
@@ -134,10 +139,11 @@
                 <div>${esc(m.selection_label)}</div>
                 <div class="rbl-muted">${m.market_scope === 'season' ? 'Mercato stagione' : (m.market_scope === 'month' ? 'Mercato mensile' : (m.calendar_match_id ? 'Partita #'+m.calendar_match_id : 'Mercato generale'))}${m.set_number ? ' · Set '+m.set_number : ''}</div>
                 ${m.dynamic_quote ? '<div class="rbl-muted">Quota ricalcolata dalla classifica ufficiale · anteprima non salvata</div>' : ''}
-                ${m.dynamic_quote_error ? '<div class="rbl-muted">Quota dinamica non disponibile</div>' : ''}
+                ${m.dynamic_quote_error ? '<div class="rbl-muted">Quota dinamica non disponibile: verifica i dati ufficiali</div>' : ''}
+                ${m.dynamic_quote_blocked ? '<div class="rbl-muted">Mercato non puntabile: '+esc(m.dynamic_quote_reason || 'verifica automatica')+'</div>' : ''}
                 <label class="rbl-muted" for="rbl-stake-${m.id}">Puntata (crediti)</label><br>
                 <input class="rbl-input" id="rbl-stake-${m.id}" type="number" min="1" step="1" inputmode="numeric" value="10">
-                <button class="rbl-btn" data-bet="${m.id}" data-selection="${esc(m.selection_key)}" ${WAGERING_ENABLED ? "" : "disabled"}>${WAGERING_ENABLED ? "Punta" : "Prove non attive"}</button>
+                <button class="rbl-btn" data-bet="${m.id}" data-selection="${esc(m.selection_key)}" ${WAGERING_ENABLED && !m.dynamic_quote_blocked ? "" : "disabled"}>${!WAGERING_ENABLED ? "Prove non attive" : (m.dynamic_quote_blocked ? "Mercato bloccato" : "Punta")}</button>
               </div>
               <div class="rbl-odd"><span class="rbl-muted">${m.dynamic_quote ? 'Quota live*' : 'Quota'}</span><strong>${fmt(m.dynamic_quote ? m.display_odds : m.odds)}</strong></div>
             </article>`).join('') : '<div class="rbl-empty">Non ci sono mercati aperti al momento.</div>'}
