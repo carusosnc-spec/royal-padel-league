@@ -26,6 +26,7 @@ jobs:
           node --check js/royal-bet-odds.js
           node --check js/royal-bet-market-planner.js
           node --check js/royal-bet-ranking-odds.js
+          node --check js/royal-bet-ranking-source.js
       - name: Run odds model tests
         run: node --test tests/royal-bet-odds.test.js
 
