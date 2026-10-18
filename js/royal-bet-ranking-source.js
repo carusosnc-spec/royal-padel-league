@@ -5,18 +5,17 @@
 (function () {
   'use strict';
   const escDate = d => new Date(d).getTime();
-  const dateKey = d => {
-    const x = new Date(d);
-    return x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0');
-  };
+  // Use the ISO calendar date consistently; don't let the browser timezone shift a match across months.
+  const dateKey = d => String(d || '').slice(0,10);
   const normalize = v => String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'');
 
   function resolvePeriod(market, now = new Date()) {
-    const scope = market.market_scope === 'month' ? 'month' : 'season';
+    const metadata = market.market_metadata || {};
+    const scope = market.market_scope === 'month' || metadata.period_scope === 'month' || metadata.scope === 'month' || metadata.month != null || metadata.month_number != null ? 'month' : 'season';
     const seasonKey = String(market.season_key || (now.getFullYear() + '-' + (now.getFullYear()+1)));
     const startYear = Number((seasonKey.match(/(20\d{2})/) || [])[1]) || now.getFullYear();
     if (scope === 'month') {
-      const md = market.market_metadata || {};
+      const md = metadata;
       const month = Number(md.month || md.month_number || now.getMonth()+1);
       const year = Number(md.year || startYear);
       if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(year)) throw new Error('Periodo mensile non valido.');
