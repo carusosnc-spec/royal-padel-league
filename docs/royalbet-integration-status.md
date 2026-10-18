@@ -41,7 +41,7 @@ Le RPC attuali usano `SECURITY DEFINER`. Le definizioni ispezionate controllano 
 `rpl_place_bet` controlla giocatore ufficiale attivo, mercato aperto, finestra temporale, selezione, divieto di puntare sulla propria partita, saldo e chiave idempotente. Le quote sono copiate nella puntata al momento della giocata.
 
 ## Limiti attuali
-- I moduli sono preparati ma non ancora montati nell'HTML principale.
+- I moduli player/operator sono montati nell'`index.html` del solo branch `royalbet-rebuild-foundation`: scheda Royal Bet nell'Area Giocatori e voce dedicata nell'Area Riservata protetta. `main` e il sito di produzione non sono stati modificati.
 - Non è stata eseguita alcuna puntata di prova e non è stata liquidata alcuna puntata.
 - La migrazione SQL non è stata eseguita.
 - Non è ancora implementato il processo automatico che genera mercati e quote dallo storico, né l'attivazione automatica della liquidazione dopo la convalida dei risultati.
@@ -72,4 +72,4 @@ Le RPC attuali usano `SECURITY DEFINER`. Le definizioni ispezionate controllano 
 - Ispezionato il pacchetto corrente `RPL_RIMOZIONE_ROYAL_BET_LAB_v9.1.76.zip` e confrontato con `RPL_Royal_Bet_Lab_v9.1.70.zip`. Il pacchetto corrente contiene pagine Royal Bet disattivate e ha rimosso dal `index.html` il collegamento nell'Area Giocatori, la scheda nella console operatore e il bridge di sessione dell'iframe.
 - La vecchia versione 9.1.70 includeva un bridge `postMessage` per trasferire la sessione Supabase dalla pagina RPL alle pagine Royal Bet, senza richiedere un nuovo accesso. Il ripristino integrale di quell'`index.html` non è una soluzione sicura: è una versione precedente e può perdere modifiche introdotte dopo la 9.1.70.
 - La pagina storica salva inoltre pronostici in `rpl_bet_predictions` dal client; le policy attuali consentono ancora scritture ai ruoli anonimo/autenticato. Non va riattivata alla cieca prima di aver limitato le policy e verificato quali schermate dipendono da tali scritture.
-- Decisione: mantenere il ramo di lavoro separato e portare il bridge di sessione nella versione corrente, senza sostituire l'`index.html` intero. Prima del rilascio servono montaggio puntuale, test con sessione reale in staging e verifica che il resto della RPL non cambi.
+- Decisione: mantenere il ramo di lavoro separato e integrare puntualmente i moduli nella versione corrente, senza ripristinare il vecchio `index.html`. Il montaggio è stato applicato con script idempotente e verificato da GitHub Actions; prima del rilascio servono test con sessioni reali di staging, verifica mobile e controllo di regressione sull'intera RPL.
