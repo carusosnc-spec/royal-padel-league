@@ -1233,6 +1233,28 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 
 <style id="rpl-9-1-56-set-pairings-weather">.rpl-cal-set-score{display:block;padding:10px 12px;margin:7px 0;border-radius:10px;background:rgba(255,255,255,.045);font-size:16px}.rpl-cal-set-pairings{display:grid;grid-template-columns:1fr;gap:5px;margin-top:6px;font-size:14px;line-height:1.35}.rpl-cal-set-pairings span{display:block;overflow-wrap:anywhere}@media(max-width:600px){.rpl-cal-set-score{font-size:16px;padding:10px}.rpl-cal-set-pairings{font-size:14px}}</style>
 
+<style id="rpl-royal-bet-lab">
+.rpl-bet-trigger{display:block;width:100%;margin:10px 0 4px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,216,106,.75);background:linear-gradient(110deg,rgba(255,216,106,.18),rgba(21,49,71,.9));color:#ffe28a;font-weight:900;letter-spacing:.3px;font-size:14px;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.16)}
+.rpl-bet-trigger:active{transform:scale(.99)}
+.rpl-bet-intro{border:1px solid rgba(255,216,106,.3);background:rgba(255,216,106,.06);border-radius:13px;padding:13px;margin:10px 0 14px;color:#dce7f2;font-size:13px;line-height:1.45}
+.rpl-bet-set{border:1px solid #31475b;border-radius:14px;padding:13px;margin:12px 0;background:linear-gradient(150deg,#10253a,#091522)}
+.rpl-bet-set h3{margin:0 0 10px;color:#ffdf7c;font-size:15px}
+.rpl-bet-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.rpl-bet-team{min-width:0;border-radius:10px;padding:10px;background:rgba(255,255,255,.045);border:1px solid #2b4054}
+.rpl-bet-team strong{display:block;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.rpl-bet-team small{display:block;color:#aab9c9;margin-top:5px;font-size:11px}
+.rpl-bet-vs{font-size:11px;color:#9eb0c2;font-weight:900}
+.rpl-bet-quote{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #293d50;font-size:13px}
+.rpl-bet-quote b{color:#ffe28a;font-size:19px}
+.rpl-bet-prob{height:7px;border-radius:9px;overflow:hidden;display:flex;background:#26394b;margin-top:8px}
+.rpl-bet-prob span:first-child{background:#58c9a4}.rpl-bet-prob span:last-child{background:#e4b957}
+.rpl-bet-history{margin-top:10px;color:#bdcad8;font-size:12px;line-height:1.55}
+.rpl-bet-badge{display:inline-block;border-radius:20px;padding:4px 8px;background:#243b4f;color:#d6e6f4;font-size:11px;font-weight:800;margin-top:8px}
+.rpl-bet-empty{padding:12px;border:1px dashed #52677a;border-radius:10px;color:#c1cedb;font-size:13px}
+@media(max-width:520px){.rpl-bet-set{padding:10px}.rpl-bet-team{padding:8px}.rpl-bet-team strong{font-size:12px}.rpl-bet-quote b{font-size:17px}.rpl-bet-teams{gap:5px}}
+.rpl-bet-forecast-history{border:1px solid rgba(88,201,164,.35);border-radius:13px;background:rgba(17,55,54,.24);padding:13px;margin:16px 0 4px;color:#dce7f2;font-size:13px;line-height:1.5}.rpl-bet-forecast-history>b{color:#8de3c4;font-size:14px}.rpl-bet-history-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}.rpl-bet-history-grid>div{background:rgba(255,255,255,.045);border:1px solid #2b4054;border-radius:10px;padding:10px}.rpl-bet-history-grid strong{display:block;font-size:21px;color:#ffe28a}.rpl-bet-history-grid small{display:block;color:#b8c8d7;font-size:11px}.rpl-bet-history-note{font-size:11px;color:#b8c8d7;margin:10px 0 0}
+</style>
+
 
 <style id="rpl-royalbet-integration-v1">
 .rpl-royalbet-card{border:1px solid rgba(231,185,78,.58);background:radial-gradient(circle at 100% 0,rgba(231,185,78,.12),transparent 42%),linear-gradient(145deg,#0b1d2c,#06121f)}
@@ -1299,6 +1321,17 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
   </div>
 
   <div id="playerDashboard" class="hidden">
+    <section id="rplRoyalBetCard" class="card rpl-royalbet-card">
+      <div class="rpl-royalbet-head">
+        <div><div class="rpl-royalbet-kicker">ROYAL PADEL LEAGUE</div><h2>🎰 ROYAL BET LAB</h2><div class="muted">Mercati, puntate e saldo crediti virtuali.</div></div>
+        <span class="badge">CREDITI VIRTUALI</span>
+      </div>
+      <button type="button" id="rplRoyalBetOpenBtn" class="primary rpl-royalbet-open">🎰 APRI ROYAL BET LAB</button>
+      <div id="rplRoyalBetFrameWrap" class="hidden rpl-royalbet-frame-wrap">
+        <div class="rpl-royalbet-framebar"><span>ROYAL BET LAB · Area giocatori</span><button type="button" id="rplRoyalBetCloseBtn" aria-label="Chiudi Royal Bet">✕ Chiudi</button></div>
+        <iframe id="rplRoyalBetFrame" title="Royal Bet Lab" loading="lazy" src="about:blank" referrerpolicy="same-origin" allow="clipboard-read; clipboard-write"></iframe>
+      </div>
+    </section>
     <section id="rplMessagingCard" class="card rpl-chat-card">
       <div class="rpl-chat-heading"><div><div class="rpl-chat-kicker">ROYAL PADEL LEAGUE</div><h2 style="margin:3px 0 4px">💬 Messaggi</h2><div class="muted">Chat riservate ai giocatori ufficiali attivi.</div></div><span class="badge">BETA</span></div>
       <button type="button" id="rplChatToggle" class="primary rpl-chat-toggle">APRI MESSAGGI</button>
@@ -1558,8 +1591,10 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <button type="button" id="opConfirmTab" onclick="showOperatorSection('confirm')">✅ Partite da confermare</button>
 <button type="button" id="opNotifyTab" onclick="showOperatorSection('notifications')">🔔 Notifiche</button>
 <button type="button" id="opAccountsTab" onclick="showOperatorSection('accounts')">👥 Account giocatori</button>
+<button type="button" id="opRoyalBetTab" onclick="showOperatorSection('royalbet')">🎰 Console Royal Bet Lab</button>
 </div>
 </div>
+<div id="operatorRoyalBetSection" class="hidden"><div class="card" style="padding:0;overflow:hidden"><h2 style="padding:16px 16px 0">🎰 Console di supervisione Royal Bet Lab</h2><div class="muted" style="padding:0 16px 12px">Mercati, quote, puntate, portafogli e operazioni di supervisione. Le modifiche sono tracciate e i rimborsi passano dal sistema crediti.</div><iframe id="rplRoyalBetOperatorFrame" title="Console Royal Bet Lab operatore" src="./royal-bet-operator.html?v=9.1.72" loading="lazy" referrerpolicy="same-origin" style="display:block;width:100%;height:1250px;border:0;background:#07121e;border-radius:0 0 12px 12px"></iframe></div></div>
 <div id="operatorVotingSection" class="hidden">
 <div class="card">
 <h2>🗳️ Votazioni settimanali</h2>
@@ -1706,6 +1741,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <script>
 const SUPABASE_URL="https://vanbadzkxvextdvnqwtr.supabase.co";
 const SUPABASE_KEY="sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs";
+// Royal Bet Lab integration package v9.1.72
 const RPL_VAPID_PUBLIC_KEY="BBnDg3GBNrM0rK17CUHivSHPbH-7tPfNQ8n8gk0aKtt_-h9q37GnSUQJYqp659248XtSZg13jLgSKDnqX6HToJE";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{experimental:{passkey:true}}}); window.sb=sb;
 
@@ -2616,11 +2652,12 @@ window.loadPlayerAccountResetList=loadPlayerAccountResetList;
 window.resetSelectedPlayerPassword=resetSelectedPlayerPassword;
 
 function showOperatorSection(which){
-  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), vc=$("operatorVoteConsoleSection"), p=$("operatorConfirmSection"), n=$("operatorNotificationsSection"), a=$("operatorAccountsSection");
+  const m=$("operatorMatchSection"), c=$("operatorCalendarSection"), v=$("operatorVotingSection"), vc=$("operatorVoteConsoleSection"), p=$("operatorConfirmSection"), n=$("operatorNotificationsSection"), a=$("operatorAccountsSection"); const rb=$("operatorRoyalBetSection");
   const mt=$("opMatchTab"), ct=$("opCalendarTab"), vt=$("opVotingTab"), vct=$("opVoteConsoleTab"), pt=$("opConfirmTab"), nt=$("opNotifyTab"), at=$("opAccountsTab");
-  [m,c,v,vc,p,n,a].forEach(x=>x?.classList.add("hidden"));
-  [mt,ct,vt,vct,pt,nt,at].forEach(x=>x?.classList.remove("primary"));
-  if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
+  [m,c,v,vc,p,n,a,rb].forEach(x=>x?.classList.add("hidden"));
+  [mt,ct,vt,vct,pt,nt,at,$("opRoyalBetTab")].forEach(x=>x?.classList.remove("primary"));
+  if(which==="royalbet"){rb?.classList.remove("hidden");$("opRoyalBetTab")?.classList.add("primary");window.rplSendOperatorBetSession?.();}
+  else if(which==="calendar"){c?.classList.remove("hidden");ct?.classList.add("primary");fillCalendarPlayers();renderCalendarWeek();loadCalendarWeeks();}
   else if(which==="voting"){v?.classList.remove("hidden");vt?.classList.add("primary");setPollCreateDefaults();initPollOptionRows();loadOperatorVoting();}
   else if(which==="voteconsole"){vc?.classList.remove("hidden");vct?.classList.add("primary");}
   else if(which==="confirm"){p?.classList.remove("hidden");pt?.classList.add("primary");loadOperatorPendingMatches();}
@@ -3524,7 +3561,7 @@ function renderCalendar(matches, resultRows=[], setRows=[], awardRows=[]){
       <div class="cal-date">⭐ PROSSIMA PARTITA · ${esc(fmtDate(first._date))}</div><div class="cal-time">${esc(fmtTime(first._date))}</div>
       <div class="cal-court">📍 ${esc(first.court||'Campo da definire')}</div>${rplCalendarWeatherMarkup(first,0)}
       <div class="rpl-public-cal-players"><div class="rpl-cal-side">${playerCard(first.player_1)}${playerCard(first.player_2)}</div><div class="rpl-cal-vs">VS</div><div class="rpl-cal-side right">${playerCard(first.player_3)}${playerCard(first.player_4)}</div></div>
-      <div class="rpl-distinta-wrap">${publicDistintaButton(first.id)}</div></div>`:'';
+      <button type="button" class="rpl-bet-trigger" data-rpl-bet="${esc(first.id)}">📊 ROYAL BET LAB · STATISTICHE & QUOTE</button><div class="rpl-distinta-wrap">${publicDistintaButton(first.id)}</div></div>`:'';
   const upcomingList=valid.filter(m=>m._date.getTime()>now.getTime()&&(!first||String(m.id)!==String(first.id)));
   const compactMatch=m=>{
     const same=m._date.toDateString()===now.toDateString();
@@ -3533,13 +3570,15 @@ function renderCalendar(matches, resultRows=[], setRows=[], awardRows=[]){
     const cls=completedMatch?'rpl-cal-history-card':`rpl-public-cal-item ${same?'same-day':''}`;
     return `<div class="${cls}"><div class="rpl-public-cal-item-head"><div><div class="mini-date">${esc(fmtDayShort(m._date))}</div><div class="mini-time">${esc(fmtTime(m._date))}</div></div><div class="mini-court">📍 ${esc(m.court||'Campo da definire')}</div>${same&&!completedMatch?'<div class="rpl-cal-today">OGGI · DA GIOCARE</div>':''}</div>
       <div class="rpl-public-cal-item-match"><div class="rpl-public-cal-team"><div class="rpl-public-cal-team-logos">${miniPlayer(m.player_1)}${miniPlayer(m.player_2)}</div><div class="rpl-public-cal-team-names">${esc(names[0])} <span>•</span> ${esc(names[1])}</div></div><div class="rpl-public-cal-item-vs">VS</div><div class="rpl-public-cal-team"><div class="rpl-public-cal-team-logos">${miniPlayer(m.player_3)}${miniPlayer(m.player_4)}</div><div class="rpl-public-cal-team-names">${esc(names[2])} <span>•</span> ${esc(names[3])}</div></div></div>
-      ${completedMatch?`<div class="rpl-cal-history-label">✓ RISULTATO INSERITO</div><button type="button" class="rpl-cal-open-result" data-result-calendar="${esc(m.id)}">📊 APRI RISULTATO E STATISTICHE</button>`:`${rplCalendarWeatherMarkup(m, 'upcoming-'+m.id)}<div class="rpl-distinta-wrap">${publicDistintaButton(m.id)}</div>`}</div>`;
+      ${completedMatch?`<div class="rpl-cal-history-label">✓ RISULTATO INSERITO</div><button type="button" class="rpl-cal-open-result" data-result-calendar="${esc(m.id)}">📊 APRI RISULTATO E STATISTICHE</button>`:`${rplCalendarWeatherMarkup(m, 'upcoming-'+m.id)}<button type="button" class="rpl-bet-trigger" data-rpl-bet="${esc(m.id)}">📊 ROYAL BET LAB · STATISTICHE & QUOTE</button><div class="rpl-distinta-wrap">${publicDistintaButton(m.id)}</div>`}</div>`;
   };
   const delayedList=delayedToday.filter(m=>!upcomingList.some(x=>String(x.id)===String(m.id))).map(m=>({...m,_delayed:true}));
   const listItems=[...delayedList,...upcomingList].sort((a,b)=>a._date-b._date);
   const list=listItems.length?`<div class="rpl-public-cal-next">${delayedList.length?'APPUNTAMENTI DI OGGI E PROSSIME PARTITE':'PROSSIMI APPUNTAMENTI'}</div><div class="rpl-public-cal-list">${listItems.map(compactMatch).join('')}</div>`:'';
   const timeline=completed.length?`<div class="rpl-cal-history-heading">⏱️ TIMELINE · PARTITE CON RISULTATO</div><div class="rpl-cal-history-timeline">${completed.sort((a,b)=>b._date-a._date).map(m=>`<div class="rpl-cal-timeline-item"><div class="rpl-cal-timeline-dot"></div>${compactMatch(m)}</div>`).join('')}</div>`:'';
   box.innerHTML=(main||(!listItems.length&&!completed.length?'<div class="rpl-public-cal-empty">Non ci sono partite programmate</div>':''))+list+timeline+`<div class="rpl-match-modal" id="rplMatchStatsModal" role="dialog" aria-modal="true" aria-labelledby="rplMatchStatsTitle"><div class="rpl-match-modal-panel"><div class="rpl-match-modal-head"><div><div class="muted">ROYAL PADEL LEAGUE</div><h2 id="rplMatchStatsTitle">Risultato e statistiche</h2><div id="rplMatchStatsSubtitle" class="muted" style="margin-top:5px;font-size:14px"></div></div><button type="button" class="rpl-match-modal-close" id="rplMatchStatsClose" aria-label="Chiudi">×</button></div><div id="rplMatchStatsContent"></div></div></div>`;
+  // Archivia automaticamente le quote giornaliere di tutte le partite future: se arrivano nuovi risultati, la previsione del giorno viene aggiornata; gli snapshot dei giorni precedenti restano nello storico.
+  valid.filter(m=>m._date.getTime()>now.getTime()&&!resultByCalendar.has(String(m.id))).forEach(m=>{try{const tmp=document.createElement('div');tmp.innerHTML=renderRoyalBetAnalysis(m,setRows,resultRows);persistRoyalBetForecastRows(m,tmp).catch(e=>console.warn('Salvataggio previsione Royal Bet non disponibile',e));}catch(e){console.warn('Calcolo previsione Royal Bet non disponibile',e);}});
   const modal=box.querySelector('#rplMatchStatsModal');
   const closeModal=()=>{modal?.classList.remove('open');document.body.style.overflow='';};
   box.querySelector('#rplMatchStatsClose')?.addEventListener('click',closeModal);
@@ -3551,10 +3590,93 @@ function renderCalendar(matches, resultRows=[], setRows=[], awardRows=[]){
     box.querySelector('#rplMatchStatsContent').innerHTML=renderCalendarMatchStats(cm,match,setsByMatch,awardsByMatch);
     modal.classList.add('open');document.body.style.overflow='hidden';
   }));
-
+  box.querySelectorAll('[data-rpl-bet]').forEach(btn=>btn.addEventListener('click',()=>{
+    const cm=valid.find(x=>String(x.id)===String(btn.dataset.rplBet));if(!cm)return;
+    box.querySelector('#rplMatchStatsTitle').textContent='ROYAL BET LAB';
+    box.querySelector('#rplMatchStatsSubtitle').textContent=`${fmtDate(cm._date)} · ore ${fmtTime(cm._date)} · ${cm.court||'Campo da definire'}`;
+    box.querySelector('#rplMatchStatsContent').innerHTML=`<div class="rpl-bet-intro" style="margin-top:0;text-align:center"><b>VUOI GIOCARE?</b><br>Apri Royal Bet Lab nell’Area Giocatori e piazza le tue puntate con i crediti virtuali.<br><button type="button" class="primary" id="rplOpenBetLabFromCalendar" style="margin-top:10px;width:100%;min-height:48px">🎰 APRI ROYAL BET LAB E SCOMMETTI</button></div>`+renderRoyalBetAnalysis(cm,setRows,resultRows);
+    box.querySelector('#rplOpenBetLabFromCalendar')?.addEventListener('click',()=>{modal.classList.remove('open');document.body.style.overflow='';if(typeof window.rplOpenPlayerAreaAndBetLab==='function')window.rplOpenPlayerAreaAndBetLab();else console.error('Collegamento Royal Bet Lab non inizializzato');});
+    initRoyalBetPredictionHistory(cm,box,setRows,resultRows).catch(e=>console.warn('Archivio Royal Bet non disponibile',e));
+    modal.classList.add('open');document.body.style.overflow='hidden';
+  }));
   box.querySelectorAll('[data-result-calendar]').forEach(btn=>btn.addEventListener('click',()=>{box.querySelector('#rplMatchStatsTitle').textContent='Risultato e statistiche';}));
   initRplCalendarWeather(box,[...valid.filter(m=>m._date.getTime()>now.getTime()),...delayedList]).catch(e=>console.warn('Meteo calendario non disponibile',e));
 }
+function renderRoyalBetAnalysis(calendarMatch,setRows,resultRows){
+  const official=id=>{const p=playerById(id);return !!p&&p.is_guest!==true&&p.is_guest!==1;};
+  const history=(setRows||[]).filter(s=>{
+    const ids=[s.pair_a_player_1,s.pair_a_player_2,s.pair_b_player_1,s.pair_b_player_2];
+    return ids.every(id=>id!=null&&official(id))&&Number(s.games_a)!==Number(s.games_b);
+  });
+  const pairKey=ids=>ids.map(String).sort((a,b)=>Number(a)-Number(b)).join(':');
+  const pairStats=new Map(),playerStats=new Map(),headStats=new Map();
+  const bumpPlayer=(id,won,gamesFor,gamesAgainst)=>{const k=String(id),x=playerStats.get(k)||{played:0,wins:0,gamesFor:0,gamesAgainst:0};x.played++;if(won)x.wins++;x.gamesFor+=gamesFor;x.gamesAgainst+=gamesAgainst;playerStats.set(k,x);};
+  history.forEach(s=>{
+    const a=[s.pair_a_player_1,s.pair_a_player_2],b=[s.pair_b_player_1,s.pair_b_player_2],ga=Number(s.games_a)||0,gb=Number(s.games_b)||0,winA=ga>gb;
+    [[a,winA,ga,gb],[b,!winA,gb,ga]].forEach(([ids,won,gf,ga2])=>{const k=pairKey(ids),x=pairStats.get(k)||{played:0,wins:0,gamesFor:0,gamesAgainst:0,matches:new Set()};x.played++;x.matches.add(String(s.match_id));if(won)x.wins++;x.gamesFor+=gf;x.gamesAgainst+=ga2;pairStats.set(k,x);ids.forEach(id=>bumpPlayer(id,won,gf,ga2));});
+    const ka=pairKey(a),kb=pairKey(b),ordered=[ka,kb].sort(),hk=ordered.join('|'),h=headStats.get(hk)||{played:0,winsFirst:0,matches:new Set()};h.played++;h.matches.add(String(s.match_id));if((winA&&ka===ordered[0])||(!winA&&kb===ordered[0]))h.winsFirst++;headStats.set(hk,h);
+  });
+  const players=rplDistintaPlayers(calendarMatch).filter(p=>p&&p.id!=null);
+  if(players.length!==4)return '<div class="rpl-bet-empty">Non riesco a identificare tutti e quattro i giocatori della partita.</div>';
+  // Se la distinta non contiene la classifica, usa fascia e ID come ordinamento stabile: è solo una previsione indicativa.
+  const rankPlayers=players.map(p=>({...p,rank:Number(p.rank)>0&&Number(p.rank)<999?Number(p.rank):Number(p.fascia)*100+Number(p.id)}));
+  const type=calendarMatch.match_type==='ONE_VS_ONE'?'ONE_VS_ONE':'ALL_VS_ALL';
+  const planned=rplSetPairs(rankPlayers,type);
+  const names=ids=>ids.map(id=>playerById(id)?.name||'Giocatore').join(' + ');
+  const pRate=id=>{const x=playerStats.get(String(id));return x?(x.wins+2)/(x.played+4):.5;};
+  const pStats=ids=>pairStats.get(pairKey(ids))||{played:0,wins:0,gamesFor:0,gamesAgainst:0,matches:new Set()};
+  const pairRate=ids=>{const x=pStats(ids);return (x.wins+2)/(x.played+4);};
+  const percent=x=>Math.round(x*100)+'%';
+  const odds=x=>(1/Math.max(.03,Math.min(.97,x))).toFixed(2);
+  const nAll=history.length;
+  const cards=planned.map((pair,i)=>{
+    const a=[pair[0].id,pair[1].id],b=[pair[2].id,pair[3].id];
+    if(a.some(x=>x==null)||b.some(x=>x==null))return '';
+    const sa=pStats(a),sb=pStats(b),ra=pairRate(a),rb=pairRate(b),ia=(pRate(a[0])+pRate(a[1]))/2,ib=(pRate(b[0])+pRate(b[1]))/2;
+    // Stima regolarizzata: rendimento coppia 58%, rendimento individuale 42%; poi correzione prudente sui precedenti esatti.
+    const strengthA=.58*ra+.42*ia,strengthB=.58*rb+.42*ib;
+    let pA=1/(1+Math.exp(-5*(strengthA-strengthB)));
+    const hk=[pairKey(a),pairKey(b)].sort().join('|'),hx=headStats.get(hk);
+    let directN=0,directA=0;
+    if(hx){directN=hx.played;const first=[pairKey(a),pairKey(b)].sort()[0];directA=pairKey(a)===first?hx.winsFirst/hx.played:1-hx.winsFirst/hx.played;const w=Math.min(.28,directN/(directN+5)*.28);pA=pA*(1-w)+directA*w;}
+    pA=Math.max(.08,Math.min(.92,pA));const pB=1-pA;
+    const confidence=nAll>=60&&sa.played>=8&&sb.played>=8?'Buona base dati':nAll>=25?'In crescita':'Limitata · pochi precedenti';
+    const hA=sa.played?`${sa.matches.size} partite · ${sa.wins}/${sa.played} set vinti (${percent(sa.wins/sa.played)})`:'nessuna partita insieme';
+    const hB=sb.played?`${sb.matches.size} partite · ${sb.wins}/${sb.played} set vinti (${percent(sb.wins/sb.played)})`:'nessuna partita insieme';
+    const direct=directN?`Precedenti esatti: ${hx.matches.size} partite / ${directN} set · coppia A ${percent(directA)} vittorie.`:'Nessun precedente esatto tra queste due coppie.';
+    return `<section class="rpl-bet-set" data-rbl-set="${i+1}" data-rbl-a1="${esc(a[0])}" data-rbl-a2="${esc(a[1])}" data-rbl-b1="${esc(b[0])}" data-rbl-b2="${esc(b[1])}" data-rbl-pa="${pA.toFixed(6)}" data-rbl-pb="${pB.toFixed(6)}"><h3>🎾 SET ${i+1}</h3><div class="rpl-bet-teams"><div class="rpl-bet-team"><strong>🟦 ${esc(names(a))}</strong><small>${esc(hA)}</small></div><div class="rpl-bet-vs">VS</div><div class="rpl-bet-team"><strong>🟨 ${esc(names(b))}</strong><small>${esc(hB)}</small></div></div><div class="rpl-bet-prob"><span style="width:${(pA*100).toFixed(1)}%"></span><span style="width:${(pB*100).toFixed(1)}%"></span></div><div class="rpl-bet-quote"><span>Probabilità A <b>${percent(pA)}</b><br><small>Quota teorica ${odds(pA)}</small></span><span style="text-align:right">Probabilità B <b>${percent(pB)}</b><br><small>Quota teorica ${odds(pB)}</small></span></div><div class="rpl-bet-history">${esc(direct)}<br>Precedenti coppia A: ${sa.matches.size} partite / ${sa.played} set · coppia B: ${sb.matches.size} partite / ${sb.played} set.</div><span class="rpl-bet-badge">Affidabilità: ${esc(confidence)}</span></section>`;
+  }).join('');
+  return `<div class="rpl-bet-intro"><b>ROYAL BET LAB · PREVISIONE STATISTICA</b><br>Quote teoriche calcolate dallo storico dei set registrati. Le coppie vengono ricostruite dalla distinta della partita; le statistiche escludono gli ospiti. Le previsioni nuove vengono archiviate e confrontate con i risultati effettivi per misurare la precisione del modello. ${nAll} set ufficiali utili nell'analisi.<br><small>Le quote sono stime statistiche, non quote di mercato né garanzie di risultato.</small></div>${cards||'<div class="rpl-bet-empty">Non sono disponibili coppie previste per questa partita.</div>'}<div id="rplBetForecastHistory" class="rpl-bet-forecast-history"><b>📈 STORICO E PRECISIONE DELLE PREVISIONI</b><p>Caricamento archivio…</p></div>`;
+}
+
+async function persistRoyalBetForecastRows(calendarMatch,root){
+  if(!window.sb||!calendarMatch||!root)return;
+  const now=new Date(),snapshotDate=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const rows=[...root.querySelectorAll('.rpl-bet-set[data-rbl-set]')].map(el=>({calendar_match_id:Number(calendarMatch.id),set_number:Number(el.dataset.rblSet),pair_a_player_1:Number(el.dataset.rblA1),pair_a_player_2:Number(el.dataset.rblA2),pair_b_player_1:Number(el.dataset.rblB1),pair_b_player_2:Number(el.dataset.rblB2),probability_a:Number(el.dataset.rblPa),probability_b:Number(el.dataset.rblPb),odds_a:Number((1/Number(el.dataset.rblPa)).toFixed(3)),odds_b:Number((1/Number(el.dataset.rblPb)).toFixed(3)),model_version:'rbl-1',snapshot_date:snapshotDate,predicted_at:now.toISOString()})).filter(r=>[r.pair_a_player_1,r.pair_a_player_2,r.pair_b_player_1,r.pair_b_player_2].every(Number.isFinite)&&r.probability_a>0&&r.probability_a<1&&r.probability_b>0&&r.probability_b<1);
+  if(rows.length){const ins=await window.sb.from('rpl_bet_predictions').upsert(rows,{onConflict:'calendar_match_id,set_number,snapshot_date'});if(ins.error)throw ins.error;}
+}
+
+async function initRoyalBetPredictionHistory(calendarMatch,root,setRows,resultRows){
+  const panel=root.querySelector('#rplBetForecastHistory'); if(!panel||!window.sb)return;
+  const hasResult=(resultRows||[]).some(r=>String(r.calendar_match_id)===String(calendarMatch.id));
+  if(!hasResult && new Date(calendarMatch.scheduled_at||calendarMatch._date||Date.now()).getTime()>Date.now()) await persistRoyalBetForecastRows(calendarMatch,root);
+  const res=await window.sb.from('rpl_bet_predictions').select('calendar_match_id,set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,probability_a,probability_b,odds_a,odds_b,predicted_at,snapshot_date').order('predicted_at',{ascending:false}).limit(2000);
+  if(res.error)throw res.error;
+  const key=ids=>ids.map(String).sort((a,b)=>Number(a)-Number(b)).join(':');
+  const matchByCal=new Map((resultRows||[]).filter(m=>m.calendar_match_id!=null).map(m=>[String(m.calendar_match_id),m]));
+  const evaluated=[],latestBySet=new Map();
+  (res.data||[]).forEach(pr=>{const k=String(pr.calendar_match_id)+':'+String(pr.set_number);if(!latestBySet.has(k))latestBySet.set(k,pr);});
+  [...latestBySet.values()].forEach(pr=>{const match=matchByCal.get(String(pr.calendar_match_id));if(!match)return;const actual=(setRows||[]).find(st=>String(st.match_id)===String(match.id)&&Number(st.set_number)===Number(pr.set_number));if(!actual||Number(actual.games_a)===Number(actual.games_b))return;
+    const predictedA=key([pr.pair_a_player_1,pr.pair_a_player_2]),actualA=key([actual.pair_a_player_1,actual.pair_a_player_2]),actualB=key([actual.pair_b_player_1,actual.pair_b_player_2]);let wonA;
+    if(predictedA===actualA)wonA=Number(actual.games_a)>Number(actual.games_b);else if(predictedA===actualB)wonA=Number(actual.games_b)>Number(actual.games_a);else return;
+    const p=Number(pr.probability_a),y=wonA?1:0;evaluated.push({p,y,hit:(p>=.5)===!!y,brier:(p-y)**2});
+  });
+  const total=latestBySet.size,settled=evaluated.length;
+  if(!total){panel.innerHTML='<b>📈 STORICO E PRECISIONE DELLE PREVISIONI</b><p>Le prime previsioni saranno archiviate qui quando aprirai l’analisi di una partita non ancora giocata.</p>';return;}
+  const hit=settled?Math.round(evaluated.filter(x=>x.hit).length/settled*100):null,brier=settled?(evaluated.reduce((n,x)=>n+x.brier,0)/settled).toFixed(3):null;
+  panel.innerHTML=`<b>📈 STORICO E PRECISIONE DELLE PREVISIONI</b><div class="rpl-bet-history-grid"><div><strong>${total}</strong><small>previsioni archiviate</small></div><div><strong>${settled}</strong><small>set verificati</small></div><div><strong>${hit==null?'—':hit+'%'}</strong><small>pronostici corretti</small></div><div><strong>${brier==null?'—':brier}</strong><small>Brier score · più basso è meglio</small></div></div><p class="rpl-bet-history-note">Le quote storiche restano quelle registrate al momento della previsione. La precisione considera soltanto set con risultato registrato e coppie riconosciute; le nuove partite aumentano gradualmente il campione.</p>`;
+}
+
 function renderCalendarMatchStats(calendarMatch,match,setsByMatch,awardsByMatch){
   const sets=setsByMatch[String(match.id)]||[]; const awards=awardsByMatch[String(match.id)]||[]; const players=[1,2,3,4].map(i=>({id:Number(calendarMatch['player_'+i]),name:playerById(calendarMatch['player_'+i])?.name||calendarMatch['player_'+i+'_name']||'Giocatore',sets:0,setsPlayed:0,games:0}));
   const stat=new Map(players.map(p=>[String(p.id),p])); let totalGames=0;
@@ -3768,7 +3890,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.73</div>
+<div id="rplVersionBadge">RPL v9.1.72</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -5602,7 +5724,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.67";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.73";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.67";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.72";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5697,6 +5819,58 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   const overlay=document.getElementById('rplRegolamentoOverlay');if(overlay)observer.observe(overlay,{attributes:true,attributeFilter:['class']});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initRegolamentoZoom);else initRegolamentoZoom();
+})();
+</script>
+
+
+<script id="rpl-royalbet-integration-v1-script">
+(function(){
+  const $=id=>document.getElementById(id);
+  function openPlayerAreaForBet(){
+    if(typeof window.showPlayerArea==='function')window.showPlayerArea();
+    else {const p=$('playerAreaPage');if(p){p.classList.remove('hidden');p.style.removeProperty('display');}}
+    setTimeout(()=>{const p=$('playerAreaPage');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},80);
+  }
+  function openPlayerAreaAndBetLab(){
+    openPlayerAreaForBet();
+    setTimeout(()=>{
+      const dashboard=$('playerDashboard'), login=$('playerLoginCard');
+      if(dashboard&&!dashboard.classList.contains('hidden')) openBetLab();
+      else { const msg=$('playerLoginMsg'); if(msg){msg.className='msg';msg.textContent='Accedi all’Area Giocatori: dopo l’accesso potrai aprire Royal Bet Lab da qui.';} window.rplOpenBetLabAfterLogin=true; const target=$('playerDashboard'); if(target){const obs=new MutationObserver(()=>{if(!target.classList.contains('hidden')){window.rplOpenBetLabAfterLogin=false;obs.disconnect();openBetLab();}});obs.observe(target,{attributes:true,attributeFilter:['class']});} }
+    },180);
+  }
+  window.rplOpenPlayerAreaAndBetLab=openPlayerAreaAndBetLab;
+  async function rplGetSessionPayload(){
+    try{const client=window.sb;if(!client?.auth?.getSession)throw new Error('Client Supabase principale non disponibile');const result=await client.auth.getSession();if(result.error)throw result.error;const s=result.data?.session;if(!s?.access_token||!s?.refresh_token)throw new Error('La pagina principale non ha una sessione Supabase attiva. Esci e rientra nell’Area Giocatori.');return {access_token:s.access_token,refresh_token:s.refresh_token};}
+    catch(e){console.warn('[Royal Bet Lab] Impossibile recuperare sessione dalla pagina principale:',e);return null;}
+  }
+  async function rplSendSessionToFrame(frame){if(!frame?.contentWindow)return false;const session=await rplGetSessionPayload();if(!session)return false;try{frame.contentWindow.postMessage({type:'RPL_AUTH_SESSION',session},location.origin);return true;}catch(e){console.warn('[Royal Bet Lab] Invio sessione iframe fallito',e);return false;}}
+  window.rplSendOperatorBetSession=()=>rplSendSessionToFrame($('rplRoyalBetOperatorFrame'));
+  window.addEventListener('message',ev=>{const f=$('rplRoyalBetOperatorFrame');if(ev.origin!==location.origin||ev.source!==f?.contentWindow||ev.data?.type!=='RPL_REQUEST_SESSION')return;window.rplSendOperatorBetSession();});
+  $('rplRoyalBetOperatorFrame')?.addEventListener('load',()=>{window.rplSendOperatorBetSession();setTimeout(window.rplSendOperatorBetSession,300);setTimeout(window.rplSendOperatorBetSession,1000);});
+  function sendSessionToBetLab(){return rplSendSessionToFrame($('rplRoyalBetFrame'));}
+  function openBetLab(){
+    const open=$('rplRoyalBetOpenBtn'),wrap=$('rplRoyalBetFrameWrap'),frame=$('rplRoyalBetFrame');
+    if(!open||!wrap||!frame)return;
+    wrap.classList.remove('hidden');open.classList.add('hidden');
+    if(!frame.dataset.rplSessionHandler){frame.addEventListener('load',()=>{sendSessionToBetLab();setTimeout(sendSessionToBetLab,250);setTimeout(sendSessionToBetLab,800);});frame.dataset.rplSessionHandler='1';}
+    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.72';frame.dataset.loaded='1';}
+    else sendSessionToBetLab();
+    if(!window.rplBetSessionRetry){window.rplBetSessionRetry=setInterval(()=>{if(!wrap.classList.contains('hidden'))sendSessionToBetLab();},1000);}
+    wrap.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function init(){
+    const open=$('rplRoyalBetOpenBtn'),close=$('rplRoyalBetCloseBtn'),wrap=$('rplRoyalBetFrameWrap'),frame=$('rplRoyalBetFrame');
+    window.addEventListener('message',ev=>{if(ev.origin!==location.origin||ev.source!==frame?.contentWindow||ev.data?.type!=='RPL_REQUEST_SESSION')return;sendSessionToBetLab();});
+    open?.addEventListener('click',()=>{
+      const dashboard=$('playerDashboard');
+      if(!dashboard||dashboard.classList.contains('hidden')){openPlayerAreaAndBetLab();return;}
+      openBetLab();
+    });
+    if(window.rplOpenBetLabAfterLogin){const observer=new MutationObserver(()=>{const d=$('playerDashboard');if(d&&!d.classList.contains('hidden')){window.rplOpenBetLabAfterLogin=false;observer.disconnect();openBetLab();}});const d=$('playerDashboard');if(d)observer.observe(d,{attributes:true,attributeFilter:['class']});}
+    close?.addEventListener('click',()=>{wrap?.classList.add('hidden');open?.classList.remove('hidden');});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 </body></html>

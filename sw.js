@@ -1,5 +1,5 @@
-// RPL release 9.1.76 — rimozione Royal Bet Lab e aggiornamento automatico PWA
-const CACHE_NAME = "rpl-v9.1.76";
+// RPL release 9.1.59 — update automatico PWA
+const CACHE_NAME = "rpl-v9.1.59";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
