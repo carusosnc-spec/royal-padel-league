@@ -1,0 +1,26 @@
+name: Integrate Royal Bet Lab release
+
+on:
+  push:
+    branches: ["royalbet-release-clean"]
+
+permissions:
+  contents: read
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v6
+      - name: Verify existing Royal Bet integration without duplicating UI
+        run: python .github/scripts/integrate-royalbet.py
+      - name: Verify page and module syntax
+        run: |
+          test -f royal-bet.html
+          node --check js/royal-bet-lab.js
+          node --check js/royal-bet-operator.js
+          node --check js/royal-bet-odds.js
+          node --check js/royal-bet-market-planner.js
+          node --check js/royal-bet-ranking-odds.js
+          node --check js/royal-bet-ranking-source.js
