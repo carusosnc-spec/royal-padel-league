@@ -143,10 +143,13 @@
       }
     }
     const mine = players.get(String(currentPlayerId)) || null;
+    const topPlayers = [...players.entries()].filter(([id,s])=>s.played>=5)
+      .map(([id,s])=>({...s,id,name:names.get(id)||('Giocatore '+id),percent:Math.round(s.won/s.played*100)}))
+      .sort((a,b)=>b.percent-a.percent || b.played-a.played).slice(0,5);
     const topPairs = [...pairs.values()].filter(p=>p.played>=3)
       .map(p=>({...p,percent:Math.round(p.won/p.played*100),label:p.ids.map(id=>names.get(id)||('Giocatore '+id)).join(' + ')}))
       .sort((a,b)=>b.percent-a.percent || b.played-a.played).slice(0,5);
-    return {totalSets,player:mine?{...mine,percent:Math.round(mine.won/mine.played*100)}:null,pairs:topPairs};
+    return {totalSets,player:mine?{...mine,percent:Math.round(mine.won/mine.played*100)}:null,topPlayers,pairs:topPairs};
   }
 
   async function loadDashboard(root) {
@@ -197,6 +200,9 @@
           <div class="rbl-row"><div><strong>Statistiche storiche RPL</strong><div class="rbl-muted">Calcolate dai set ufficiali confermati · sola lettura</div></div>
           ${history.player ? '<div class="rbl-odd"><span class="rbl-muted">La tua % vittorie</span><strong>'+history.player.percent+'%</strong><span class="rbl-muted">'+history.player.won+'/'+history.player.played+' set</span></div>' : ''}
           </div>
+          <div class="rbl-muted" style="margin-top:10px">Campione analizzato: ${fmt(history.totalSets)} set ufficiali</div>
+          <div style="margin-top:12px"><strong>Giocatori più efficaci · almeno 5 set</strong></div>
+          ${history.topPlayers && history.topPlayers.length ? history.topPlayers.map((p,i)=>'<div class="rbl-market"><div><strong>'+(i+1)+'. '+esc(p.name)+'</strong><div class="rbl-muted">'+p.won+' set vinti su '+p.played+' giocati</div></div><div class="rbl-odd"><strong>'+p.percent+'%</strong><span class="rbl-muted">vittorie</span></div></div>').join('') : '<div class="rbl-empty">Dati insufficienti per la classifica individuale.</div>'}
           <div style="margin-top:12px"><strong>Coppie con almeno 3 set insieme</strong></div>
           ${history.pairs.length ? history.pairs.map((p,i)=>'<div class="rbl-market"><div><strong>'+(i+1)+'. '+esc(p.label)+'</strong><div class="rbl-muted">'+p.won+' set vinti su '+p.played+' insieme</div></div><div class="rbl-odd"><strong>'+p.percent+'%</strong><span class="rbl-muted">vittorie</span></div></div>').join('') : '<div class="rbl-empty">Dati insufficienti per classificare le coppie (servono almeno 3 set insieme).</div>'}
         </div>
