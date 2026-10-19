@@ -66,8 +66,12 @@
       .rbl-odd strong{display:block;font-size:1.1rem;color:#d5f36a}
       .rbl-input{width:100%;max-width:150px;border-radius:8px;padding:9px;border:1px solid #7185a5;background:#0f1b30;color:#fff}
       .rbl-alert{padding:10px 12px;border-radius:10px;margin:10px 0;background:rgba(213,243,106,.12)}
+      .rbl-market-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,220px) auto;gap:8px;align-items:center;margin:10px 0}
+      .rbl-market-tools .rbl-input{max-width:none;width:100%;min-width:0}
+      .rbl-market-tools select{cursor:pointer}
+      .rbl-market[hidden]{display:none!important}
       .rbl-error{background:rgba(255,100,100,.14)}.rbl-empty{padding:16px;text-align:center;opacity:.75}
-      @media(max-width:520px){.rbl-card{padding:11px}.rbl-market{grid-template-columns:minmax(0,1fr) auto}.rbl-odd{min-width:64px}}
+      @media(max-width:520px){.rbl-card{padding:11px}.rbl-market{grid-template-columns:minmax(0,1fr) auto}.rbl-odd{min-width:64px}.rbl-market-tools{grid-template-columns:1fr 1fr}.rbl-market-tools #rbl-market-search{grid-column:1/-1}.rbl-market-tools #rbl-market-count{grid-column:1/-1}}
       </style>`;
   }
 
@@ -145,13 +149,21 @@
           <div class="rbl-card"><div class="rbl-muted">Crediti impegnati</div><div class="rbl-balance">${fmt(locked)}</div></div>
         </div>
         <div class="rbl-tabs" role="tablist">
-          <button data-tab="markets" aria-selected="true">Mercati aperti</button>
-          <button data-tab="wagers" aria-selected="false">Le mie puntate</button>
+          <button data-tab="markets" aria-selected="true">Mercati aperti (${markets.length})</button>
+          <button data-tab="wagers" aria-selected="false">Le mie puntate (${wagers.length})</button>
+        </div>
+        <div class="rbl-market-tools">
+          <input id="rbl-market-search" class="rbl-input" type="search" placeholder="Cerca giocatore o mercato…" aria-label="Cerca tra i mercati">
+          <select id="rbl-market-filter" class="rbl-input" aria-label="Filtra per categoria">
+            <option value="all">Tutte le categorie</option>
+            ${[...new Set(markets.map(m=>m.market_type))].sort().map(type=>'<option value="'+esc(type)+'">'+esc(MARKET_NAMES[type]||type)+'</option>').join('')}
+          </select>
+          <span id="rbl-market-count" class="rbl-muted">${markets.length} mercati disponibili</span>
         </div>
         <div id="rbl-alert" aria-live="polite">${WAGERING_ENABLED ? "" : '<div class="rbl-alert">Modalità verifica: quote dinamiche dalla classifica ufficiale confermata; puntate temporaneamente disabilitate.</div>'}</div>
         <div id="rbl-markets" class="rbl-card">
           ${markets.length ? markets.map(m => `
-            <article class="rbl-market">
+            <article class="rbl-market" data-market-type="${esc(m.market_type)}" data-market-search="${esc([MARKET_NAMES[m.market_type] || m.market_type,m.selection_label,m.selection_key,m.market_scope,m.calendar_match_id].filter(Boolean).join(' ').toLowerCase())}">
               <div>
                 <strong>${esc(MARKET_NAMES[m.market_type] || m.market_type)}</strong>
                 <div>${esc(m.selection_label)}</div>
@@ -180,8 +192,25 @@
       const showMarkets = btn.dataset.tab === 'markets';
       root.querySelector('#rbl-markets').hidden = !showMarkets;
       root.querySelector('#rbl-wagers').hidden = showMarkets;
+      root.querySelector('.rbl-market-tools').hidden = !showMarkets;
       root.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b === btn)));
     }));
+    const searchInput = root.querySelector('#rbl-market-search');
+    const filterSelect = root.querySelector('#rbl-market-filter');
+    const applyMarketFilters = () => {
+      const term = (searchInput.value || '').trim().toLocaleLowerCase('it-IT');
+      const type = filterSelect.value;
+      let visible = 0;
+      root.querySelectorAll('#rbl-markets [data-market-type]').forEach(card => {
+        const matchesType = type === 'all' || card.dataset.marketType === type;
+        const matchesTerm = !term || (card.dataset.marketSearch || '').includes(term);
+        card.hidden = !(matchesType && matchesTerm);
+        if (!card.hidden) visible++;
+      });
+      root.querySelector('#rbl-market-count').textContent = visible + (visible === 1 ? ' mercato trovato' : ' mercati trovati');
+    };
+    searchInput.addEventListener('input', applyMarketFilters);
+    filterSelect.addEventListener('change', applyMarketFilters);
     root.querySelectorAll('[data-bet]').forEach(btn => btn.addEventListener('click', async () => {
       if (!WAGERING_ENABLED) {
         const alert = root.querySelector('#rbl-alert');
