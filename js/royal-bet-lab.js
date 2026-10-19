@@ -87,7 +87,7 @@
       .rbl-season-mvp>summary{background:linear-gradient(100deg,rgba(99,44,132,.8),rgba(54,54,81,.75))}
       .rbl-season-unbeaten{border-color:rgba(255,116,137,.8);background:rgba(112,30,52,.2)}
       .rbl-season-unbeaten>summary{background:linear-gradient(100deg,rgba(139,35,61,.8),rgba(54,54,81,.75))}
-      .rbl-set-group{padding:8px 0}.rbl-set-group h4{margin:8px 0;color:#d5f36a;font-size:.98rem}
+      .rbl-set-group{padding:8px 0}.rbl-set-group h4{margin:8px 0;color:#d5f36a;font-size:.98rem}.rbl-set-group .rbl-set-heading{font-size:1.35rem;font-weight:900;letter-spacing:.08em;margin:14px 0 10px}.rbl-selection-label{font-weight:800;font-size:1rem;line-height:1.35}.rbl-set-winner-option .rbl-selection-label{font-size:1rem}
       .rbl-match-subtitle{display:block;font-size:.83rem;opacity:.75;margin-top:3px}
       .rbl-error{background:rgba(255,100,100,.14)}.rbl-empty{padding:16px;text-align:center;opacity:.75}
       @media(max-width:520px){.rbl-card{padding:11px}.rbl-market{grid-template-columns:minmax(0,1fr) auto}.rbl-odd{min-width:64px}.rbl-market-tools{grid-template-columns:1fr 1fr}.rbl-market-tools #rbl-market-search{grid-column:1/-1}.rbl-market-tools #rbl-market-count{grid-column:1/-1}}
@@ -214,21 +214,24 @@
     const locked = wallet ? wallet.locked_credits : 0;
     const history = historyRes;
     const calendarById = new Map(calendarMatches.map(m => [String(m.id), m]));
-    const renderMarketCard = m => `
-      <article class="rbl-market" data-market-type="${esc(m.market_type)}" data-market-search="${esc([MARKET_NAMES[m.market_type] || m.market_type,m.selection_label,m.selection_key,m.market_scope,m.calendar_match_id].filter(Boolean).join(' ').toLocaleLowerCase('it-IT'))}">
+    const renderMarketCard = m => {
+      const isSetWinner = m.market_type === 'set_winner' && m.set_number != null;
+      return `
+      <article class="rbl-market ${isSetWinner ? 'rbl-set-winner-option' : ''}" data-market-type="${esc(m.market_type)}" data-market-search="${esc([MARKET_NAMES[m.market_type] || m.market_type,m.selection_label,m.selection_key,m.market_scope,m.calendar_match_id].filter(Boolean).join(' ').toLocaleLowerCase('it-IT'))}">
         <div>
-          <strong>${esc(MARKET_NAMES[m.market_type] || m.market_type)}</strong>
-          <div>${esc(m.selection_label)}</div>
-          <div class="rbl-muted">${m.market_scope === 'season' ? 'Mercato stagione' : (m.market_scope === 'month' ? 'Mercato mensile' : (m.calendar_match_id ? 'Partita #'+m.calendar_match_id : 'Mercato generale'))}${m.set_number ? ' · Set '+m.set_number : ''}</div>
-          ${m.dynamic_quote ? '<div class="rbl-muted">Quota ricalcolata dalla classifica ufficiale · anteprima non salvata</div>' : ''}
+          ${isSetWinner ? '' : '<strong>'+esc(MARKET_NAMES[m.market_type] || m.market_type)+'</strong>'}
+          <div class="rbl-selection-label">${esc(m.selection_label)}</div>
+          ${!isSetWinner ? '<div class="rbl-muted">'+(m.market_scope === 'season' ? 'Mercato stagione' : (m.market_scope === 'month' ? 'Mercato mensile' : (m.calendar_match_id ? 'Partita #'+m.calendar_match_id : 'Mercato generale')))+(m.set_number ? ' · Set '+m.set_number : '')+'</div>' : ''}
+          ${m.dynamic_quote ? '<div class="rbl-muted">Quota live aggiornata automaticamente</div>' : ''}
           ${m.dynamic_quote_error ? '<div class="rbl-muted">Quota dinamica non disponibile: verifica i dati ufficiali</div>' : ''}
           ${m.dynamic_quote_blocked ? '<div class="rbl-muted">Mercato non puntabile: '+esc(m.dynamic_quote_reason || 'verifica automatica')+'</div>' : ''}
           <label class="rbl-muted" for="rbl-stake-${m.id}">Puntata (crediti)</label><br>
           <input class="rbl-input" id="rbl-stake-${m.id}" type="number" min="1" step="1" inputmode="numeric" value="10">
           <button class="rbl-btn" data-bet="${m.id}" data-selection="${esc(m.selection_key)}" ${WAGERING_ENABLED && !m.dynamic_quote_blocked ? "" : "disabled"}>${!WAGERING_ENABLED ? "Prove non attive" : (m.dynamic_quote_blocked ? "Mercato bloccato" : "Punta")}</button>
         </div>
-        <div class="rbl-odd"><span class="rbl-muted">${m.dynamic_quote ? 'Quota live*' : 'Quota'}</span><strong>${fmt(m.dynamic_quote ? m.display_odds : m.odds)}</strong></div>
+        <div class="rbl-odd"><span class="rbl-muted">Quota</span><strong>${fmt(m.dynamic_quote ? m.display_odds : m.odds)}</strong></div>
       </article>`;
+    };
     const renderGroupedRows = rows => {
       const pieces = [];
       const general = rows.filter(m => m.set_number == null);
@@ -240,7 +243,7 @@
         bySet.get(key).push(m);
       });
       [...bySet.entries()].sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([setNo,setRows]) => {
-        pieces.push('<section class="rbl-set-group" data-set-group="' + esc(setNo) + '"><h4>🎾 Set ' + esc(setNo) + ' · ' + setRows.length + ' esiti/mercati</h4>' + setRows.map(renderMarketCard).join('') + '</section>');
+        pieces.push('<section class="rbl-set-group" data-set-group="' + esc(setNo) + '"><h4 class="rbl-set-heading">SET ' + esc(setNo) + '</h4>' + setRows.map(renderMarketCard).join('') + '</section>');
       });
       return pieces.join('');
     };
