@@ -88,6 +88,36 @@
       label===normalize(p.selection_label+' '+(p.nickname||'')) || key===normalize(p.selection_label));
   }
 
+  async function loadSetHistory(sb) {
+    const mr = await sb.from('matches').select('id,is_confirmed,approval_status').eq('is_confirmed',true).eq('approval_status','confirmed').limit(5000);
+    if (mr.error) throw mr.error;
+    const ids = (mr.data || []).map(x=>x.id);
+    if (!ids.length) return [];
+    const [sr, pr] = await Promise.all([
+      sb.from('sets').select('pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b').in('match_id',ids).limit(20000),
+      sb.from('players').select('id,name,nickname').eq('active',true)
+    ]);
+    if (sr.error) throw sr.error;
+    if (pr.error) throw pr.error;
+    const names = new Map((pr.data||[]).map(p=>[String(p.id),p.nickname ? p.name+' “'+p.nickname+'”' : p.name]));
+    const stats = new Map();
+    for (const r of sr.data||[]) {
+      const ga=Number(r.games_a), gb=Number(r.games_b);
+      if (!Number.isFinite(ga)||!Number.isFinite(gb)||ga===gb) continue;
+      const a=[r.pair_a_player_1,r.pair_a_player_2].filter(x=>x!=null);
+      const b=[r.pair_b_player_1,r.pair_b_player_2].filter(x=>x!=null);
+      if(a.length!==2||b.length!==2) continue;
+      const win=ga>gb?a:b;
+      for(const id of [...a,...b]) {
+        const k=String(id);
+        if(!stats.has(k)) stats.set(k,{id:k,played:0,won:0});
+        const s=stats.get(k); s.played++;
+        if(win.some(w=>String(w)===k)) s.won++;
+      }
+    }
+    return [...stats.values()].map(s=>({...s,name:names.get(s.id)||('Giocatore '+s.id),win_rate:Math.round(100*s.won/s.played)}));
+  }
+
   async function quoteMarkets(sb, markets, oddsModel) {
     const targets=(markets||[]).filter(m =>
       ['regular_season_champion'].includes(m.market_type) &&
@@ -116,5 +146,5 @@
     return markets;
   }
 
-  window.RoyalBetRankingSource=Object.freeze({resolvePeriod,loadOfficialStandings,quoteMarkets});
+  window.RoyalBetRankingSource=Object.freeze({resolvePeriod,loadOfficialStandings,loadSetHistory,quoteMarkets});
 })();
