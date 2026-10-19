@@ -1,8 +1,8 @@
-name: Integrate Royal Bet Lab on rebuild branch
+name: Integrate Royal Bet Lab release
 
 on:
   push:
-    branches: ["royalbet-rebuild-foundation"]
+    branches: ["royalbet-release-clean"]
 
 permissions:
   contents: write
@@ -12,10 +12,10 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[rbl-integration-bot]') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout rebuild branch
+      - name: Checkout release branch
         uses: actions/checkout@v6
         with:
-          ref: royalbet-rebuild-foundation
+          ref: royalbet-release-clean
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -48,4 +48,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           git commit -m "build: mount Royal Bet Lab UI [rbl-integration-bot]"
-          git push origin HEAD:royalbet-rebuild-foundation
+          git push origin HEAD:royalbet-release-clean
