@@ -11,14 +11,18 @@ async function rplOperatorBootstrapFromSharedStorage(){
  if(sessionAccepted||sessionBusy||rplLocalOperatorAuthBusy)return;
  rplLocalOperatorAuthBusy=true;
  try{
-  await ensureSupabase();
-  const {data,error}=await sb.auth.getSession();if(error)throw error;
+  const client=await ensureSupabase();
+  if(!client||!client.auth||typeof client.auth.getSession!=='function')throw Error('Client Supabase non inizializzato. Ricarica la pagina; se persiste, usa l’accesso alternativo.');
+  const {data,error}=await client.auth.getSession();if(error)throw error;
   const session=data?.session;
   if(session?.access_token){
    await acceptSession(session);
    if(user){sessionAccepted=true;clearInterval(rplOperatorSessionRetry);msg('Sessione condivisa verificata. Console operatore connessa.','ok');}
+  } else {
+   msg('Nessuna sessione condivisa trovata. Accedi con le credenziali operatore qui sotto.');
+   $('operatorFallbackLogin')?.classList.remove('hidden');
   }
- }catch(e){console.warn('[Royal Bet Console] Bootstrap sessione locale:',e);msg('Sessione non disponibile: '+(e?.message||String(e)),'error');}
+ }catch(e){console.warn('[Royal Bet Console] Bootstrap sessione locale:',e);msg('Accesso automatico non riuscito: '+(e?.message||String(e)),'error');$('operatorFallbackLogin')?.classList.remove('hidden');}
  finally{rplLocalOperatorAuthBusy=false;}
 }
 rplOperatorBootstrapFromSharedStorage();const rplOperatorLocalAuthTimer=setInterval(()=>{if(sessionAccepted){clearInterval(rplOperatorLocalAuthTimer);return;}rplOperatorBootstrapFromSharedStorage();},1500);
