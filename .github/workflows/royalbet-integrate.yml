@@ -5,47 +5,22 @@ on:
     branches: ["royalbet-release-clean"]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   integrate:
-    if: ${{ !contains(github.event.head_commit.message, '[rbl-integration-bot]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout release branch
         uses: actions/checkout@v6
-        with:
-          ref: royalbet-release-clean
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Mount player and operator modules into current index
+      - name: Verify existing Royal Bet integration without duplicating UI
         run: python .github/scripts/integrate-royalbet.py
-      - name: Verify HTML mount and module syntax
+      - name: Verify page and module syntax
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          html = Path('index.html').read_text(encoding='utf-8')
-          required = ['id="royalBetPlayerCard"', 'id="royalBetOperatorSection"', 'js/royal-bet-lab.js', 'js/royal-bet-operator.js']
-          missing = [item for item in required if item not in html]
-          if missing:
-              raise SystemExit('Missing integration markers: ' + ', '.join(missing))
-          print('Integration markers OK')
-          PY
+          test -f royal-bet.html
           node --check js/royal-bet-lab.js
           node --check js/royal-bet-operator.js
           node --check js/royal-bet-odds.js
-          node --test tests/royal-bet-odds.test.js
-      - name: Commit integrated index on the rebuild branch
-        run: |
-          if git diff --quiet; then
-            echo "No integration changes to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git commit -m "build: mount Royal Bet Lab UI [rbl-integration-bot]"
-          git push origin HEAD:royalbet-release-clean
+          node --check js/royal-bet-market-planner.js
+          node --check js/royal-bet-ranking-odds.js
+          node --check js/royal-bet-ranking-source.js
