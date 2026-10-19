@@ -1,0 +1,56 @@
+name: Royal Bet Lab checks
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["royalbet-rebuild-foundation"]
+
+permissions:
+  contents: read
+
+jobs:
+  javascript-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Syntax-check Royal Bet modules
+        run: |
+          node --check js/royal-bet-lab.js
+          node --check js/royal-bet-operator.js
+          node --check js/royal-bet-odds.js
+          node --check js/royal-bet-market-planner.js
+          node --check js/royal-bet-ranking-odds.js
+          node --check js/royal-bet-ranking-source.js
+      - name: Run odds model tests
+        run: node --test tests/royal-bet-odds.test.js
+
+      - name: Package Royal Bet Lab branch snapshot
+        if: success()
+        run: |
+          git archive --format=zip --prefix=RPL_ROYAL_BET_LAB/ HEAD -o RPL_ROYAL_BET_LAB_v9.1.82.zip
+      - name: Upload branch snapshot
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: RPL_ROYAL_BET_LAB_v9.1.82
+          path: RPL_ROYAL_BET_LAB_v9.1.82.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  edge-function-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check server quote function
+        run: deno check supabase/functions/royal-bet-refresh-quotes/index.ts
