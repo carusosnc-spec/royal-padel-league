@@ -3341,6 +3341,14 @@ $("date").value=new Date().toISOString().slice(0,16);
 
   function rplNormalizePublicNav(){
   const h=location.hash;
+  // Non nascondere l’Area Giocatori quando la navigazione imposta #player.
+  // Il listener hashchange della classifica veniva eseguito dopo showPlayerArea()
+  // e richiudeva la pagina durante l’accesso o la digitazione dei dati.
+  if(h==="#player"){
+    document.getElementById("playerAreaPage")?.classList.remove("hidden");
+    document.getElementById("playerAreaPage")?.style.removeProperty("display");
+    return;
+  }
   document.getElementById("playerAreaPage")?.classList.add("hidden");
   document.getElementById("playerAreaPage")?.style.setProperty("display","none","important");
   if(h==="#calendar"){
