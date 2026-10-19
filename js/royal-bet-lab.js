@@ -75,6 +75,18 @@
       .rbl-match-group>summary:after,.rbl-season-group>summary:after{content:'＋';font-size:1.1rem;color:#d5f36a;font-weight:800}
       .rbl-match-group[open]>summary:after,.rbl-season-group[open]>summary:after{content:'−'}
       .rbl-match-body{padding:10px 12px}
+      .rbl-season-card{margin:10px 0;border-width:1px;border-style:solid}
+      .rbl-season-card>summary{font-weight:800}
+      .rbl-season-regular{border-color:rgba(213,243,106,.75);background:rgba(67,86,24,.18)}
+      .rbl-season-regular>summary{background:linear-gradient(100deg,rgba(83,109,25,.75),rgba(35,59,97,.72))}
+      .rbl-season-bonus{border-color:rgba(91,190,255,.8);background:rgba(18,67,105,.22)}
+      .rbl-season-bonus>summary{background:linear-gradient(100deg,rgba(20,91,145,.78),rgba(35,59,97,.72))}
+      .rbl-season-podium{border-color:rgba(255,190,74,.8);background:rgba(112,71,10,.2)}
+      .rbl-season-podium>summary{background:linear-gradient(100deg,rgba(128,79,11,.8),rgba(54,54,81,.75))}
+      .rbl-season-mvp{border-color:rgba(214,137,255,.8);background:rgba(83,38,112,.2)}
+      .rbl-season-mvp>summary{background:linear-gradient(100deg,rgba(99,44,132,.8),rgba(54,54,81,.75))}
+      .rbl-season-unbeaten{border-color:rgba(255,116,137,.8);background:rgba(112,30,52,.2)}
+      .rbl-season-unbeaten>summary{background:linear-gradient(100deg,rgba(139,35,61,.8),rgba(54,54,81,.75))}
       .rbl-set-group{padding:8px 0}.rbl-set-group h4{margin:8px 0;color:#d5f36a;font-size:.98rem}
       .rbl-match-subtitle{display:block;font-size:.83rem;opacity:.75;margin-top:3px}
       .rbl-error{background:rgba(255,100,100,.14)}.rbl-empty{padding:16px;text-align:center;opacity:.75}
@@ -257,9 +269,24 @@
       const setCount = new Set(rows.filter(m=>m.set_number!=null).map(m=>m.set_number)).size;
       return '<details class="rbl-match-group" data-match-group="'+esc(id)+'"><summary><span><strong>🎾 Partita #'+esc(id)+' · '+esc(dateLabel)+'</strong><span class="rbl-match-subtitle">'+esc(cm?.court || 'Campo da confermare')+'</span><span class="rbl-match-subtitle">'+esc(playersLabel || 'Giocatori da confermare')+'</span></span><span class="rbl-muted">'+rows.length+' esiti · '+setCount+' set</span></summary><div class="rbl-match-body">'+renderGroupedRows(rows)+'</div></details>';
     }).join('');
-    const seasonMarketsHtml = seasonMarkets.length
-      ? '<details class="rbl-season-group rbl-match-group"><summary><span><strong>🏆 Scommesse di stagione</strong><span class="rbl-match-subtitle">Regular Season e Classifica Bonus</span></span><span class="rbl-muted">'+seasonMarkets.length+' esiti</span></summary><div class="rbl-match-body">'+renderGroupedRows(seasonMarkets)+'</div></details>'
-      : '';
+    const seasonOrder = [
+      {type:'regular_season_champion',title:'🏆 Campione Regular Season',subtitle:'Chi chiuderà al primo posto la classifica principale?',className:'rbl-season-regular'},
+      {type:'bonus_ranking_champion',title:'⭐ Campione Classifica Bonus',subtitle:'Mercato separato dalla Regular Season',className:'rbl-season-bonus'},
+      {type:'season_podium',title:'🥇 Podio della stagione',subtitle:'Possibile mercato futuro: pronostica i primi tre classificati',className:'rbl-season-podium',planned:true},
+      {type:'season_mvp_leader',title:'👑 Maggior numero di MVP',subtitle:'Possibile mercato futuro: chi conquisterà più MVP durante la stagione?',className:'rbl-season-mvp',planned:true},
+      {type:'season_unbeaten_leader',title:'🔥 Più serate da imbattuto',subtitle:'Possibile mercato futuro: chi totalizzerà più serate da imbattuto?',className:'rbl-season-unbeaten',planned:true},
+      {type:'finals_champion',title:'🏆 Campione Finals',subtitle:'Vincitore delle Finals',className:'rbl-season-podium'},
+      {type:'finals_podium',title:'🥉 Podio Finals',subtitle:'Pronostico sul podio delle Finals',className:'rbl-season-podium'}
+    ];
+    const seasonMarketsHtml = seasonOrder.map(def => {
+      const rows = seasonMarkets.filter(m => m.market_type === def.type);
+      if (!rows.length && !def.planned) return '';
+      const content = rows.length
+        ? renderGroupedRows(rows)
+        : '<div class="rbl-alert">Mercato in preparazione. Prima di aprire le puntate verranno configurati quote automatiche, chiusura e liquidazione in base ai risultati ufficiali della stagione.</div>';
+      const countLabel = rows.length ? rows.length+' esiti' : 'In preparazione';
+      return '<details class="rbl-season-group rbl-match-group rbl-season-card '+def.className+'" data-season-market="'+def.type+'"><summary><span><strong>'+esc(def.title)+'</strong><span class="rbl-match-subtitle">'+esc(def.subtitle)+'</span></span><span class="rbl-muted">'+countLabel+'</span></summary><div class="rbl-match-body">'+content+'</div></details>';
+    }).join('');
     const marketsHtml = (seasonMarketsHtml + matchMarketsHtml + (generalMarkets.length ? '<details class="rbl-match-group"><summary><strong>🎾 Altri mercati</strong><span class="rbl-muted">'+generalMarkets.length+' esiti</span></summary><div class="rbl-match-body">'+renderGroupedRows(generalMarkets)+'</div></details>' : '')) || '<div class="rbl-empty">Non ci sono mercati aperti al momento.</div>';
 
     root.innerHTML = styles() + `
@@ -326,14 +353,14 @@
         if (!card.hidden) visible++;
       });
       root.querySelector('#rbl-market-count').textContent = visible + (visible === 1 ? ' mercato trovato' : ' mercati trovati');
-      const filtering = Boolean(term) || type !== 'all';
       root.querySelectorAll('#rbl-markets .rbl-set-group').forEach(group => {
         group.hidden = ![...group.querySelectorAll('[data-market-type]')].some(card => !card.hidden);
       });
       root.querySelectorAll('#rbl-markets .rbl-match-group').forEach(group => {
-        const hasVisible = [...group.querySelectorAll('[data-market-type]')].some(card => !card.hidden);
-        group.hidden = !hasVisible;
-        if (filtering && hasVisible) group.open = true;
+        const cards = [...group.querySelectorAll('[data-market-type]')];
+        const hasVisible = cards.some(card => !card.hidden);
+        const plannedOnly = group.dataset.seasonMarket && cards.length === 0;
+        group.hidden = !hasVisible && !plannedOnly;
       });
     };
     searchInput.addEventListener('input', applyMarketFilters);
