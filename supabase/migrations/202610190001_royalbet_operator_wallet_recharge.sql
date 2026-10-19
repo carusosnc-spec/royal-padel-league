@@ -2,12 +2,16 @@
 -- Applies only to the existing RPL Supabase project.
 begin;
 
-create or replace function public.rpl_admin_recharge_bet_wallet(
+-- Drop first because PostgreSQL does not allow CREATE OR REPLACE to rename
+-- OUT columns in an existing RETURNS TABLE signature.
+drop function if exists public.rpl_admin_recharge_bet_wallet(bigint, integer, text);
+
+create function public.rpl_admin_recharge_bet_wallet(
   p_player_id bigint,
   p_amount integer,
   p_reason text
 )
-returns table(balance integer, updated_at timestamptz)
+returns table(new_balance integer, wallet_updated_at timestamptz)
 language plpgsql
 security definer
 set search_path = public, pg_temp
@@ -72,8 +76,8 @@ begin
     v_reason, v_user_id
   );
 
-  balance := v_new_balance;
-  updated_at := v_wallet_updated_at;
+  new_balance := v_new_balance;
+  wallet_updated_at := v_wallet_updated_at;
   return next;
 end;
 $function$;
@@ -82,3 +86,6 @@ revoke all on function public.rpl_admin_recharge_bet_wallet(bigint, integer, tex
 grant execute on function public.rpl_admin_recharge_bet_wallet(bigint, integer, text) to authenticated;
 
 commit;
+
+-- Refresh PostgREST's schema cache after the transaction commits.
+notify pgrst, 'reload schema';
