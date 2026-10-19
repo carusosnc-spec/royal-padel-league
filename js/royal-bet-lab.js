@@ -106,14 +106,6 @@
     const sb = client();
     await ensureRankingModules();
     const { player } = await currentPlayer();
-    // Server-side refresh is best-effort until the Edge Function is deployed.
-    // The wager RPC remains the authority for wallet/market validation.
-    try {
-      const refresh = await sb.functions.invoke('royal-bet-refresh-quotes', { body: {} });
-      if (refresh.error) console.warn('Royal Bet quote refresh unavailable; using current saved quotes.', refresh.error);
-    } catch (refreshError) {
-      console.warn('Royal Bet quote refresh unavailable; using current saved quotes.', refreshError);
-    }
     const [walletRes, marketsRes, wagersRes] = await Promise.all([
       sb.from('rpl_bet_wallets').select('balance,locked_credits,updated_at').eq('player_id', player.id).maybeSingle(),
       sb.from('rpl_bet_markets').select('id,calendar_match_id,market_type,set_number,selection_key,selection_label,odds,status,opens_at,closes_at,market_scope,season_key,market_metadata')
@@ -129,19 +121,16 @@
     if (wagersRes.error) throw wagersRes.error;
     const wallet = walletRes.data;
     let markets = marketsRes.data || [];
-    // Read-only live quote calculation from official, confirmed RPL results.
-    // It never writes prices to the database and is not the security boundary for wagers.
+    // Read-only preview: calculate quotes only in the browser from official,
+    // confirmed RPL results. Phase 1 must not invoke server refresh or write to DB.
     if (window.RoyalBetRankingSource && window.RoyalBetRankingOdds) {
-      markets = await window.RoyalBetRankingSource.quoteMarkets(sb, markets, window.RoyalBetRankingOdds);
+      try {
+        markets = await window.RoyalBetRankingSource.quoteMarkets(sb, markets, window.RoyalBetRankingOdds);
+      } catch (quoteError) {
+        console.warn('Royal Bet: preventivo dinamico non disponibile; mostro le quote salvate.', quoteError);
+      }
     }
     const wagers = wagersRes.data || [];
-    try {
-      await loadScriptOnce('./js/royal-bet-ranking-odds.js',()=>!!window.RoyalBetRankingOdds);
-      await loadScriptOnce('./js/royal-bet-ranking-source.js',()=>!!window.RoyalBetRankingSource);
-      await window.RoyalBetRankingSource.quoteMarkets(sb,markets,window.RoyalBetRankingOdds);
-    } catch (quoteError) {
-      console.warn('Royal Bet: preventivo dinamico non disponibile; mostro le quote salvate.', quoteError);
-    }
     const balance = wallet ? wallet.balance : 0;
     const locked = wallet ? wallet.locked_credits : 0;
 
