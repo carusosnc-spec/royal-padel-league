@@ -16,6 +16,8 @@ declare
   v_user_id uuid := auth.uid();
   v_wallet public.rpl_bet_wallets%rowtype;
   v_reason text := trim(coalesce(p_reason, ''));
+  v_new_balance integer;
+  v_wallet_updated_at timestamptz;
 begin
   if v_user_id is null then
     raise exception 'Accesso richiesto';
@@ -53,23 +55,25 @@ begin
     raise exception 'Portafoglio non trovato per il giocatore selezionato';
   end if;
 
-  update public.rpl_bet_wallets
-  set balance = balance + p_amount,
+  update public.rpl_bet_wallets as w
+  set balance = w.balance + p_amount,
       updated_at = now()
-  where player_id = p_player_id
-  returning rpl_bet_wallets.balance, rpl_bet_wallets.updated_at
-  into balance, updated_at;
+  where w.player_id = p_player_id
+  returning w.balance, w.updated_at
+  into v_new_balance, v_wallet_updated_at;
 
   insert into public.rpl_bet_wallet_transactions (
     player_id, transaction_type, amount, balance_after,
     reference_type, reference_id, idempotency_key, note, created_by
   ) values (
-    p_player_id, 'admin_adjustment', p_amount, balance,
+    p_player_id, 'admin_adjustment', p_amount, v_new_balance,
     'admin_recharge', p_player_id,
     'admin-topup-' || gen_random_uuid()::text,
     v_reason, v_user_id
   );
 
+  balance := v_new_balance;
+  updated_at := v_wallet_updated_at;
   return next;
 end;
 $function$;
