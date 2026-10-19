@@ -7,9 +7,8 @@
   'use strict';
 
   const RPC = { placeBet: 'rpl_place_bet' };
-  // Fail-closed safety switch: keep real-credit wagering disabled until the live
-  // end-to-end checks are explicitly approved. Read-only dashboard remains usable.
-  const WAGERING_ENABLED = false;
+  // Wagering enabled for markets whose server-side odds have been recalculated and verified.
+  const WAGERING_ENABLED = true;
   const MARKET_NAMES = {
     set_winner: 'Vincitore set',
     set_exact_score: 'Risultato esatto',
