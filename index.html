@@ -1594,7 +1594,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <button type="button" id="opRoyalBetTab" onclick="showOperatorSection('royalbet')">🎰 Console Royal Bet Lab</button>
 </div>
 </div>
-<div id="operatorRoyalBetSection" class="hidden"><div class="card" style="padding:0;overflow:hidden"><h2 style="padding:16px 16px 0">🎰 Console di supervisione Royal Bet Lab</h2><div class="muted" style="padding:0 16px 12px">Mercati, quote, puntate, portafogli e operazioni di supervisione. Le modifiche sono tracciate e i rimborsi passano dal sistema crediti.</div><iframe id="rplRoyalBetOperatorFrame" title="Console Royal Bet Lab operatore" src="./royal-bet-operator.html?v=9.1.72" loading="lazy" referrerpolicy="same-origin" style="display:block;width:100%;height:1250px;border:0;background:#07121e;border-radius:0 0 12px 12px"></iframe></div></div>
+<div id="operatorRoyalBetSection" class="hidden"><div class="card" style="padding:0;overflow:hidden"><h2 style="padding:16px 16px 0">🎰 Console di supervisione Royal Bet Lab</h2><div class="muted" style="padding:0 16px 12px">Mercati, quote, puntate, portafogli e operazioni di supervisione. Le modifiche sono tracciate e i rimborsi passano dal sistema crediti.</div><iframe id="rplRoyalBetOperatorFrame" title="Console Royal Bet Lab operatore" src="./royal-bet-operator.html?v=9.1.80" loading="lazy" referrerpolicy="same-origin" style="display:block;width:100%;height:1250px;border:0;background:#07121e;border-radius:0 0 12px 12px"></iframe></div></div>
 <div id="operatorVotingSection" class="hidden">
 <div class="card">
 <h2>🗳️ Votazioni settimanali</h2>
@@ -1741,7 +1741,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <script>
 const SUPABASE_URL="https://vanbadzkxvextdvnqwtr.supabase.co";
 const SUPABASE_KEY="sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs";
-// Royal Bet Lab integration package v9.1.72
+// Royal Bet Lab integration package v9.1.80
 const RPL_VAPID_PUBLIC_KEY="BBnDg3GBNrM0rK17CUHivSHPbH-7tPfNQ8n8gk0aKtt_-h9q37GnSUQJYqp659248XtSZg13jLgSKDnqX6HToJE";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{experimental:{passkey:true}}}); window.sb=sb;
 
@@ -3890,7 +3890,7 @@ async function loadPublicCalendar(){
   // Direct hash navigation is handled by the final RPL navigation controller.
 })();
 </script>
-<div id="rplVersionBadge">RPL v9.1.72</div>
+<div id="rplVersionBadge">RPL v9.1.80</div>
 <script>window.addEventListener('hashchange',rplNormalizePublicNav);</script>
 
 <style id="rpl-v6552-nav-final">
@@ -5724,7 +5724,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
   else if(!openPlayerArea())setTimeout(openPlayerArea,250);
 })();
 </script>
-<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.67";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.72";</script>
+<script id="rpl-v9128-version">document.documentElement.dataset.rplVersion="9.1.67";const rplVBadge=document.getElementById("rplVersionBadge");if(rplVBadge)rplVBadge.textContent="RPL v9.1.80";</script>
 <script src="./pair-stats.js?v=2"></script>
 
 <script id="rpl-v9135-dashboard-reorder">
@@ -5854,7 +5854,7 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
     if(!open||!wrap||!frame)return;
     wrap.classList.remove('hidden');open.classList.add('hidden');
     if(!frame.dataset.rplSessionHandler){frame.addEventListener('load',()=>{sendSessionToBetLab();setTimeout(sendSessionToBetLab,250);setTimeout(sendSessionToBetLab,800);});frame.dataset.rplSessionHandler='1';}
-    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.72';frame.dataset.loaded='1';}
+    if(!frame.dataset.loaded||frame.getAttribute('src')==='about:blank'){frame.src='./royal-bet.html?v=9.1.80';frame.dataset.loaded='1';}
     else sendSessionToBetLab();
     if(!window.rplBetSessionRetry){window.rplBetSessionRetry=setInterval(()=>{if(!wrap.classList.contains('hidden'))sendSessionToBetLab();},1000);}
     wrap.scrollIntoView({behavior:'smooth',block:'start'});
