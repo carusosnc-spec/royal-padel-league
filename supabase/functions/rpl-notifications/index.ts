@@ -93,16 +93,16 @@ async function scheduled(admin:any){
   // Royal Bet: invia automaticamente una Push quando una puntata risulta vincente.
   const betWins = await admin.from("rpl_bet_win_notifications")
     .select("id,wager_id,player_id,market_id,payout_credits,attempts")
-    .eq("status","pending").lte("next_attempt_at",now.toISOString())
-    .order("created_at",{ascending:true}).limit(50);
+    .in("status",["pending","processing"]).lte("next_attempt_at",now.toISOString())
+    .order("created_at",{ascending:true}).limit(20);
   if (betWins.error) throw betWins.error;
   result.betWinQueueFound = (betWins.data ?? []).length;
   result.betWinPushSent = 0;
   result.betWinPushFailed = 0;
   for (const q of betWins.data ?? []) {
     const claimed = await admin.from("rpl_bet_win_notifications")
-      .update({status:"processing",attempts:Number(q.attempts||0)+1})
-      .eq("id",q.id).eq("status","pending").select("id").maybeSingle();
+      .update({status:"processing",attempts:Number(q.attempts||0)+1,next_attempt_at:new Date(Date.now()+10*60000).toISOString()})
+      .eq("id",q.id).in("status",["pending","processing"]).select("id").maybeSingle();
     if (claimed.error) throw claimed.error;
     if (!claimed.data) continue;
     const attempt = Number(q.attempts||0)+1;
