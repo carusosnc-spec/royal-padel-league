@@ -35,7 +35,7 @@ function requireVapid(){
   if(!publicKey||!privateKey||!subject)throw new Error("Mancano VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY o VAPID_SUBJECT");
   webpush.setVapidDetails(subject,publicKey,privateKey);
 }
-async function sendPush(admin:any,playerIds:number[],title:string,body:string,url:string){
+async function sendPush(admin:any,playerIds:number[],title:string,body:string,url:string,tag="rpl-notification"){
   const siteBase="https://carusosnc-spec.github.io/royal-padel-league/";
   const targetUrl=/^https?:\/\//i.test(String(url||""))?String(url):new URL(String(url||"./index.html#player"),siteBase).href;
   const ids=[...new Set(playerIds.map(Number).filter(Number.isFinite))];
@@ -49,7 +49,7 @@ async function sendPush(admin:any,playerIds:number[],title:string,body:string,ur
   const failedPlayerIds:number[]=[];
   for(const row of list){
     try{
-      await webpush.sendNotification(row.subscription,JSON.stringify({title,body,url:targetUrl,tag:"rpl-notification"}),{TTL:86400});
+      await webpush.sendNotification(row.subscription,JSON.stringify({title,body,url:targetUrl,tag}),{TTL:86400});
       sent++;deliveredPlayerIds.push(Number(row.player_id));
     }
     catch(error){
@@ -102,7 +102,7 @@ async function scheduled(admin:any){
   for (const q of betWins.data ?? []) {
     const claimed = await admin.from("rpl_bet_win_notifications")
       .update({status:"processing",attempts:Number(q.attempts||0)+1,next_attempt_at:new Date(Date.now()+10*60000).toISOString()})
-      .eq("id",q.id).in("status",["pending","processing"]).select("id").maybeSingle();
+      .eq("id",q.id).in("status",["pending","processing"]).lte("next_attempt_at",now.toISOString()).select("id").maybeSingle();
     if (claimed.error) throw claimed.error;
     if (!claimed.data) continue;
     const attempt = Number(q.attempts||0)+1;
@@ -133,7 +133,7 @@ async function scheduled(admin:any){
       const context = m?.set_number ? " (Set " + Number(m.set_number) + ")" : "";
       const body = ("Hai vinto! Ti sono stati accreditati " +
         payout.toLocaleString("it-IT") + " crediti Royal Bet." + context + outcome).slice(0,180);
-      const delivery = await sendPush(admin,[pid],"🎉 Royal Bet: scommessa vinta!",body,"?rpl=bet#player");
+      const delivery = await sendPush(admin,[pid],"🎉 Royal Bet: scommessa vinta!",body,"?rpl=bet#player","royalbet-win-"+String(q.wager_id));
       if ((delivery.deliveredPlayerIds||[]).map(Number).includes(pid)) {
         await markSent(admin,eventKey,[pid]);
         const {error:upd} = await admin.from("rpl_bet_win_notifications").update({
