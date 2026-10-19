@@ -1,5 +1,5 @@
-// RPL release 9.1.78 — mercati per partita/set e notifiche vincita Royal Bet
-const CACHE_NAME = "rpl-v9.1.78";
+// RPL release 9.1.79 — schede Royal Bet chiuse e mercati stagionali distinti
+const CACHE_NAME = "rpl-v9.1.79";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
