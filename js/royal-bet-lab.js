@@ -106,11 +106,54 @@
     await load('./js/royal-bet-ranking-source.js');
   }
 
+  async function loadHistoricalStats(sb, currentPlayerId) {
+    const matchesRes = await sb.from('matches').select('id,played_at,is_confirmed,approval_status')
+      .eq('is_confirmed', true).eq('approval_status', 'confirmed').order('played_at', {ascending:false}).limit(5000);
+    if (matchesRes.error) throw matchesRes.error;
+    const matchIds = (matchesRes.data || []).map(m => m.id);
+    if (!matchIds.length) return {totalSets:0, player:null, pairs:[]};
+    const [setsRes, playersRes] = await Promise.all([
+      sb.from('sets').select('match_id,set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b').in('match_id', matchIds).limit(20000),
+      sb.from('players').select('id,name,nickname').eq('active', true)
+    ]);
+    if (setsRes.error) throw setsRes.error;
+    if (playersRes.error) throw playersRes.error;
+    const names = new Map((playersRes.data || []).map(p => [String(p.id), p.nickname ? p.name+' “'+p.nickname+'”' : p.name]));
+    const players = new Map(), pairs = new Map();
+    const pairKey = ids => ids.map(String).sort().join(':');
+    let totalSets = 0;
+    for (const row of setsRes.data || []) {
+      const ga = Number(row.games_a), gb = Number(row.games_b);
+      if (!Number.isFinite(ga) || !Number.isFinite(gb) || ga === gb) continue;
+      const sideA = [row.pair_a_player_1, row.pair_a_player_2].filter(x => x != null);
+      const sideB = [row.pair_b_player_1, row.pair_b_player_2].filter(x => x != null);
+      if (sideA.length !== 2 || sideB.length !== 2) continue;
+      totalSets++;
+      const winner = ga > gb ? sideA : sideB;
+      for (const id of [...sideA, ...sideB]) {
+        const key = String(id);
+        if (!players.has(key)) players.set(key, {played:0,won:0});
+        const st = players.get(key); st.played++; if (winner.some(x=>String(x)===key)) st.won++;
+      }
+      for (const ids of [sideA, sideB]) {
+        const key = pairKey(ids);
+        if (!pairs.has(key)) pairs.set(key, {ids:ids.map(String).sort(),played:0,won:0});
+        const st = pairs.get(key); st.played++;
+        if (ids.every(id=>winner.some(x=>String(x)===String(id)))) st.won++;
+      }
+    }
+    const mine = players.get(String(currentPlayerId)) || null;
+    const topPairs = [...pairs.values()].filter(p=>p.played>=3)
+      .map(p=>({...p,percent:Math.round(p.won/p.played*100),label:p.ids.map(id=>names.get(id)||('Giocatore '+id)).join(' + ')}))
+      .sort((a,b)=>b.percent-a.percent || b.played-a.played).slice(0,5);
+    return {totalSets,player:mine?{...mine,percent:Math.round(mine.won/mine.played*100)}:null,pairs:topPairs};
+  }
+
   async function loadDashboard(root) {
     const sb = client();
     await ensureRankingModules();
     const { player } = await currentPlayer();
-    const [walletRes, marketsRes, wagersRes] = await Promise.all([
+    const [walletRes, marketsRes, wagersRes, historyRes] = await Promise.all([
       sb.from('rpl_bet_wallets').select('balance,locked_credits,updated_at').eq('player_id', player.id).maybeSingle(),
       sb.from('rpl_bet_markets').select('id,calendar_match_id,market_type,set_number,selection_key,selection_label,odds,status,opens_at,closes_at,market_scope,season_key,market_metadata')
         .eq('status','open')
@@ -118,7 +161,8 @@
         .or('closes_at.is.null,closes_at.gt.' + new Date().toISOString())
         .order('closes_at',{ascending:true,nullsFirst:false}).limit(100),
       sb.from('rpl_bet_wagers').select('id,market_id,selection_key,stake,odds_locked,potential_payout,status,settled_payout,placed_at')
-        .eq('player_id',player.id).order('placed_at',{ascending:false}).limit(25)
+        .eq('player_id',player.id).order('placed_at',{ascending:false}).limit(25),
+      loadHistoricalStats(sb, player.id)
     ]);
     if (walletRes.error) throw walletRes.error;
     if (marketsRes.error) throw marketsRes.error;
@@ -137,6 +181,7 @@
     const wagers = wagersRes.data || [];
     const balance = wallet ? wallet.balance : 0;
     const locked = wallet ? wallet.locked_credits : 0;
+    const history = historyRes;
 
     root.innerHTML = styles() + `
       <section class="rbl">
@@ -147,6 +192,13 @@
         <div class="rbl-grid">
           <div class="rbl-card"><div class="rbl-muted">Crediti disponibili</div><div class="rbl-balance">${fmt(balance)}</div></div>
           <div class="rbl-card"><div class="rbl-muted">Crediti impegnati</div><div class="rbl-balance">${fmt(locked)}</div></div>
+        </div>
+        <div class="rbl-card" style="margin-top:12px">
+          <div class="rbl-row"><div><strong>Statistiche storiche RPL</strong><div class="rbl-muted">Calcolate dai set ufficiali confermati · sola lettura</div></div>
+          ${history.player ? '<div class="rbl-odd"><span class="rbl-muted">La tua % vittorie</span><strong>'+history.player.percent+'%</strong><span class="rbl-muted">'+history.player.won+'/'+history.player.played+' set</span></div>' : ''}
+          </div>
+          <div style="margin-top:12px"><strong>Coppie con almeno 3 set insieme</strong></div>
+          ${history.pairs.length ? history.pairs.map((p,i)=>'<div class="rbl-market"><div><strong>'+(i+1)+'. '+esc(p.label)+'</strong><div class="rbl-muted">'+p.won+' set vinti su '+p.played+' insieme</div></div><div class="rbl-odd"><strong>'+p.percent+'%</strong><span class="rbl-muted">vittorie</span></div></div>').join('') : '<div class="rbl-empty">Dati insufficienti per classificare le coppie (servono almeno 3 set insieme).</div>'}
         </div>
         <div class="rbl-tabs" role="tablist">
           <button data-tab="markets" aria-selected="true">Mercati aperti (${markets.length})</button>
