@@ -169,7 +169,7 @@
         .eq('status','open')
         .or('opens_at.is.null,opens_at.lte.' + new Date().toISOString())
         .or('closes_at.is.null,closes_at.gt.' + new Date().toISOString())
-        .order('closes_at',{ascending:true,nullsFirst:false}).limit(100),
+        .order('closes_at',{ascending:true,nullsFirst:false}).limit(300),
       sb.from('rpl_bet_wagers').select('id,market_id,selection_key,stake,odds_locked,potential_payout,status,settled_payout,placed_at')
         .eq('player_id',player.id).order('placed_at',{ascending:false}).limit(25),
       loadHistoricalStats(sb, player.id)
