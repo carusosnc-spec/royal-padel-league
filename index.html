@@ -4927,6 +4927,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     }catch(e){console.error('RPL player result',e);panel.innerHTML=`<div class="msg err">Impossibile aprire la distinta: ${escP(e.message||e)}</div>`;}
   }
   async function submitPlayerResult(cm){
+    const panel=q('inlinePlayerResultPanel');
     const msg=q('playerResultMsg'),rows=scoreRowsFromPanel();msg.className='msg';msg.textContent='Controllo risultati…';
     if(rows.some(x=>x.ga===null||x.gb===null)){msg.className='msg err';msg.textContent='Inserisci il punteggio di tutti i set.';return}
     const bad=rows.findIndex(x=>!isValidPadelSetScore(x.ga,x.gb));
