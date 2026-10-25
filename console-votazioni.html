@@ -7,6 +7,7 @@
 <header class="brand"><div style="font-size:30px">👑 🎾 👑</div><h1>ROYAL PADEL LEAGUE</h1><p>CONSOLE DI CONTROLLO VOTAZIONI · AREA RISERVATA</p></header>
 <section class="panel"><div class="topline"><div><h2>🗳️ Stato della votazione</h2><div class="small">Voti registrati, giocatori mancanti e stato notifiche.</div></div><button id="refresh" class="primary">↻ AGGIORNA DATI</button></div>
 <div class="select-wrap"><label for="pollSelect">SELEZIONA LA SETTIMANA</label><select id="pollSelect"><option>Caricamento votazioni…</option></select></div><div id="pollMeta" class="status">Accesso e caricamento dati…</div>
+<div style="margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#06111d"><div style="font-weight:900;color:var(--gold);margin-bottom:6px">🔔 NOTIFICHE OPERATORE</div><div class="small" style="margin-bottom:9px">Attiva le notifiche su questo dispositivo per ricevere un avviso ogni volta che un giocatore vota.</div><button id="operatorPushEnable" class="primary" type="button">🔔 ATTIVA NOTIFICHE SU QUESTO DISPOSITIVO</button><div id="operatorPushStatus" class="status" style="margin-top:8px">Controllo registrazione notifiche…</div></div>
 <div class="stats"><div class="stat"><b id="total">—</b><span>GIOCATORI ATTIVI</span></div><div class="stat"><b id="voted">—</b><span>HANNO VOTATO</span></div><div class="stat"><b id="missing">—</b><span>NON HANNO VOTATO</span></div><div class="stat"><b id="rate">—</b><span>PARTECIPAZIONE</span></div></div></section>
 <section class="panel"><div class="topline"><div><h2>📅 Riepilogo giornate e fasce</h2><div class="small">Per ogni opzione vedi quanti giocatori hanno votato e i relativi nomi. La giornata è completa quando raggiunge il numero massimo previsto.</div></div></div><div id="dayStats"><div class="status">Caricamento giornate…</div></div></section>
 <section class="panel"><div class="topline"><div><h2 id="listTitle">📋 Elenco giocatori</h2><div class="small">Il voto e le notifiche sono due stati distinti.</div></div></div><div class="toolbar"><input id="search" type="search" placeholder="Cerca giocatore o soprannome…"><button id="copy">📋 COPIA NON VOTANTI</button><button id="onlyMissing">Mostra tutti</button></div><div id="list"><div class="status">Caricamento elenco…</div></div><div id="foot" class="small" style="margin-top:10px"></div></section>
@@ -19,6 +20,32 @@ const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 const fmtDate=v=>v?new Date(v).toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"numeric"}):"—";
 const fmtDateTime=v=>v?new Date(v).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";
 function status(t,k){$("pollMeta").className="status "+(k||"");$("pollMeta").textContent=t;}
+const RPL_OPERATOR_VAPID_PUBLIC_KEY="BBnDg3GBNrM0rK17CUHivSHPbH-7tPfNQ8n8gk0aKtt_-h9q37GnSUQJYqp659248XtSZg13jLgSKDnqX6HToJE";
+function isIOS(){return /iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/i.test(navigator.userAgent)&&navigator.maxTouchPoints>1);}
+function isStandalone(){return window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;}
+async function enableOperatorPush(){
+ const box=$("operatorPushStatus"),btn=$("operatorPushEnable");box.className="status";box.textContent="Attivazione notifiche…";btn.disabled=true;
+ try{
+  if(!window.isSecureContext)throw new Error("Le notifiche richiedono HTTPS.");
+  if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window))throw new Error("Questo browser non supporta le notifiche Push.");
+  if(isIOS()&&!isStandalone())throw new Error("Su iPhone aggiungi prima RPL alla Schermata Home e aprila dalla sua icona.");
+  const {data:sessionData,error:sessionError}=await sb.auth.getSession(),session=sessionData?.session;
+  if(sessionError||!session)throw new Error("Accedi prima all’Area Riservata RPL in un’altra scheda, poi riprova.");
+  const {data:op,error:opError}=await sb.from("operators").select("user_id").eq("user_id",session.user.id).maybeSingle();
+  if(opError||!op)throw new Error("Account non autorizzato come operatore.");
+  let permission=Notification.permission;if(permission==="default")permission=await Notification.requestPermission();
+  if(permission!=="granted")throw new Error("Permesso notifiche non concesso. Abilitalo nelle impostazioni del dispositivo.");
+  const reg=await navigator.serviceWorker.register("./sw.js?v=735");await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub){const key=Uint8Array.from(atob(RPL_OPERATOR_VAPID_PUBLIC_KEY.replace(/-/g,"+").replace(/_/g,"/")+"=".repeat((4-RPL_OPERATOR_VAPID_PUBLIC_KEY.length%4)%4)),c=>c.charCodeAt(0));sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});}
+  const {data,error}=await sb.functions.invoke("rpl-notifications",{body:{action:"subscribe_operator",subscription:sub.toJSON(),user_agent:navigator.userAgent}});
+  if(error)throw new Error(error.message||"Errore salvataggio dispositivo operatore.");
+  if(!data?.ok)throw new Error(data?.error||"Il server non ha confermato la registrazione.");
+  box.className="status ok";box.textContent="🟢 Notifiche operatore attive su questo dispositivo.";btn.textContent="🟢 NOTIFICHE ATTIVE";
+ }catch(e){box.className="status err";box.textContent="❌ "+(e?.message||String(e));}
+ finally{btn.disabled=false;}
+}
+
 async function load(){
  $("refresh").disabled=true;$("refresh").textContent="⏳ AGGIORNAMENTO…";
  try{
@@ -53,6 +80,7 @@ function render(){
  $("list").innerHTML=filtered.length?filtered.map(p=>{const hv=votedIds.has(Number(p.id)),hd=devices.has(Number(p.id));return '<div class="player"><div><div class="player-name">'+esc(p.name)+'</div><div class="nick">'+(p.nickname?'“'+esc(p.nickname)+'”':'')+'</div></div><div class="player-meta"><span class="pill '+(hv?'yes':'no')+'">'+(hv?'✅ VOTATO':'⏳ DA VOTARE')+'</span><span class="pill '+(hd?'yes':'no')+'">'+(hd?'🔔 NOTIFICHE ATTIVE':'🔕 NO DISPOSITIVO')+'</span></div></div>';}).join(""):'<div class="empty">'+(showMissingOnly?'🎉 Tutti i giocatori hanno votato!':'Nessun giocatore corrisponde alla ricerca.')+'</div>';
  $("foot").textContent="Voti registrati: "+votes.length+". Giocatori conteggiati: attivi e non ospiti ("+players.length+"). Ultimo aggiornamento: "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+".";
 }
+$("operatorPushEnable").addEventListener("click",enableOperatorPush);
 $("refresh").addEventListener("click",load);$("pollSelect").addEventListener("change",()=>loadVotes().catch(e=>status(e.message||String(e),"err")));$("search").addEventListener("input",render);$("onlyMissing").addEventListener("click",()=>{showMissingOnly=!showMissingOnly;render();});
 $("copy").addEventListener("click",async()=>{const w=weeks.find(x=>Number(x.id)===selectedWeek),ids=new Set(votes.map(v=>Number(v.player_id))),list=players.filter(p=>!ids.has(Number(p.id))).sort((a,b)=>a.name.localeCompare(b.name,"it"));const out="ROYAL PADEL LEAGUE — GIOCATORI CHE NON HANNO VOTATO\nSettimana "+fmtDate(w&&w.week_start)+" → "+fmtDate(w&&w.week_end)+"\nScadenza: "+fmtDateTime(w&&w.closes_at)+"\n\n"+(list.length?list.map(p=>"• "+p.name+(p.nickname?' (“'+p.nickname+'”)':'')).join("\n"):"Tutti hanno votato.");try{await navigator.clipboard.writeText(out);status("Elenco non votanti copiato negli appunti.","ok");}catch(e){window.prompt("Copia l’elenco:",out);}});
 load();
