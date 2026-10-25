@@ -1,6 +1,6 @@
 // RPL release 9.1.81 — schede chiuse e mercati set semplificati
-const CACHE_NAME = "rpl-v9.1.81";
-const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp"];
+const CACHE_NAME = "rpl-v9.1.82";
+const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
   self.skipWaiting();
@@ -13,7 +13,17 @@ self.addEventListener("fetch", event => {
   if(event.request.method !== "GET") return;
   const url=new URL(event.request.url);
   if(url.origin===self.location.origin && (event.request.mode==='navigate' || /\/index\.html$/.test(url.pathname))){
-    event.respondWith(fetch(new Request(event.request,{cache:'no-store'})).then(response=>{if(response&&response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(c=>c.put(event.request,copy)).catch(()=>{});}return response;}).catch(()=>caches.match(event.request).then(cached=>cached||caches.match('./index.html'))));
+    event.respondWith(fetch(new Request(event.request,{cache:'no-store'})).then(async response=>{
+      if(!response||!response.ok)return response;
+      let html=await response.clone().text();
+      if(!html.includes('rpl-vote-alert.js'))html=html.replace(/<\\/body\\s*>/i,'<script src="./rpl-vote-alert.js?v=9.1.82"><\\/script></body>');
+      const headers=new Headers(response.headers);
+      headers.delete('content-length');headers.delete('content-encoding');
+      headers.set('content-type','text/html; charset=utf-8');
+      const transformed=new Response(html,{status:response.status,statusText:response.statusText,headers});
+      caches.open(CACHE_NAME).then(c=>c.put(event.request,transformed.clone())).catch(()=>{});
+      return transformed;
+    }).catch(()=>caches.match(event.request).then(cached=>cached||caches.match('./index.html'))));
     return;
   }
   event.respondWith(fetch(event.request).catch(()=>caches.match(event.request)));
