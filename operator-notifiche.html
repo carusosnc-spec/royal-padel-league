@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07121e">
+<title>Royal Padel League — Notifiche Operatore</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#07121e;color:#f4f7fb;font:16px system-ui,-apple-system,sans-serif;display:grid;place-items:center;padding:20px}.card{width:min(100%,520px);background:#102235;border:1px solid #28465e;border-radius:18px;padding:24px;box-shadow:0 18px 55px #0006}h1{font-size:24px;margin:0 0 8px;color:#f3cf56}.muted{color:#b8c8d7;line-height:1.5}label{display:block;margin:16px 0 6px}input,button{width:100%;padding:13px;border-radius:10px;font:inherit}input{border:1px solid #3c5a70;background:#081723;color:white}button{margin-top:14px;border:0;background:#e7c44e;color:#101b25;font-weight:800;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.status{margin-top:16px;padding:12px;border-radius:10px;background:#091a28;line-height:1.5;overflow-wrap:anywhere}.ok{border:1px solid #3c9d75}.err{border:1px solid #d66b6b}.hidden{display:none}.brand{text-align:center;font-weight:900;letter-spacing:2px;margin-bottom:18px}
+</style>
+</head>
+<body>
+<main class="card">
+<div class="brand">👑 ROYAL PADEL LEAGUE 🎾</div>
+<h1>Notifiche per gli operatori</h1>
+<p class="muted">Attiva questo dispositivo per ricevere un avviso quando un giocatore invia il proprio voto. L'account deve essere uno dei quattro account autorizzati nell'Area Riservata.</p>
+<section id="loginBox">
+<label for="email">Email operatore</label><input id="email" type="email" autocomplete="username" placeholder="Email usata per l'Area Riservata">
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password">
+<button id="loginBtn" type="button">ACCEDI</button>
+</section>
+<section id="activeBox" class="hidden">
+<p id="accountLabel" class="muted"></p>
+<button id="enableBtn" type="button">🔔 ATTIVA NOTIFICHE SU QUESTO DISPOSITIVO</button>
+<button id="logoutBtn" type="button" style="background:#294357;color:#fff">ESCI</button>
+</section>
+<div id="status" class="status" role="status" aria-live="polite">Controllo sessione…</div>
+</main>
+<script>
+const SUPABASE_URL="https://vanbadzkxvextdvnqwtr.supabase.co";
+const SUPABASE_KEY="sb_publishable_2NzwAEuFrb_8RXvAplLHPA_DegAhVvs";
+const VAPID_PUBLIC_KEY="BBnDg3GBNrM0rK17CUHivSHPbH-7tPfNQ8n8gk0aKtt_-h9q37GnSUQJYqp659248XtSZg13jLgSKDnqX6HToJE";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{experimental:{passkey:true}}});
+const $=id=>document.getElementById(id);
+function status(text,kind=""){const el=$("status");el.textContent=text;el.className="status "+kind}
+function showSession(user){$("loginBox").classList.toggle("hidden",!!user);$("activeBox").classList.toggle("hidden",!user);$("accountLabel").textContent=user?"Account collegato: "+(user.email||user.id):""}
+async function refresh(){const {data,error}=await sb.auth.getSession();if(error){status(error.message,"err");return}showSession(data.session?.user||null);status(data.session?"Accesso effettuato. Ora attiva le notifiche su questo dispositivo.":"Accedi con l'account operatore RPL.")}
+$("loginBtn").addEventListener("click",async()=>{const email=$("email").value.trim(),password=$("password").value;if(!email||!password){status("Inserisci email e password.","err");return} $("loginBtn").disabled=true;try{const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;showSession(data.user);status("Accesso effettuato. Ora attiva le notifiche su questo dispositivo.")}catch(e){status("Accesso non riuscito: "+(e.message||e),"err")}finally{$("loginBtn").disabled=false}});
+$("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
+$("logoutBtn").addEventListener("click",async()=>{await sb.auth.signOut();showSession(null);status("Sei uscito.")}
+);
+$("enableBtn").addEventListener("click",async()=>{const b=$("enableBtn");b.disabled=true;status("Attivazione notifiche…");try{
+ const {data:sessionData,error:sessionError}=await sb.auth.getSession();if(sessionError||!sessionData.session)throw new Error("Accedi prima con un account operatore.");
+ if(!window.isSecureContext)throw new Error("Le notifiche richiedono HTTPS.");
+ if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window))throw new Error("Questo browser non supporta le notifiche Push.");
+ if(/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window.matchMedia("(display-mode: standalone)").matches&&!window.navigator.standalone)throw new Error("Su iPhone/iPad aggiungi prima RPL alla Schermata Home e aprila dalla sua icona.");
+ let permission=Notification.permission;if(permission==="default")permission=await Notification.requestPermission();if(permission!=="granted")throw new Error("Permesso notifiche non concesso: abilitalo nelle impostazioni del dispositivo.");
+ const reg=await navigator.serviceWorker.register("./sw.js?v=operator-push-1");
+ await navigator.serviceWorker.ready;
+ let sub=await reg.pushManager.getSubscription();if(!sub){const key=Uint8Array.from(atob(VAPID_PUBLIC_KEY.replace(/-/g,"+").replace(/_/g,"/")+"=".repeat((4-VAPID_PUBLIC_KEY.length%4)%4)),c=>c.charCodeAt(0));sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key})}
+ const {data,error}=await sb.functions.invoke("rpl-notifications",{body:{action:"subscribe_operator",subscription:sub.toJSON(),user_agent:navigator.userAgent}});
+ if(error)throw new Error(error.message||"Errore nel salvataggio della registrazione Push.");if(data?.ok===false)throw new Error(data.error||"Impossibile attivare le notifiche.");
+ status("✅ Notifiche operatore attivate su questo dispositivo. Ora i nuovi voti possono generare l'avviso Push.","ok");b.textContent="🟢 NOTIFICHE ATTIVE";
+ }catch(e){status("❌ "+(e.message||String(e)),"err");b.disabled=false}});
+sb.auth.onAuthStateChange((_event,session)=>showSession(session?.user||null));
+refresh();
+</script>
+</body>
+</html>
