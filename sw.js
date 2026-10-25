@@ -16,7 +16,7 @@ self.addEventListener("fetch", event => {
     event.respondWith(fetch(new Request(event.request,{cache:'no-store'})).then(async response=>{
       if(!response||!response.ok)return response;
       let html=await response.clone().text();
-      if(!html.includes('rpl-vote-alert.js'))html=html.replace(/<\\/body\\s*>/i,'<script src="./rpl-vote-alert.js?v=9.1.82"><\\/script></body>');
+      if(!html.includes('rpl-vote-alert.js'))html=html.replace(/<\/body\s*>/i,'<script src="./rpl-vote-alert.js?v=9.1.82"></script></body>');
       const headers=new Headers(response.headers);
       headers.delete('content-length');headers.delete('content-encoding');
       headers.set('content-type','text/html; charset=utf-8');
