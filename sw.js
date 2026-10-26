@@ -1,6 +1,6 @@
-// RPL release 9.1.83 — cache aggiornata per Royal Pay v9.1.82
-const CACHE_NAME = "rpl-v9.1.83";
-const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js"];
+// RPL release 9.1.84 — cache aggiornata per l'integrazione Royal Pay
+const CACHE_NAME = "rpl-v9.1.84";
+const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
   self.skipWaiting();
