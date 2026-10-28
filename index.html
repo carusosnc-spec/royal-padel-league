@@ -314,6 +314,15 @@ select option:checked {
   user-select:none;
   letter-spacing:.3px;
 }
+
+<style id="rpl-ranking-movement-mobile">
+.rpl-rank-movement{display:inline-block;font-size:10px;font-weight:900;line-height:1.2;margin-top:3px;white-space:nowrap}
+.rpl-rank-movement.up{color:#20b66b}
+.rpl-rank-movement.down{color:#ef5350}
+.rpl-rank-movement.same{color:#9aa9b8}
+.rpl-rank-movement.new{color:#e7b94e;font-size:8px}
+@media(max-width:600px){.rpl-rank-movement{font-size:9px}.rpl-rank-movement.new{font-size:7px}}
+</style>
 </style>
 
 <style id="rpl-v6541-form-readability">
@@ -1903,6 +1912,7 @@ function minSetsRequired(){
   return null; // settembre: nessuna soglia ancora scaduta
 }
 
+let rplPreviousRanks = {};
 function render(){
   const required=minSetsRequired();
   let a=stats.map(s=>{
@@ -1920,10 +1930,12 @@ function render(){
       : "";
     const f=String(s.fascia||"").replace(/^F/i,"");
     const rank=i+1;
+    const previousRank=rplPreviousRanks[s.id]||null;
+    const movement=previousRank===null ? '<span class="rpl-rank-movement new">NUOVO</span>' : previousRank>rank ? `<span class="rpl-rank-movement up" aria-label="Salito di ${previousRank-rank} posizioni">▲ ${previousRank-rank}</span>` : previousRank<rank ? `<span class="rpl-rank-movement down" aria-label="Sceso di ${rank-previousRank} posizioni">▼ ${rank-previousRank}</span>` : '<span class="rpl-rank-movement same" aria-label="Posizione invariata">—</span>';
     const finalsTag=s.eligible && rank<=5 ? `<span class="rpl-finals-status rpl-finals-captain">♛ Capitano Finals${rank<=3?' · Podio':' · Spareggio'}</span>` : (s.eligible && rank<=10 ? `<span class="rpl-finals-status rpl-finals-qualified">🎟 Qualificato Finals</span>` : '');
     const podiumClass=s.eligible && rank<=3 ? ` rpl-podium-${rank}` : '';
     return `<tr class="${s.eligible?"":"rpl-ineligible"}${podiumClass}">
-      <td><b>${rank}</b></td>
+      <td><b>${rank}</b><div>${movement}</div></td>
       <td><div style="display:flex;align-items:center;gap:9px">
         <img src="${logoFile(s.name)}" alt="${s.name}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
         <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${s.name}</b><br><span class="rpl-ranking-player-nick">${s.nick}</span>${finalsTag?`<br>${finalsTag}`:""}${status}</div>
@@ -1944,7 +1956,7 @@ async function loadRanking(){
   const calculationStats=emptyStats();
   const {data:matches,error:me}=await sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").order("played_at",{ascending:true});
   if(me){$("status").textContent="Errore caricamento partite: "+me.message;return}
-  if(!matches.length){stats=calculationStats;render();return}
+  if(!matches.length){stats=calculationStats;rplPreviousRanks={};render();return}
   const ids=matches.map(m=>m.id);
   const [{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
     sb.from("match_players").select("*").in("match_id",ids),
@@ -1962,6 +1974,11 @@ async function loadRanking(){
   });
   (aw||[]).forEach(x=>{let s=calculationStats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++});
   stats=calculationStats;
+  try{
+    const previous=await calculateStandingsBefore(matches[matches.length-1].played_at);
+    rplPreviousRanks={};
+    (previous||[]).forEach((p,i)=>{rplPreviousRanks[p.id]=i+1});
+  }catch(_){rplPreviousRanks={};}
   render();
 }
 function resetForm(){["p1","p2","p3","p4"].forEach((id,i)=>{if(dbPlayers[i])$(id).value=dbPlayers[i].id});refreshSets();document.querySelectorAll(".scoreA,.scoreB").forEach(x=>x.value="");document.querySelectorAll("#mvp input,#imb input").forEach(x=>x.checked=false);$("date").value=new Date().toISOString().slice(0,16)}
