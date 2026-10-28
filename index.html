@@ -4745,12 +4745,47 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
     if(mids.length){const [pm,ps,pa]=await Promise.all([sb.from('match_players').select('*').in('match_id',mids),sb.from('sets').select('*').in('match_id',mids),sb.from('match_awards').select('*').in('match_id',mids)]);if(pm.error||ps.error||pa.error)throw(pm.error||ps.error||pa.error);const pSnap={};(pm.data||[]).forEach(x=>pSnap[x.match_id+'_'+x.player_id]=x);const pst=emptyStats();(ps.data||[]).forEach(x=>{const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],ga=+x.games_a,gb=+x.games_b;if(ga===gb)return;const W=ga>gb?A:B,L=ga>gb?B:A,wg=Math.max(ga,gb),lg=Math.min(ga,gb);W.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.won++;z.games+=wg;z.pt+=(pSnap[x.match_id+'_'+L[0]]?.fascia_value||0)+(pSnap[x.match_id+'_'+L[1]]?.fascia_value||0)}});L.forEach(pid=>{const z=pst.find(s=>s.id===pid);if(z){z.sets++;z.games+=lg}})});(pa.data||[]).forEach(x=>{const z=pst.find(s=>s.id===x.player_id);if(z){if(x.award_type==='MVP')z.mvp++;if(x.award_type==='IMBATTUTO')z.imb++}});const pr=pst.map(s=>({...s,base:s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0})).map(s=>({...s,total:s.base+s.mvp*1.5+s.imb})).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,'it'));partial=pr.findIndex(x=>String(x.id)===String(playerId))+1;}
     return {general:general.findIndex(x=>String(x.id)===String(playerId))+1,partial,bonus};
   }
+  async function rplLoadRecentPlayerSets(playerId){
+    try{
+      const {data:participations,error:pe}=await sb.from('match_players').select('match_id').eq('player_id',playerId);
+      if(pe)throw pe;
+      const matchIds=[...new Set((participations||[]).map(x=>x.match_id).filter(x=>x!=null))];
+      if(!matchIds.length)return [];
+      const [mr,sr,pr]=await Promise.all([
+        sb.from('matches').select('id,played_at,approval_status').in('id',matchIds).or('approval_status.eq.confirmed,approval_status.is.null').order('played_at',{ascending:false}),
+        sb.from('sets').select('id,match_id,set_number,pair_a_player_1,pair_a_player_2,pair_b_player_1,pair_b_player_2,games_a,games_b').in('match_id',matchIds),
+        sb.from('players').select('id,name,nickname')
+      ]);
+      if(mr.error)throw mr.error;if(sr.error)throw sr.error;if(pr.error)throw pr.error;
+      const matchMap=new Map((mr.data||[]).map(m=>[String(m.id),m]));
+      const playerMap=new Map((pr.data||[]).map(p=>[String(p.id),p]));
+      const rows=[];
+      (sr.data||[]).forEach(s=>{
+        const A=[s.pair_a_player_1,s.pair_a_player_2].filter(v=>v!=null).map(String);
+        const B=[s.pair_b_player_1,s.pair_b_player_2].filter(v=>v!=null).map(String);
+        const side=A.includes(String(playerId))?A:(B.includes(String(playerId))?B:null);
+        const match=matchMap.get(String(s.match_id));
+        const ga=Number(s.games_a),gb=Number(s.games_b);
+        if(!side||!match||!Number.isFinite(ga)||!Number.isFinite(gb)||ga===gb)return;
+        const opponents=A.includes(String(playerId))?B:A;
+        const won=(ga>gb?A:B).includes(String(playerId));
+        const person=id=>playerMap.get(String(id))||{name:'Giocatore',nickname:''};
+        const label=id=>{const p=person(id);return escP(p.name||'Giocatore')+(p.nickname?' “'+escP(p.nickname)+'”':'')};
+        rows.push({date:match.played_at,matchId:s.match_id,setNumber:Number(s.set_number)||0,won,score:ga+'-'+gb,partner:label(side.find(id=>id!==String(playerId))),opponents:opponents.map(label).join(' / ')});
+      });
+      return rows.sort((a,b)=>new Date(b.date)-new Date(a.date)||b.setNumber-a.setNumber).slice(0,10);
+    }catch(e){console.warn('RPL ultimi set:',e);return [];}
+  }
+  function rplRecentSetsMarkup(rows){
+    if(!rows.length)return '<section class="rpl-recent-sets"><h3>ULTIMI 10 SET</h3><p class="muted">Nessun set disponibile.</p></section>';
+    return '<section class="rpl-recent-sets"><h3>ULTIMI 10 SET</h3><p class="muted">Tocca un risultato per vedere i dettagli.</p><div class="rpl-recent-set-list">'+rows.map((x,i)=>'<details class="rpl-recent-set '+(x.won?'win':'loss')+'"><summary><span class="rpl-set-result '+(x.won?'win':'loss')+'">'+(x.won?'V':'P')+'</span><span class="rpl-set-date">'+escP(x.date?new Date(x.date).toLocaleDateString('it-IT'):'Data n/d')+' · Set '+(x.setNumber||'—')+'</span><b class="rpl-set-score">'+escP(x.score)+'</b><span class="rpl-set-expand">＋</span></summary><div class="rpl-set-detail"><div><small>COMPAGNO</small><b>'+x.partner+'</b></div><div><small>AVVERSARI</small><b>'+x.opponents+'</b></div><div><small>RISULTATO</small><b>'+escP(x.score)+'</b></div></div></details>').join('')+'</div></section>';
+  }
   async function openRplPlayerProfile(playerId){
     const modal=q('rplPlayerProfileModal'),body=q('rplPlayerProfileModalBody');if(!modal||!body)return;
     modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');body.innerHTML='<div class="muted" style="text-align:center;padding:25px">Caricamento scheda giocatore…</div>';
     try{
       const p=playerById(playerId);if(!p)throw new Error('Giocatore non trovato.');
-      const [prof,ranks,st,acc]=await Promise.all([loadPlayerProfileData(playerId),rplGetRankingsForProfile(playerId),rplCalcPlayerStats(playerId),sb.from('player_accounts').select('player_id,user_id,avatar_path').eq('player_id',playerId).maybeSingle()]);
+      const [prof,ranks,st,acc,recentSets]=await Promise.all([loadPlayerProfileData(playerId),rplGetRankingsForProfile(playerId),rplCalcPlayerStats(playerId),sb.from('player_accounts').select('player_id,user_id,avatar_path').eq('player_id',playerId).maybeSingle(),rplLoadRecentPlayerSets(playerId)]);
       const avatarUrls=rplAvatarUrls(prof,acc?.data||null);
       const photo=avatarUrls[0]||'';
       const fallbackPhoto=avatarUrls[1]||'';
@@ -4758,7 +4793,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       const logo=logoFile(p.name);const age=rplProfileAge(prof?.birth_date);const side=rplProfileSide(prof?.preferred_side);const style=rplProfileStyle(prof?.play_style);
       const stats=[['SET',st.st.sets],['VINTI',st.st.won],['GAME',st.st.games],['PT.SET',st.st.pt.toFixed(1)],['BASE',st.base.toFixed(2)],['MVP',st.st.mvp],['IMBATTUTO',st.st.imb],['TOTALE',st.total.toFixed(2)]];
       const photoMarkup=`<div class="rpl-profile-photo-wrap">${photo?`<img src="${escP(photo)}" class="rpl-profile-modal-photo rpl-image-zoom-trigger" role="button" tabindex="0" data-rpl-zoom-src="${escP(photo)}" data-rpl-zoom-alt="Foto profilo di ${escP(p.name||'Giocatore')}" onclick="openRplImageZoomFromElement(this);event.stopPropagation()" loading="eager" data-avatar-candidates='${escP(avatarCandidates)}' data-avatar-index="0" onload="this.parentElement.classList.add('has-photo')" onerror="try{const a=JSON.parse(this.dataset.avatarCandidates||'[]');const i=Number(this.dataset.avatarIndex||0)+1;if(i<a.length){this.dataset.avatarIndex=i;this.src=a[i]}else{this.onerror=null;this.removeAttribute('src');this.parentElement.classList.remove('has-photo')}}catch(_){this.onerror=null;this.removeAttribute('src');this.parentElement.classList.remove('has-photo')}">`:''}<div class="rpl-profile-photo-placeholder" aria-label="Foto profilo non ancora caricata"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="34" r="18"/><path d="M15 91c2-22 16-35 35-35s33 13 35 35z"/></svg></div></div>`;
-      body.innerHTML=`<div class="rpl-profile-modal-head">${photoMarkup}<div class="rpl-profile-modal-logo ${logo?'rpl-image-zoom-trigger':''}" ${logo?`role="button" tabindex="0" data-rpl-zoom-src="${escP(logo)}" data-rpl-zoom-alt="Logo di ${escP(p.name||'Giocatore')}" onclick="openRplImageZoomFromElement(this);event.stopPropagation()"`:''} style="${logo?`background-image:url('${logo}');background-size:cover;background-position:center`:''}">${logo?'':'🏆'}</div><div style="flex:1"><div class="rpl-player-kicker">ROYAL PADEL LEAGUE</div><div class="rpl-profile-modal-title">${escP(p.name||'')}</div><div class="rpl-profile-modal-nick">${p.nickname?`“${escP(p.nickname)}”`:''}</div><div class="muted">Fascia ${p.fascia||'—'} · ${p.fascia_value||'—'} punti</div></div></div><div class="rpl-profile-ranks"><div class="rpl-profile-rank main"><b>${ranks.general||'—'}</b><span>CLASSIFICA GENERALE</span></div><div class="rpl-profile-rank"><b>${ranks.partial||'—'}</b><span>PARZIALE MESE</span></div><div class="rpl-profile-rank"><b>${ranks.bonus||'—'}</b><span>CLASSIFICA BONUS</span></div></div><div class="rpl-public-profile-meta">${prof?.birth_date?`<div><b>${rplProfileDate(prof.birth_date)}${age!==''?' · '+age+' anni':''}</b><span>DATA DI NASCITA</span></div>`:''}${side?`<div><b>${side}</b><span>LATO PREFERITO</span></div>`:''}${prof?.racket?`<div><b>${escP(prof.racket)}</b><span>RACCHETTA</span></div>`:''}${style?`<div><b>${style}</b><span>STILE DI GIOCO</span></div>`:''}</div><div class="rpl-profile-stat-grid">${stats.map(x=>`<div class="rpl-profile-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>`;
+      body.innerHTML=`<div class="rpl-profile-modal-head">${photoMarkup}<div class="rpl-profile-modal-logo ${logo?'rpl-image-zoom-trigger':''}" ${logo?`role="button" tabindex="0" data-rpl-zoom-src="${escP(logo)}" data-rpl-zoom-alt="Logo di ${escP(p.name||'Giocatore')}" onclick="openRplImageZoomFromElement(this);event.stopPropagation()"`:''} style="${logo?`background-image:url('${logo}');background-size:cover;background-position:center`:''}">${logo?'':'🏆'}</div><div style="flex:1"><div class="rpl-player-kicker">ROYAL PADEL LEAGUE</div><div class="rpl-profile-modal-title">${escP(p.name||'')}</div><div class="rpl-profile-modal-nick">${p.nickname?`“${escP(p.nickname)}”`:''}</div><div class="muted">Fascia ${p.fascia||'—'} · ${p.fascia_value||'—'} punti</div></div></div><div class="rpl-profile-ranks"><div class="rpl-profile-rank main"><b>${ranks.general||'—'}</b><span>CLASSIFICA GENERALE</span></div><div class="rpl-profile-rank"><b>${ranks.partial||'—'}</b><span>PARZIALE MESE</span></div><div class="rpl-profile-rank"><b>${ranks.bonus||'—'}</b><span>CLASSIFICA BONUS</span></div></div><div class="rpl-public-profile-meta">${prof?.birth_date?`<div><b>${rplProfileDate(prof.birth_date)}${age!==''?' · '+age+' anni':''}</b><span>DATA DI NASCITA</span></div>`:''}${side?`<div><b>${side}</b><span>LATO PREFERITO</span></div>`:''}${prof?.racket?`<div><b>${escP(prof.racket)}</b><span>RACCHETTA</span></div>`:''}${style?`<div><b>${style}</b><span>STILE DI GIOCO</span></div>`:''}</div><div class="rpl-profile-stat-grid">${stats.map(x=>`<div class="rpl-profile-stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>${rplRecentSetsMarkup(recentSets)}`;
     }catch(e){body.innerHTML=`<div class="msg err">Errore caricamento scheda: ${escP(e.message||e)}</div>`;}
   }
   function closeRplPlayerProfile(){const m=q('rplPlayerProfileModal');if(m){m.classList.add('hidden');m.setAttribute('aria-hidden','true')}}
@@ -5900,4 +5935,24 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 <script src="./royal-pay.js?v=9.1.84" defer></script>
+<style id="rpl-recent-sets-style">
+.rpl-recent-sets{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.rpl-recent-sets h3{margin:0 0 6px;font-size:13px;letter-spacing:.08em}
+.rpl-recent-set-list{display:grid;gap:7px;margin-top:10px}
+.rpl-recent-set{border:1px solid rgba(255,255,255,.12);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.025)}
+.rpl-recent-set summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px;cursor:pointer;min-height:48px}
+.rpl-recent-set summary::-webkit-details-marker{display:none}
+.rpl-set-result{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:10px;font-size:24px;font-weight:1000}
+.rpl-set-result.win{color:#19d47b;background:rgba(25,212,123,.12)}
+.rpl-set-result.loss{color:#ff555d;background:rgba(255,85,93,.12)}
+.rpl-set-date{flex:1;font-size:12px;color:var(--muted,#aeb9c8)}
+.rpl-set-score{font-size:16px;white-space:nowrap}
+.rpl-set-expand{color:#aeb9c8}
+.rpl-recent-set[open] .rpl-set-expand{transform:rotate(45deg)}
+.rpl-set-detail{display:grid;gap:9px;padding:0 12px 12px 58px;font-size:13px}
+.rpl-set-detail div{display:grid;gap:3px}
+.rpl-set-detail small{font-size:9px;letter-spacing:.08em;color:#aeb9c8;font-weight:800}
+.rpl-set-detail b{font-weight:700;overflow-wrap:anywhere}
+@media(max-width:480px){.rpl-recent-set summary{gap:7px;padding:8px}.rpl-set-result{flex-basis:34px;height:36px;font-size:23px}.rpl-set-date{font-size:11px}.rpl-set-score{font-size:14px}.rpl-set-detail{padding-left:50px}}
+</style>
 </body></html>
