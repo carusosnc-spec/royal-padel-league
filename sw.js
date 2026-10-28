@@ -1,5 +1,5 @@
-// RPL release 9.1.86 — Royal Pay loader e cache aggiornata
-const CACHE_NAME = "rpl-v9.1.86";
+// RPL release 9.1.87 — Royal Pay loader e cache aggiornata
+const CACHE_NAME = "rpl-v9.1.87";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
@@ -11,6 +11,62 @@ self.addEventListener("message", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith("rpl-v") && k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
+
+self.addEventListener("push", event => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (_) {
+    try { payload = { body: event.data ? event.data.text() : "" }; } catch (_) {}
+  }
+
+  const title = typeof payload.title === "string" && payload.title.trim()
+    ? payload.title.trim()
+    : "Royal Padel League";
+  const body = typeof payload.body === "string" && payload.body.trim()
+    ? payload.body.trim()
+    : "Hai una nuova comunicazione RPL.";
+  const tag = typeof payload.tag === "string" && payload.tag.trim()
+    ? payload.tag.trim()
+    : "rpl-notification";
+  let targetUrl = new URL("./index.html#player", self.location.href).href;
+  try {
+    const candidate = new URL(typeof payload.url === "string" ? payload.url : targetUrl, self.location.href);
+    if (candidate.origin === self.location.origin) targetUrl = candidate.href;
+  } catch (_) {}
+
+  event.waitUntil(self.registration.showNotification(title, {
+    body,
+    tag,
+    icon: new URL("./apple-touch-icon.png", self.location.href).href,
+    badge: new URL("./favicon-32x32.png", self.location.href).href,
+    data: { url: targetUrl },
+    renotify: true
+  }));
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  let targetUrl = new URL("./index.html#player", self.location.href).href;
+  try {
+    const candidate = new URL(event.notification.data && event.notification.data.url
+      ? event.notification.data.url
+      : targetUrl, self.location.href);
+    if (candidate.origin === self.location.origin) targetUrl = candidate.href;
+  } catch (_) {}
+
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of windows) {
+      if (client.url.startsWith(self.location.origin) && "navigate" in client) {
+        await client.navigate(targetUrl);
+        return client.focus();
+      }
+    }
+    return self.clients.openWindow(targetUrl);
+  })());
+});
+
 async function injectRoyalPay(response, requestUrl) {
   if (!response || !response.ok) return response;
   const type = response.headers.get("content-type") || "";
