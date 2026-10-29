@@ -10,6 +10,9 @@
   .rpl-pay-card{border:1px solid rgba(63,196,133,.4);background:linear-gradient(150deg,rgba(12,40,37,.96),rgba(6,18,31,.98));border-radius:14px;padding:15px;margin:12px 0;color:#f5f7fa}
   .rpl-pay-toggle-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 8px}
   .rpl-chat-card{align-self:start!important;height:fit-content}
+  #playerDashboard{align-items:start!important}
+  #rplChatToggle{font-size:0!important;min-width:0!important;position:relative}
+  #rplChatToggle::before{content:"💬";font-size:18px;line-height:1}
   #rplMessagingCard .rpl-chat-heading{display:none!important}
   #rplMessagingCard #rplPayPlayerCard{width:100%;box-sizing:border-box;margin:8px 0 0}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
@@ -40,6 +43,8 @@
     const chatToggle=$('rplChatToggle');
     if(messages&&chatToggle){
       messages.querySelector('.rpl-chat-heading')?.remove();
+      chatToggle.setAttribute('aria-label','Apri messaggi');
+      chatToggle.setAttribute('title','Apri messaggi');
       let row=$('rplPlayerQuickActions');
       if(!row){
         row=document.createElement('div');row.id='rplPlayerQuickActions';row.className='rpl-pay-toggle-row';
