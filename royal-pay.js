@@ -9,10 +9,15 @@
   const css = `
   .rpl-pay-card{border:1px solid rgba(63,196,133,.4);background:linear-gradient(150deg,rgba(12,40,37,.96),rgba(6,18,31,.98));border-radius:14px;padding:15px;margin:12px 0;color:#f5f7fa}
   .rpl-pay-toggle-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 8px}
-  .rpl-chat-card{align-self:start!important;height:fit-content}
+  .rpl-chat-card{align-self:start!important;height:fit-content!important;min-height:0!important}
   #playerDashboard{align-items:start!important}
-  #rplChatToggle{font-size:0!important;min-width:0!important;position:relative}
-  #rplChatToggle::before{content:"💬";font-size:18px;line-height:1}
+  #rplMessagingCard{align-self:start!important;height:fit-content!important;min-height:0!important;grid-row:auto!important;}
+  #rplMessagingCard #rplPayPlayerCard{max-height:none;}
+  #rplPlayerQuickActions{align-items:start!important;align-self:start!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;}
+  #rplChatToggle{font-size:0!important;min-width:0!important;width:100%!important;max-width:100%!important;overflow:hidden!important;position:relative;white-space:nowrap!important;}
+  #rplChatToggle *{display:none!important;font-size:0!important;}
+  #rplChatToggle::before{content:"💬";display:block;font-size:18px;line-height:1}
+  @media(min-width:700px){#rplMessagingCard{height:fit-content!important;align-self:start!important;}#rplPlayerQuickActions{align-self:start!important;}}
   #rplMessagingCard .rpl-chat-heading{display:none!important}
   #rplMessagingCard #rplPayPlayerCard{width:100%;box-sizing:border-box;margin:8px 0 0}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
@@ -45,6 +50,7 @@
       messages.querySelector('.rpl-chat-heading')?.remove();
       chatToggle.setAttribute('aria-label','Apri messaggi');
       chatToggle.setAttribute('title','Apri messaggi');
+      chatToggle.innerHTML='<span aria-hidden="true">💬</span>';
       let row=$('rplPlayerQuickActions');
       if(!row){
         row=document.createElement('div');row.id='rplPlayerQuickActions';row.className='rpl-pay-toggle-row';
