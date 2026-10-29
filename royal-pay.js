@@ -77,14 +77,18 @@
         return label.includes('apri royal bet lab')||label==='royal bet lab';
       });
       if(betControl){
+        let betCard=null,ancestor=betControl.parentElement;
+        for(let depth=0;ancestor&&ancestor!==host&&depth<6;depth++,ancestor=ancestor.parentElement){
+          const t=(ancestor.innerText||ancestor.textContent||'').replace(/\s+/g,' ').toLowerCase();
+          if(t.includes('royal bet lab')&&(t.includes('crediti virtuali')||t.includes('mercati, puntate'))){betCard=ancestor;break;}
+        }
         const betWrapper=betControl.parentElement;
         betControl.textContent='🎲 BET LAB';
         betControl.classList.add('rpl-betlab-quick-btn');
         betControl.style.cssText+=';display:inline-flex!important;align-items:center;justify-content:center;min-width:0;width:100%;max-width:100%;min-height:38px;padding:8px 5px;font-size:10px;line-height:1.1;white-space:nowrap;overflow:hidden;';
         row.appendChild(betControl);
-        if(betWrapper && betWrapper!==row && !betWrapper.querySelector('button,a,[role="button"]')){
-          betWrapper.classList.add('rpl-betlab-launcher-empty');
-        }
+        if(betCard&&betCard!==row)betCard.classList.add('rpl-betlab-launcher-empty');
+        else if(betWrapper&&betWrapper!==row&&!betWrapper.querySelector('button,a,[role="button"]'))betWrapper.classList.add('rpl-betlab-launcher-empty');
       }
       payButton.addEventListener('click',()=>{
         const opening=section.classList.contains('hidden');
