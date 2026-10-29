@@ -23,6 +23,9 @@
   #rplPayPlayerCard.rpl-pay-player-panel.hidden{display:none!important}
   #rplPlayerQuickActions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:min(100%,340px);margin:0 0 8px!important}
   #rplPlayerQuickActions #rplChatToggle,#rplPlayerQuickActions #rplPayPlayerToggle{min-width:0!important;width:100%!important;max-width:100%!important}
+  #rplPlayerQuickActions{grid-template-columns:repeat(3,minmax(0,1fr))!important;width:min(100%,510px)!important;gap:5px!important}
+  #rplPlayerQuickActions .rpl-betlab-quick-btn{grid-column:auto!important;min-width:0!important;width:100%!important;max-width:100%!important;min-height:38px!important;padding:7px 4px!important;font-size:10px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important}
+  .rpl-betlab-launcher-empty{display:none!important}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
   .rpl-pay-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #3fc485!important;border-radius:9px!important;background:linear-gradient(135deg,#123c31,#0b2825)!important;color:#d9ffe9!important;font-weight:800;cursor:pointer}
   .rpl-pay-open-btn[aria-expanded="true"]{border-color:#ffd86a!important;color:#ffd86a!important}
@@ -67,6 +70,22 @@
       payButton.setAttribute('aria-controls','rplPayPlayerCard');payButton.setAttribute('aria-expanded','false');
       payButton.textContent='💳 ROYAL PAY';
       if(payButton.parentElement!==row)row.appendChild(payButton);
+      /* Move the existing Royal Bet Lab launcher into the same compact action row. */
+      const betControl=Array.from(host.querySelectorAll('button,a,[role="button"]')).find(el=>{
+        if(el===payButton||el===chatToggle)return false;
+        const label=(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+        return label.includes('apri royal bet lab')||label==='royal bet lab';
+      });
+      if(betControl){
+        const betWrapper=betControl.parentElement;
+        betControl.textContent='🎲 BET LAB';
+        betControl.classList.add('rpl-betlab-quick-btn');
+        betControl.style.cssText+=';display:inline-flex!important;align-items:center;justify-content:center;min-width:0;width:100%;max-width:100%;min-height:38px;padding:8px 5px;font-size:10px;line-height:1.1;white-space:nowrap;overflow:hidden;';
+        row.appendChild(betControl);
+        if(betWrapper && betWrapper!==row && !betWrapper.querySelector('button,a,[role="button"]')){
+          betWrapper.classList.add('rpl-betlab-launcher-empty');
+        }
+      }
       payButton.addEventListener('click',()=>{
         const opening=section.classList.contains('hidden');
         section.classList.toggle('hidden',!opening);
