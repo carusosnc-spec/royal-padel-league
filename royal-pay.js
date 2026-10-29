@@ -26,6 +26,12 @@
   #rplPlayerQuickActions{grid-template-columns:repeat(2,minmax(0,1fr))!important;width:min(100%,340px)!important;gap:5px!important}
   #rplPlayerQuickActions .rpl-betlab-quick-btn{grid-column:auto!important;min-width:0!important;width:100%!important;max-width:100%!important;min-height:38px!important;padding:7px 4px!important;font-size:10px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important}
   .rpl-betlab-launcher-empty{display:none!important}
+  #rplRoyalBetCard.rpl-betlab-launcher-host{display:none!important}
+  #rplBetLabPanel{grid-column:1 / -1!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;margin:10px 0!important;padding:16px!important;align-self:stretch!important}
+  #rplBetLabPanel .rpl-betlab-panel-kicker{font-size:10px;letter-spacing:.16em;color:#72e5ae;font-weight:900}
+  #rplBetLabPanel h2{margin:4px 0 6px;font-size:20px}
+  #rplBetLabPanel .rpl-royalbet-frame-wrap{width:100%;max-width:100%;box-sizing:border-box}
+  #rplBetLabPanel iframe{display:block;width:100%;min-height:75vh;border:0;border-radius:10px;background:#06111d}
   #rplBetLabActionSection{grid-column:3!important;grid-row:2!important;align-self:start!important;min-width:0!important;width:100%!important;margin:0!important;padding:0!important}
   #rplBetLabActionSection #rplRoyalBetOpenBtn{width:100%!important;max-width:100%!important;height:46px!important;min-height:46px!important;margin:0!important}
   #rplRoyalBetCard.rpl-betlab-launcher-host{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;margin:0!important;min-height:0!important}
@@ -56,7 +62,7 @@
   function mountPlayer(){
     const host=$('playerDashboard'); if(!host||$('rplPayPlayerCard'))return;
     const section=document.createElement('section');section.id='rplPayPlayerCard';section.className='rpl-pay-card hidden';
-    section.innerHTML='<div style="font-size:11px;letter-spacing:.18em;color:#72e5ae;font-weight:900">ROYAL PADEL LEAGUE · PAGAMENTI</div><h2>💳 I MIEI PAGAMENTI</h2><div class="rpl-pay-muted">Quote, contributi e pagamenti da confermare dall’operatore.</div><div id="rplPayWalletSummary" style="margin:12px 0"></div><div id="rplPayPlayerSummary" style="margin:12px 0"></div><div id="rplPayPlayerList">Premi AGGIORNA per caricare le quote.</div><h3>📜 Movimenti del portafoglio</h3><div id="rplPayWalletHistory" class="rpl-pay-muted">I movimenti saranno caricati all’apertura.</div><div class="rpl-pay-muted" style="margin-top:8px">Ricarica: il pagamento deve essere verificato dall’operatore prima dell’accredito.</div><a class="rpl-pay-link" href="'+PAYPAL_URL+'" target="_blank" rel="noopener noreferrer">RICARICA CON PAYPAL</a><a class="rpl-pay-link" href="'+REVOLUT_URL+'" target="_blank" rel="noopener noreferrer">RICARICA CON REVOLUT</a><div class="rpl-pay-muted">Per il bonifico, chiedi all’operatore le coordinate e indica la causale Royal Pay.</div><button type="button" id="rplPayPlayerRefresh">↻ AGGIORNA</button>';
+    section.innerHTML='<div style="font-size:11px;letter-spacing:.18em;color:#72e5ae;font-weight:900">ROYAL PADEL LEAGUE · PAGAMENTI</div><h2>💳 I MIEI PAGAMENTI</h2><div class="rpl-pay-muted">Quote, contributi e pagamenti da confermare dall’operatore.</div><div id="rplPayWalletSummary" style="margin:12px 0"></div><div id="rplPayPlayerSummary" style="margin:12px 0"></div><div id="rplPayPlayerList">Premi AGGIORNA per caricare le quote.</div><h3>📜 Movimenti del portafoglio</h3><div id="rplPayWalletHistory" class="rpl-pay-muted">I movimenti saranno caricati all’apertura.</div><div class="rpl-pay-muted" style="margin-top:8px">Ricarica: il pagamento deve essere verificato dall’operatore prima dell’accredito.</div><a class="rpl-pay-link" href="'+PAYPAL_URL+'" target="_blank" rel="noopener noreferrer">RICARICA CON PAYPAL</a><a class="rpl-pay-link" href="'+REVOLUT_URL+'" target="_blank" rel="noopener noreferrer">RICARICA CON REVOLUT</a><button type="button" id="rplPayBankTransferBtn" class="rpl-pay-link">🏦 RICARICA CON BONIFICO</button><div class="rpl-pay-muted">Per utilizzare il bonifico, richiedi le coordinate bancarie all’operatore e indica la causale “Royal Pay”. Le coordinate non vengono mostrate nell’app.</div><button type="button" id="rplPayPlayerRefresh">↻ AGGIORNA</button>';
     const messages=$('rplMessagingCard');
     const chatToggle=$('rplChatToggle');
     if(messages&&chatToggle){
@@ -97,6 +103,21 @@
         betControl.classList.add('rpl-betlab-quick-btn');
         betControl.style.cssText='display:flex!important;align-items:center;justify-content:center;box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:46px;height:46px;margin:0;padding:8px 10px;font-size:12px;line-height:1.1;white-space:nowrap;';
         $('rplRoyalBetCard')?.classList.add('rpl-betlab-launcher-host');
+        /* Dedicated full-width panel: move the real iframe wrapper and preserve original open/session handlers. */
+        const betCard=$('rplRoyalBetCard');
+        const betWrap=$('rplRoyalBetFrameWrap');
+        let betPanel=$('rplBetLabPanel');
+        if(!betPanel){
+          betPanel=document.createElement('section');
+          betPanel.id='rplBetLabPanel';
+          betPanel.className='rpl-pay-card rpl-betlab-panel hidden';
+          betPanel.innerHTML='<div class="rpl-betlab-panel-kicker">ROYAL PADEL LEAGUE</div><h2>🎰 BET LAB</h2><div class="rpl-pay-muted">Mercati e scommesse con crediti virtuali.</div>';
+        }
+        if(row.parentElement)row.insertAdjacentElement('afterend',betPanel);
+        if(betWrap&&betWrap.parentElement!==betPanel)betPanel.appendChild(betWrap);
+        betCard?.classList.add('hidden');
+        betControl.addEventListener('click',()=>betPanel.classList.remove('hidden'),true);
+        $('rplRoyalBetCloseBtn')?.addEventListener('click',()=>betPanel.classList.add('hidden'),true);
       }
       payButton.addEventListener('click',()=>{
         const opening=section.classList.contains('hidden');
@@ -114,6 +135,7 @@
     }else{
       const bet=$('rplRoyalBetCard'); if(bet?.parentNode)bet.insertAdjacentElement('afterend',section);else host.prepend(section);
     }
+    $('rplPayBankTransferBtn')?.addEventListener('click',()=>alert('Per ricaricare con bonifico, contatta un operatore Royal Padel League per ricevere le coordinate bancarie. Inserisci “Royal Pay” nella causale e attendi la verifica prima dell’accredito.'));
     $('rplPayPlayerRefresh').addEventListener('click',loadPlayer);
   }
   async function getPlayer(){
