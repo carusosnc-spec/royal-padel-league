@@ -19,7 +19,10 @@
   #rplChatToggle::before{content:"💬";display:block;font-size:18px;line-height:1}
   @media(min-width:700px){#rplMessagingCard{height:fit-content!important;align-self:start!important;}#rplPlayerQuickActions{align-self:start!important;}}
   #rplMessagingCard .rpl-chat-heading{display:none!important}
-  #rplPayPlayerCard{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:12px 0;align-self:start;height:fit-content!important;min-height:0!important;grid-column:1 / -1}\n  #rplPayPlayerCard.rpl-pay-player-panel.hidden{display:none!important}\n  #rplPlayerQuickActions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:min(100%,340px);margin:0 0 8px!important}\n  #rplPlayerQuickActions #rplChatToggle,#rplPlayerQuickActions #rplPayPlayerToggle{min-width:0!important;width:100%!important;max-width:100%!important}
+  #rplPayPlayerCard{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:12px 0;align-self:start;height:fit-content!important;min-height:0!important;grid-column:1 / -1}
+  #rplPayPlayerCard.rpl-pay-player-panel.hidden{display:none!important}
+  #rplPlayerQuickActions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:min(100%,340px);margin:0 0 8px!important}
+  #rplPlayerQuickActions #rplChatToggle,#rplPlayerQuickActions #rplPayPlayerToggle{min-width:0!important;width:100%!important;max-width:100%!important}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
   .rpl-pay-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #3fc485!important;border-radius:9px!important;background:linear-gradient(135deg,#123c31,#0b2825)!important;color:#d9ffe9!important;font-weight:800;cursor:pointer}
   .rpl-pay-open-btn[aria-expanded="true"]{border-color:#ffd86a!important;color:#ffd86a!important}
@@ -52,22 +55,18 @@
       chatToggle.setAttribute('title','Apri messaggi');
       chatToggle.innerHTML='<span aria-hidden="true">💬</span>';
       let row=$('rplPlayerQuickActions');
-      if(!row){
-        row=document.createElement('div');row.id='rplPlayerQuickActions';row.className='rpl-pay-toggle-row';
-      }
-      /* Keep the two compact controls beside "Le mie partite", not at the bottom of the dashboard. */
-      const matchesControl=Array.from(host.querySelectorAll('button,a,[role="button"]')).find(el=>/le mie partite/i.test((el.innerText||el.textContent||'').trim()));
-      if(matchesControl && matchesControl!==row && !row.contains(matchesControl)){
-        matchesControl.insertAdjacentElement('afterend',row);
-      }else if(!row.isConnected){
-        chatToggle.insertAdjacentElement('beforebegin',row);
-      }
+      if(!row){row=document.createElement('div');row.id='rplPlayerQuickActions';row.className='rpl-pay-toggle-row';}
+      const normalizeLabel=el=>(el.innerText||el.textContent||'').replace(/[📋🎾💬💳▾▼⌄]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+      const matchesControl=Array.from(host.querySelectorAll('button,a,[role="button"],summary')).find(el=>normalizeLabel(el)==='le mie partite');
+      if(matchesControl){matchesControl.insertAdjacentElement('afterend',row);}
+      else if(messages.parentElement){messages.insertAdjacentElement('beforebegin',row);}
+      else if(!row.isConnected){host.prepend(row);}
       if(chatToggle.parentElement!==row)row.appendChild(chatToggle);
       const payButton=$('rplPayPlayerToggle')||document.createElement('button');
       payButton.type='button';payButton.id='rplPayPlayerToggle';payButton.className='rpl-pay-open-btn';
       payButton.setAttribute('aria-controls','rplPayPlayerCard');payButton.setAttribute('aria-expanded','false');
       payButton.textContent='💳 ROYAL PAY';
-      if(!payButton.parentNode)row.appendChild(payButton);
+      if(payButton.parentElement!==row)row.appendChild(payButton);
       payButton.addEventListener('click',()=>{
         const opening=section.classList.contains('hidden');
         section.classList.toggle('hidden',!opening);
