@@ -1,5 +1,5 @@
-// RPL release 9.1.93 — aggiornamento posizione Royal Pay operatore
-const CACHE_NAME = "rpl-v9.1.93";
+// RPL release 9.1.94 — aggiornamento posizione Royal Pay operatore
+const CACHE_NAME = "rpl-v9.1.94";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
@@ -75,7 +75,7 @@ async function injectRoyalPay(response, requestUrl) {
   if (!(path.endsWith("/") || path.endsWith("/index.html"))) return response;
   let html = await response.text();
   if (!html.includes('src="./royal-pay.js') && !html.includes("src='./royal-pay.js")) {
-    const script = '<script src="./royal-pay.js?v=9.1.93" defer></script>';
+    const script = '<script src="./royal-pay.js?v=9.1.94" defer></script>';
     if (/<\/body\s*>/i.test(html)) html = html.replace(/<\/body\s*>/i, script + "</body>");
     else html += script;
   }
