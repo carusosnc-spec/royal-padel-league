@@ -8,7 +8,10 @@
   const euro = v => Number(v || 0).toLocaleString('it-IT',{style:'currency',currency:'EUR'});
   const css = `
   .rpl-pay-card{border:1px solid rgba(63,196,133,.4);background:linear-gradient(150deg,rgba(12,40,37,.96),rgba(6,18,31,.98));border-radius:14px;padding:15px;margin:12px 0;color:#f5f7fa}
-  .rpl-pay-toggle-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:8px}
+  .rpl-pay-toggle-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 8px}
+  .rpl-chat-card{align-self:start!important;height:fit-content}
+  #rplMessagingCard .rpl-chat-heading{display:none!important}
+  #rplMessagingCard #rplPayPlayerCard{width:100%;box-sizing:border-box;margin:8px 0 0}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
   .rpl-pay-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #3fc485!important;border-radius:9px!important;background:linear-gradient(135deg,#123c31,#0b2825)!important;color:#d9ffe9!important;font-weight:800;cursor:pointer}
   .rpl-pay-open-btn[aria-expanded="true"]{border-color:#ffd86a!important;color:#ffd86a!important}
@@ -36,17 +39,18 @@
     const messages=$('rplMessagingCard');
     const chatToggle=$('rplChatToggle');
     if(messages&&chatToggle){
+      messages.querySelector('.rpl-chat-heading')?.remove();
       let row=$('rplPlayerQuickActions');
       if(!row){
         row=document.createElement('div');row.id='rplPlayerQuickActions';row.className='rpl-pay-toggle-row';
         chatToggle.insertAdjacentElement('beforebegin',row);
         row.appendChild(chatToggle);
       }
-      const payButton=document.createElement('button');
+      const payButton=$('rplPayPlayerToggle')||document.createElement('button');
       payButton.type='button';payButton.id='rplPayPlayerToggle';payButton.className='rpl-pay-open-btn';
       payButton.setAttribute('aria-controls','rplPayPlayerCard');payButton.setAttribute('aria-expanded','false');
       payButton.textContent='💳 ROYAL PAY';
-      row.appendChild(payButton);
+      if(!payButton.parentNode)row.appendChild(payButton);
       payButton.addEventListener('click',()=>{
         const opening=section.classList.contains('hidden');
         section.classList.toggle('hidden',!opening);
@@ -54,7 +58,7 @@
         payButton.textContent=opening?'✕ CHIUDI PAY':'💳 ROYAL PAY';
         if(opening)loadPlayer();
       });
-      messages.insertAdjacentElement('afterend',section);
+      messages.appendChild(section);
     }else{
       const bet=$('rplRoyalBetCard'); if(bet?.parentNode)bet.insertAdjacentElement('afterend',section);else host.prepend(section);
     }
