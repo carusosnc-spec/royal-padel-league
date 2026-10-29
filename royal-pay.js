@@ -62,12 +62,26 @@
   }
   function mountOperator(){
     const host=$('operatorBox');if(!host||$('rplPayOperatorCard'))return;
-    const toggle=document.createElement('button');toggle.type='button';toggle.id='rplPayOperatorToggle';toggle.className='rpl-pay-link';toggle.style.width='100%';toggle.textContent='💶 ROYAL PAY · APRI GESTIONE';
+    const toggle=document.createElement('button');toggle.type='button';toggle.id='rplPayOperatorToggle';toggle.className='rpl-pay-link';toggle.textContent='💶 Royal Pay';
+    toggle.style.cssText='width:100%;min-width:0;min-height:44px;height:44px;box-sizing:border-box;margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:800;white-space:normal;';
     const section=document.createElement('section');section.id='rplPayOperatorCard';section.className='rpl-pay-card';section.hidden=true;
-    toggle.addEventListener('click',()=>{section.hidden=!section.hidden;toggle.textContent=section.hidden?'💶 ROYAL PAY · APRI GESTIONE':'✖ CHIUDI ROYAL PAY';if(!section.hidden)loadOperator();});
+    toggle.addEventListener('click',()=>{section.hidden=!section.hidden;toggle.textContent=section.hidden?'💶 Royal Pay':'✖ Chiudi Royal Pay';if(!section.hidden)loadOperator();});
     section.innerHTML='<div style="font-size:11px;letter-spacing:.18em;color:#72e5ae;font-weight:900">ROYAL PADEL LEAGUE · CONSOLE</div><h2>💶 ROYAL PAY · GESTIONE QUOTE</h2><div class="rpl-pay-muted">Crea quote, assegna contributi e verifica manualmente i pagamenti. Le partite a Calascibetta applicano €3 ai soci registrati e €6 agli altri partecipanti selezionati.</div><div id="rplPayOpMsg" class="rpl-pay-muted" role="status" style="margin:10px 0"></div><h3>➕ Crea una quota</h3><div class="rpl-pay-grid"><div><label>Descrizione quota</label><input id="rplPayTitle" placeholder="Es. Partita 29/10 ore 21:00"></div><div><label>Tipo</label><select id="rplPayType"><option value="match">Partita</option><option value="season">Iscrizione stagione</option><option value="monthly">Quota mensile</option><option value="bimonthly">Quota bimestrale</option><option value="contribution">Contributo speciale</option><option value="custom">Altro</option></select></div><div><label>Importo per giocatore (€)</label><input id="rplPayAmount" type="number" min="0" step=".50" value="6"></div><div><label>Scadenza</label><input id="rplPayDue" type="date"></div></div><label>Note / causale</label><textarea id="rplPayDescription" rows="2" placeholder="Dettagli facoltativi"></textarea><label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input id="rplPayCalascibetta" type="checkbox" style="width:18px;min-height:18px"> Partita presso Padel Club Calascibetta (socio registrato: €3)</label><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><h3 style="margin:8px 0">Giocatori da addebitare</h3><div><button type="button" id="rplPaySelectAll">SELEZIONA TUTTI</button><button type="button" id="rplPaySelectNone">NESSUNO</button></div></div><div id="rplPayPlayers" class="rpl-pay-checks">Caricamento giocatori…</div><button type="button" id="rplPayCreateCharge">CREA QUOTA E ASSEGNA</button><hr style="border-color:#354a4a;margin:18px 0"><h3>⏳ Pagamenti in attesa di verifica</h3><div id="rplPayPendingList">Caricamento…</div><button type="button" id="rplPayRefreshPending">↻ AGGIORNA PAGAMENTI</button><hr style="border-color:#354a4a;margin:18px 0"><h3>📊 Riepilogo quote dovute</h3><div id="rplPayBalances">Caricamento…</div><hr style="border-color:#354a4a;margin:18px 0"><h3>💶 Portafogli Royal Pay</h3><div class="rpl-pay-muted">Ricariche e rettifiche sono registrate nello storico in euro.</div><div id="rplPayWalletBalances">Caricamento portafogli…</div>';
-    host.appendChild(toggle);
-    host.appendChild(section);
+    // Put Royal Pay beside the existing console actions when possible.
+    // If the action grid cannot be identified, place it at the very top of operatorBox.
+    const controls=[...host.querySelectorAll('button,a,[role="button"]')];
+    const betButton=controls.find(el=>/console royal bet lab/i.test(el.textContent||''));
+    let actionContainer=betButton?.parentElement||null;
+    if(actionContainer && actionContainer!==host && actionContainer.children.length<2) actionContainer=actionContainer.parentElement;
+    if(actionContainer && betButton && actionContainer.contains(betButton)){
+      if(betButton.nextSibling) actionContainer.insertBefore(toggle,betButton.nextSibling);
+      else actionContainer.appendChild(toggle);
+      section.style.marginTop='12px';
+      actionContainer.insertAdjacentElement('afterend',section);
+    }else{
+      host.insertBefore(toggle,host.firstChild);
+      host.insertBefore(section,toggle.nextSibling);
+    }
     $('rplPaySelectAll').addEventListener('click',()=>section.querySelectorAll('[data-pay-player]').forEach(x=>x.checked=true));
     $('rplPaySelectNone').addEventListener('click',()=>section.querySelectorAll('[data-pay-player]').forEach(x=>x.checked=false));
     $('rplPayCreateCharge').addEventListener('click',createCharge);
