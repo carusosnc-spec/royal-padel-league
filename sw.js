@@ -1,5 +1,5 @@
-// RPL release 9.1.97 — aggiornamento posizione Royal Pay operatore
-const CACHE_NAME = "rpl-v9.1.97";
+// RPL release 9.1.98 — aggiornamento posizione Royal Pay operatore
+const CACHE_NAME = "rpl-v9.1.98";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
@@ -74,10 +74,16 @@ async function injectRoyalPay(response, requestUrl) {
   const path = new URL(requestUrl).pathname;
   if (!(path.endsWith("/") || path.endsWith("/index.html"))) return response;
   let html = await response.text();
-  if (!html.includes('src="./royal-pay.js') && !html.includes("src='./royal-pay.js")) {
-    const script = '<script src="./royal-pay.js?v=9.1.97" defer></script>';
-    if (/<\/body\s*>/i.test(html)) html = html.replace(/<\/body\s*>/i, script + "</body>");
-    else html += script;
+  const injectedScripts = [
+    ['royal-pay.js', '<script src="./royal-pay.js?v=9.1.98" defer></script>'],
+    ['rpl-ranking-evolution.js', '<script src="./rpl-ranking-evolution.js?v=1" defer></script>'],
+    ['rpl-last-sets.js', '<script src="./rpl-last-sets.js?v=2" defer></script>']
+  ];
+  for (const [needle, script] of injectedScripts) {
+    if (!html.includes('src="./' + needle) && !html.includes("src='./" + needle)) {
+      if (/<\\/body\\s*>/i.test(html)) html = html.replace(/<\\/body\\s*>/i, script + "</body>");
+      else html += script;
+    }
   }
   const headers = new Headers(response.headers);
   headers.delete("content-length");
