@@ -1,10 +1,10 @@
-/* Royal Padel League — integrazione Royal Pay v9.1.96
+/* Royal Padel League — integrazione Royal Pay v9.1.97
    Caricare questo file nella stessa cartella di index.html e royal-pay.js.
    Non modifica Royal Bet Lab e non gestisce crediti virtuali.
 */
 (function () {
   "use strict";
-  var SITE_VERSION = "9.1.96";
+  var SITE_VERSION = "9.1.97";
   var SCRIPT_ID = "rplRoyalPayModuleScript";
 
   function updateVersionBadge() {
