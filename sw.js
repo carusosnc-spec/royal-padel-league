@@ -1,5 +1,5 @@
-// RPL release 9.1.109 — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v9.1.109";
+// RPL release 9.1.110 — ripristino frecce classifica basate sulle partite
+const CACHE_NAME = "rpl-v9.1.110";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
