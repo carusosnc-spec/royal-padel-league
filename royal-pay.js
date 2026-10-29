@@ -8,6 +8,11 @@
   const euro = v => Number(v || 0).toLocaleString('it-IT',{style:'currency',currency:'EUR'});
   const css = `
   .rpl-pay-card{border:1px solid rgba(63,196,133,.4);background:linear-gradient(150deg,rgba(12,40,37,.96),rgba(6,18,31,.98));border-radius:14px;padding:15px;margin:12px 0;color:#f5f7fa}
+  .rpl-pay-toggle-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:8px}
+  .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
+  .rpl-pay-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #3fc485!important;border-radius:9px!important;background:linear-gradient(135deg,#123c31,#0b2825)!important;color:#d9ffe9!important;font-weight:800;cursor:pointer}
+  .rpl-pay-open-btn[aria-expanded="true"]{border-color:#ffd86a!important;color:#ffd86a!important}
+  @media(max-width:420px){.rpl-pay-toggle-row{gap:5px}.rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{font-size:10px!important;padding:8px 4px!important}}
   .rpl-pay-card h2,.rpl-pay-card h3{margin:2px 0 10px;color:#d9ffe9}
   .rpl-pay-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
   .rpl-pay-card input,.rpl-pay-card select,.rpl-pay-card textarea{width:100%;min-height:40px;border-radius:8px;border:1px solid #47635f;background:#081a20;color:#fff;padding:9px;margin:4px 0 9px}
@@ -26,11 +31,34 @@
   function addStyle(){if($('rplPayStyles'))return;const st=document.createElement('style');st.id='rplPayStyles';st.textContent=css;document.head.appendChild(st);}
   function mountPlayer(){
     const host=$('playerDashboard'); if(!host||$('rplPayPlayerCard'))return;
-    const section=document.createElement('section');section.id='rplPayPlayerCard';section.className='rpl-pay-card';
-    section.innerHTML='<div style="font-size:11px;letter-spacing:.18em;color:#72e5ae;font-weight:900">ROYAL PADEL LEAGUE · PAGAMENTI</div><h2>💳 I MIEI PAGAMENTI</h2><div class="rpl-pay-muted">Quote, contributi e pagamenti da confermare dall’operatore.</div><div id="rplPayWalletSummary" style="margin:12px 0"></div><div id="rplPayPlayerSummary" style="margin:12px 0"></div><div id="rplPayPlayerList">Caricamento quote…</div><h3>📜 Movimenti del portafoglio</h3><div id="rplPayWalletHistory" class="rpl-pay-muted">Caricamento movimenti…</div><div class="rpl-pay-muted" style="margin-top:8px">Ricarica: il pagamento deve essere verificato dall’operatore prima dell’accredito.</div><a class="rpl-pay-link" href="'+PAYPAL_URL+'" target="_blank" rel="noopener noreferrer">RICARICA CON PAYPAL</a><a class="rpl-pay-link" href="'+REVOLUT_URL+'" target="_blank" rel="noopener noreferrer">RICARICA CON REVOLUT</a><div class="rpl-pay-muted">Per il bonifico, chiedi all’operatore le coordinate e indica la causale Royal Pay.</div><button type="button" id="rplPayPlayerRefresh">↻ AGGIORNA</button>';
-    const bet=$('rplRoyalBetCard'); if(bet?.parentNode)bet.insertAdjacentElement('afterend',section);else host.prepend(section);
+    const section=document.createElement('section');section.id='rplPayPlayerCard';section.className='rpl-pay-card hidden';
+    section.innerHTML='<div style="font-size:11px;letter-spacing:.18em;color:#72e5ae;font-weight:900">ROYAL PADEL LEAGUE · PAGAMENTI</div><h2>💳 I MIEI PAGAMENTI</h2><div class="rpl-pay-muted">Quote, contributi e pagamenti da confermare dall’operatore.</div><div id="rplPayWalletSummary" style="margin:12px 0"></div><div id="rplPayPlayerSummary" style="margin:12px 0"></div><div id="rplPayPlayerList">Premi AGGIORNA per caricare le quote.</div><h3>📜 Movimenti del portafoglio</h3><div id="rplPayWalletHistory" class="rpl-pay-muted">I movimenti saranno caricati all’apertura.</div><div class="rpl-pay-muted" style="margin-top:8px">Ricarica: il pagamento deve essere verificato dall’operatore prima dell’accredito.</div><a class="rpl-pay-link" href="'+PAYPAL_URL+'" target="_blank" rel="noopener noreferrer">RICARICA CON PAYPAL</a><a class="rpl-pay-link" href="'+REVOLUT_URL+'" target="_blank" rel="noopener noreferrer">RICARICA CON REVOLUT</a><div class="rpl-pay-muted">Per il bonifico, chiedi all’operatore le coordinate e indica la causale Royal Pay.</div><button type="button" id="rplPayPlayerRefresh">↻ AGGIORNA</button>';
+    const messages=$('rplMessagingCard');
+    const chatToggle=$('rplChatToggle');
+    if(messages&&chatToggle){
+      let row=$('rplPlayerQuickActions');
+      if(!row){
+        row=document.createElement('div');row.id='rplPlayerQuickActions';row.className='rpl-pay-toggle-row';
+        chatToggle.insertAdjacentElement('beforebegin',row);
+        row.appendChild(chatToggle);
+      }
+      const payButton=document.createElement('button');
+      payButton.type='button';payButton.id='rplPayPlayerToggle';payButton.className='rpl-pay-open-btn';
+      payButton.setAttribute('aria-controls','rplPayPlayerCard');payButton.setAttribute('aria-expanded','false');
+      payButton.textContent='💳 ROYAL PAY';
+      row.appendChild(payButton);
+      payButton.addEventListener('click',()=>{
+        const opening=section.classList.contains('hidden');
+        section.classList.toggle('hidden',!opening);
+        payButton.setAttribute('aria-expanded',String(opening));
+        payButton.textContent=opening?'✕ CHIUDI PAY':'💳 ROYAL PAY';
+        if(opening)loadPlayer();
+      });
+      messages.insertAdjacentElement('afterend',section);
+    }else{
+      const bet=$('rplRoyalBetCard'); if(bet?.parentNode)bet.insertAdjacentElement('afterend',section);else host.prepend(section);
+    }
     $('rplPayPlayerRefresh').addEventListener('click',loadPlayer);
-    loadPlayer();
   }
   async function getPlayer(){
     const {data:{user},error}=await window.sb.auth.getUser();if(error||!user)throw new Error('Accedi all’Area Giocatori per consultare i pagamenti.');
