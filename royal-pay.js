@@ -22,10 +22,15 @@
   #rplPayPlayerCard{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:12px 0;align-self:start;height:fit-content!important;min-height:0!important;grid-column:1 / -1}
   #rplPayPlayerCard.rpl-pay-player-panel.hidden{display:none!important}
   #rplPlayerQuickActions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:min(100%,340px);margin:0 0 8px!important}
-  #rplPlayerQuickActions #rplChatToggle,#rplPlayerQuickActions #rplPayPlayerToggle{min-width:0!important;width:100%!important;max-width:100%!important}
+  #rplPlayerQuickActions #rplChatToggle,#rplPlayerQuickActions #rplPayPlayerToggle{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;min-width:0!important;width:100%!important;max-width:100%!important;height:46px!important;min-height:46px!important;margin:0!important;padding:8px 5px!important;line-height:1.1!important;border-radius:9px!important}
   #rplPlayerQuickActions{grid-template-columns:repeat(2,minmax(0,1fr))!important;width:min(100%,340px)!important;gap:5px!important}
   #rplPlayerQuickActions .rpl-betlab-quick-btn{grid-column:auto!important;min-width:0!important;width:100%!important;max-width:100%!important;min-height:38px!important;padding:7px 4px!important;font-size:10px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important}
   .rpl-betlab-launcher-empty{display:none!important}
+  #rplBetLabActionSection{grid-column:3!important;grid-row:2!important;align-self:start!important;min-width:0!important;width:100%!important;margin:0!important;padding:0!important}
+  #rplBetLabActionSection #rplRoyalBetOpenBtn{width:100%!important;max-width:100%!important;height:46px!important;min-height:46px!important;margin:0!important}
+  #rplRoyalBetCard.rpl-betlab-launcher-host{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;margin:0!important;min-height:0!important}
+  #rplRoyalBetCard.rpl-betlab-launcher-host>.rpl-royalbet-head{display:none!important}
+  #rplRoyalBetCard.rpl-betlab-launcher-host>#rplRoyalBetOpenBtn{display:none!important}
   #rplBetLabQuickProxy{grid-column:3!important;grid-row:2!important;align-self:start!important;margin:0 0 8px!important;border:1px solid #d5a72e!important;border-radius:9px!important;background:linear-gradient(135deg,#a77a1e,#f3cf62)!important;color:#07111b!important;font-weight:900!important;cursor:pointer!important}
   #rplBetLabQuickProxy:hover{filter:brightness(1.04)}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
@@ -60,46 +65,38 @@
       chatToggle.setAttribute('title','Apri messaggi');
       chatToggle.innerHTML='<span aria-hidden="true">💬</span>';
       let row=$('rplPlayerQuickActions');
-      if(!row){row=document.createElement('div');row.id='rplPlayerQuickActions';row.className='rpl-pay-toggle-row';}
-      const normalizeLabel=el=>(el.innerText||el.textContent||'').replace(/[📋🎾💬💳▾▼⌄]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
-      const matchesControl=Array.from(host.querySelectorAll('button,a,[role="button"],summary')).find(el=>normalizeLabel(el)==='le mie partite');
-      if(matchesControl){matchesControl.insertAdjacentElement('afterend',row);}
-      else if(messages.parentElement){messages.insertAdjacentElement('beforebegin',row);}
-      else if(!row.isConnected){host.prepend(row);}
+      if(!row){row=document.createElement('div');row.id='rplPlayerQuickActions';}
+      const matchesSection=$('rplMatchesToggleBtn')?.closest('.rpl-player-section-v900');
+      const statsSection=$('rplStatsToggleBtn')?.closest('.rpl-player-section-v900');
+      row.className='rpl-player-section-v900 rpl-pay-toggle-row';
+      if(row.parentElement!==host){
+        if(matchesSection)matchesSection.insertAdjacentElement('afterend',row);
+        else host.appendChild(row);
+      }
       if(chatToggle.parentElement!==row)row.appendChild(chatToggle);
       const payButton=$('rplPayPlayerToggle')||document.createElement('button');
       payButton.type='button';payButton.id='rplPayPlayerToggle';payButton.className='rpl-pay-open-btn';
       payButton.setAttribute('aria-controls','rplPayPlayerCard');payButton.setAttribute('aria-expanded','false');
       payButton.textContent='💳 ROYAL PAY';
       if(payButton.parentElement!==row)row.appendChild(payButton);
-      /* Keep the original Bet Lab launcher in place so its own event handlers continue to work.
-         The compact button is a proxy that clicks the original launcher. */
-      const betControl=Array.from(host.querySelectorAll('button,a,[role="button"]')).find(el=>{
-        if(el===payButton||el===chatToggle||el.classList.contains('rpl-betlab-quick-btn'))return false;
-        const label=(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
-        return label.includes('apri royal bet lab')||label==='royal bet lab';
-      });
+      /* Move the real Bet Lab opener, preserving its original click/session handler. */
+      const betControl=$('rplRoyalBetOpenBtn');
       if(betControl){
-        let betCard=null,ancestor=betControl.parentElement;
-        for(let depth=0;ancestor&&ancestor!==host&&depth<6;depth++,ancestor=ancestor.parentElement){
-          const t=(ancestor.innerText||ancestor.textContent||'').replace(/\s+/g,' ').toLowerCase();
-          if(t.includes('royal bet lab')&&(t.includes('crediti virtuali')||t.includes('mercati, puntate'))){betCard=ancestor;break;}
+        let betSection=$('rplBetLabActionSection');
+        if(!betSection){
+          betSection=document.createElement('div');
+          betSection.id='rplBetLabActionSection';
+          betSection.className='rpl-player-section-v900 rpl-betlab-action-section';
         }
-        let betProxy=$('rplBetLabQuickProxy');
-        if(!betProxy){
-          betProxy=document.createElement('button');
-          betProxy.type='button';betProxy.id='rplBetLabQuickProxy';betProxy.className='rpl-betlab-quick-btn';
-          betProxy.textContent='🎲 BET LAB';
-          betProxy.addEventListener('click',()=>betControl.click());
+        if(betControl.parentElement!==betSection)betSection.appendChild(betControl);
+        if(betSection.parentElement!==host){
+          if(statsSection)statsSection.insertAdjacentElement('afterend',betSection);
+          else host.appendChild(betSection);
         }
-        betProxy.style.cssText='display:inline-flex!important;align-items:center;justify-content:center;box-sizing:border-box;min-width:0;width:100%;max-width:100%;min-height:44px;padding:8px 10px;font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;';
-        const statisticsControl=Array.from(host.querySelectorAll('button,a,[role="button"],summary')).find(el=>{
-          const label=(el.innerText||el.textContent||'').replace(/[📊▾▼⌄]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
-          return label==='statistiche';
-        });
-        if(statisticsControl)statisticsControl.insertAdjacentElement('afterend',betProxy);
-        else if(betProxy.parentElement!==row)row.appendChild(betProxy);
-        if(betCard&&betCard!==row)betCard.classList.add('rpl-betlab-launcher-empty');
+        betControl.textContent='🎲 BET LAB';
+        betControl.classList.add('rpl-betlab-quick-btn');
+        betControl.style.cssText='display:flex!important;align-items:center;justify-content:center;box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:46px;height:46px;margin:0;padding:8px 10px;font-size:12px;line-height:1.1;white-space:nowrap;';
+        $('rplRoyalBetCard')?.classList.add('rpl-betlab-launcher-host');
       }
       payButton.addEventListener('click',()=>{
         const opening=section.classList.contains('hidden');
