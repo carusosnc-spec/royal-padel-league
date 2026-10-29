@@ -19,7 +19,7 @@
   #rplChatToggle::before{content:"💬";display:block;font-size:18px;line-height:1}
   @media(min-width:700px){#rplMessagingCard{height:fit-content!important;align-self:start!important;}#rplPlayerQuickActions{align-self:start!important;}}
   #rplMessagingCard .rpl-chat-heading{display:none!important}
-  #rplPayPlayerCard{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:12px 0;align-self:start;height:fit-content!important;min-height:0!important;grid-column:1 / -1}
+  #rplPayPlayerCard{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:12px 0;align-self:start;height:fit-content!important;min-height:0!important;grid-column:1 / -1}\n  #rplPayPlayerCard.rpl-pay-player-panel.hidden{display:none!important}\n  #rplPlayerQuickActions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:min(100%,340px);margin:0 0 8px!important}\n  #rplPlayerQuickActions #rplChatToggle,#rplPlayerQuickActions #rplPayPlayerToggle{min-width:0!important;width:100%!important;max-width:100%!important}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
   .rpl-pay-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #3fc485!important;border-radius:9px!important;background:linear-gradient(135deg,#123c31,#0b2825)!important;color:#d9ffe9!important;font-weight:800;cursor:pointer}
   .rpl-pay-open-btn[aria-expanded="true"]{border-color:#ffd86a!important;color:#ffd86a!important}
@@ -54,9 +54,15 @@
       let row=$('rplPlayerQuickActions');
       if(!row){
         row=document.createElement('div');row.id='rplPlayerQuickActions';row.className='rpl-pay-toggle-row';
-        chatToggle.insertAdjacentElement('beforebegin',row);
-        row.appendChild(chatToggle);
       }
+      /* Keep the two compact controls beside "Le mie partite", not at the bottom of the dashboard. */
+      const matchesControl=Array.from(host.querySelectorAll('button,a,[role="button"]')).find(el=>/le mie partite/i.test((el.innerText||el.textContent||'').trim()));
+      if(matchesControl && matchesControl!==row && !row.contains(matchesControl)){
+        matchesControl.insertAdjacentElement('afterend',row);
+      }else if(!row.isConnected){
+        chatToggle.insertAdjacentElement('beforebegin',row);
+      }
+      if(chatToggle.parentElement!==row)row.appendChild(chatToggle);
       const payButton=$('rplPayPlayerToggle')||document.createElement('button');
       payButton.type='button';payButton.id='rplPayPlayerToggle';payButton.className='rpl-pay-open-btn';
       payButton.setAttribute('aria-controls','rplPayPlayerCard');payButton.setAttribute('aria-expanded','false');
@@ -71,7 +77,7 @@
       });
       /* Royal Pay is a standalone full-width panel, not a child of the messages/buttons card. */
       section.classList.add("rpl-pay-player-panel");
-      messages.insertAdjacentElement("afterend",section);
+      section.classList.add("hidden");\n      payButton.setAttribute("aria-expanded","false");\n      payButton.textContent="💳 ROYAL PAY";\n      messages.insertAdjacentElement("afterend",section);
     }else{
       const bet=$('rplRoyalBetCard'); if(bet?.parentNode)bet.insertAdjacentElement('afterend',section);else host.prepend(section);
     }
