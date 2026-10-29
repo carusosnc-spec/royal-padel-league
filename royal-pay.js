@@ -76,7 +76,10 @@
       });
       /* Royal Pay is a standalone full-width panel, not a child of the messages/buttons card. */
       section.classList.add("rpl-pay-player-panel");
-      section.classList.add("hidden");\n      payButton.setAttribute("aria-expanded","false");\n      payButton.textContent="💳 ROYAL PAY";\n      messages.insertAdjacentElement("afterend",section);
+      section.classList.add("hidden");
+      payButton.setAttribute("aria-expanded","false");
+      payButton.textContent="💳 ROYAL PAY";
+      messages.insertAdjacentElement("afterend",section);
     }else{
       const bet=$('rplRoyalBetCard'); if(bet?.parentNode)bet.insertAdjacentElement('afterend',section);else host.prepend(section);
     }
