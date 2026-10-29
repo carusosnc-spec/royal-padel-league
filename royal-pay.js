@@ -19,7 +19,7 @@
   #rplChatToggle::before{content:"💬";display:block;font-size:18px;line-height:1}
   @media(min-width:700px){#rplMessagingCard{height:fit-content!important;align-self:start!important;}#rplPlayerQuickActions{align-self:start!important;}}
   #rplMessagingCard .rpl-chat-heading{display:none!important}
-  #rplMessagingCard #rplPayPlayerCard{width:100%;box-sizing:border-box;margin:8px 0 0}
+  #rplPayPlayerCard{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:12px 0;align-self:start;height:fit-content!important;min-height:0!important;grid-column:1 / -1}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
   .rpl-pay-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #3fc485!important;border-radius:9px!important;background:linear-gradient(135deg,#123c31,#0b2825)!important;color:#d9ffe9!important;font-weight:800;cursor:pointer}
   .rpl-pay-open-btn[aria-expanded="true"]{border-color:#ffd86a!important;color:#ffd86a!important}
@@ -69,7 +69,9 @@
         payButton.textContent=opening?'✕ CHIUDI PAY':'💳 ROYAL PAY';
         if(opening)loadPlayer();
       });
-      messages.appendChild(section);
+      /* Royal Pay is a standalone full-width panel, not a child of the messages/buttons card. */
+      section.classList.add("rpl-pay-player-panel");
+      messages.insertAdjacentElement("afterend",section);
     }else{
       const bet=$('rplRoyalBetCard'); if(bet?.parentNode)bet.insertAdjacentElement('afterend',section);else host.prepend(section);
     }
