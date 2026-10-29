@@ -118,6 +118,15 @@
     if (existing) existing.remove();
     const section = document.createElement("section");
     section.id = SECTION_ID;
+    if (typeof window.openRplRankingEvolution === "function" && !body.querySelector(".rpl-evo-open")) {
+      const evo = document.createElement("button");
+      evo.type = "button";
+      evo.className = "rpl-evo-open";
+      evo.textContent = "📈 ROYAL RANKING EVOLUTION · Vedi andamento in classifica";
+      evo.style.cssText = "display:block;width:100%;margin:12px 0;padding:12px;border:1px solid #c9a43b;border-radius:10px;background:linear-gradient(135deg,#8b6a1e,#f0cb5d);color:#07121e;font-weight:900;cursor:pointer;";
+      evo.addEventListener("click", function () { window.openRplRankingEvolution(Number(playerId)); });
+      body.appendChild(evo);
+    }
     const rows = data.items.map(function (item, i) {
       const detailId = SECTION_ID + "-detail-" + i;
       const score = item.mine + "–" + item.theirs;
