@@ -23,9 +23,11 @@
   #rplPayPlayerCard.rpl-pay-player-panel.hidden{display:none!important}
   #rplPlayerQuickActions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:min(100%,340px);margin:0 0 8px!important}
   #rplPlayerQuickActions #rplChatToggle,#rplPlayerQuickActions #rplPayPlayerToggle{min-width:0!important;width:100%!important;max-width:100%!important}
-  #rplPlayerQuickActions{grid-template-columns:repeat(3,minmax(0,1fr))!important;width:min(100%,510px)!important;gap:5px!important}
+  #rplPlayerQuickActions{grid-template-columns:repeat(2,minmax(0,1fr))!important;width:min(100%,340px)!important;gap:5px!important}
   #rplPlayerQuickActions .rpl-betlab-quick-btn{grid-column:auto!important;min-width:0!important;width:100%!important;max-width:100%!important;min-height:38px!important;padding:7px 4px!important;font-size:10px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important}
   .rpl-betlab-launcher-empty{display:none!important}
+  #rplBetLabQuickProxy{grid-column:auto!important;margin:0 0 8px!important;border:1px solid #d5a72e!important;border-radius:9px!important;background:linear-gradient(135deg,#a77a1e,#f3cf62)!important;color:#07111b!important;font-weight:900!important;cursor:pointer!important}
+  #rplBetLabQuickProxy:hover{filter:brightness(1.04)}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
   .rpl-pay-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #3fc485!important;border-radius:9px!important;background:linear-gradient(135deg,#123c31,#0b2825)!important;color:#d9ffe9!important;font-weight:800;cursor:pointer}
   .rpl-pay-open-btn[aria-expanded="true"]{border-color:#ffd86a!important;color:#ffd86a!important}
@@ -70,9 +72,10 @@
       payButton.setAttribute('aria-controls','rplPayPlayerCard');payButton.setAttribute('aria-expanded','false');
       payButton.textContent='💳 ROYAL PAY';
       if(payButton.parentElement!==row)row.appendChild(payButton);
-      /* Move the existing Royal Bet Lab launcher into the same compact action row. */
+      /* Keep the original Bet Lab launcher in place so its own event handlers continue to work.
+         The compact button is a proxy that clicks the original launcher. */
       const betControl=Array.from(host.querySelectorAll('button,a,[role="button"]')).find(el=>{
-        if(el===payButton||el===chatToggle)return false;
+        if(el===payButton||el===chatToggle||el.classList.contains('rpl-betlab-quick-btn'))return false;
         const label=(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
         return label.includes('apri royal bet lab')||label==='royal bet lab';
       });
@@ -82,13 +85,21 @@
           const t=(ancestor.innerText||ancestor.textContent||'').replace(/\s+/g,' ').toLowerCase();
           if(t.includes('royal bet lab')&&(t.includes('crediti virtuali')||t.includes('mercati, puntate'))){betCard=ancestor;break;}
         }
-        const betWrapper=betControl.parentElement;
-        betControl.textContent='🎲 BET LAB';
-        betControl.classList.add('rpl-betlab-quick-btn');
-        betControl.style.cssText+=';display:inline-flex!important;align-items:center;justify-content:center;min-width:0;width:100%;max-width:100%;min-height:38px;padding:8px 5px;font-size:10px;line-height:1.1;white-space:nowrap;overflow:hidden;';
-        row.appendChild(betControl);
+        let betProxy=$('rplBetLabQuickProxy');
+        if(!betProxy){
+          betProxy=document.createElement('button');
+          betProxy.type='button';betProxy.id='rplBetLabQuickProxy';betProxy.className='rpl-betlab-quick-btn';
+          betProxy.textContent='🎲 BET LAB';
+          betProxy.addEventListener('click',()=>betControl.click());
+        }
+        betProxy.style.cssText='display:inline-flex!important;align-items:center;justify-content:center;box-sizing:border-box;min-width:0;width:100%;max-width:100%;min-height:44px;padding:8px 10px;font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;';
+        const statisticsControl=Array.from(host.querySelectorAll('button,a,[role="button"],summary')).find(el=>{
+          const label=(el.innerText||el.textContent||'').replace(/[📊▾▼⌄]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+          return label==='statistiche';
+        });
+        if(statisticsControl)statisticsControl.insertAdjacentElement('afterend',betProxy);
+        else if(betProxy.parentElement!==row)row.appendChild(betProxy);
         if(betCard&&betCard!==row)betCard.classList.add('rpl-betlab-launcher-empty');
-        else if(betWrapper&&betWrapper!==row&&!betWrapper.querySelector('button,a,[role="button"]'))betWrapper.classList.add('rpl-betlab-launcher-empty');
       }
       payButton.addEventListener('click',()=>{
         const opening=section.classList.contains('hidden');
