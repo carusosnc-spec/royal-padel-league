@@ -26,7 +26,7 @@
   #rplPlayerQuickActions{grid-template-columns:repeat(2,minmax(0,1fr))!important;width:min(100%,340px)!important;gap:5px!important}
   #rplPlayerQuickActions .rpl-betlab-quick-btn{grid-column:auto!important;min-width:0!important;width:100%!important;max-width:100%!important;min-height:38px!important;padding:7px 4px!important;font-size:10px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important}
   .rpl-betlab-launcher-empty{display:none!important}
-  #rplBetLabQuickProxy{grid-column:auto!important;margin:0 0 8px!important;border:1px solid #d5a72e!important;border-radius:9px!important;background:linear-gradient(135deg,#a77a1e,#f3cf62)!important;color:#07111b!important;font-weight:900!important;cursor:pointer!important}
+  #rplBetLabQuickProxy{grid-column:3!important;grid-row:2!important;align-self:start!important;margin:0 0 8px!important;border:1px solid #d5a72e!important;border-radius:9px!important;background:linear-gradient(135deg,#a77a1e,#f3cf62)!important;color:#07111b!important;font-weight:900!important;cursor:pointer!important}
   #rplBetLabQuickProxy:hover{filter:brightness(1.04)}
   .rpl-pay-toggle-row #rplChatToggle,.rpl-pay-open-btn{width:100%!important;min-width:0;min-height:38px!important;padding:8px 6px!important;font-size:11px!important;line-height:1.15!important;white-space:normal}
   .rpl-pay-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #3fc485!important;border-radius:9px!important;background:linear-gradient(135deg,#123c31,#0b2825)!important;color:#d9ffe9!important;font-weight:800;cursor:pointer}
