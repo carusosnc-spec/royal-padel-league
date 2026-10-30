@@ -1260,6 +1260,43 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 .rpl-royalbet-card{border:1px solid rgba(231,185,78,.58);background:radial-gradient(circle at 100% 0,rgba(231,185,78,.12),transparent 42%),linear-gradient(145deg,#0b1d2c,#06121f)}
 .rpl-royalbet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.rpl-royalbet-head h2{color:#ffd86a;font-size:22px;margin:4px 0}.rpl-royalbet-kicker{font-size:10px;letter-spacing:.18em;font-weight:900;color:#9da8b4}.rpl-royalbet-open{width:100%;min-height:50px;margin-top:14px;font-size:14px}.rpl-royalbet-frame-wrap{margin-top:14px;border:1px solid rgba(231,185,78,.28);border-radius:12px;overflow:hidden}.rpl-royalbet-framebar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;background:#0a1723;color:#ffd86a;font-size:11px;font-weight:800}.rpl-royalbet-framebar button{padding:6px 9px;font-size:11px}.rpl-royalbet-frame-wrap iframe{display:block;width:100%;height:min(82vh,1000px);min-height:700px;border:0;background:#06121f}@media(max-width:600px){.rpl-royalbet-head{display:block}.rpl-royalbet-head .badge{display:inline-block;margin-top:8px}.rpl-royalbet-frame-wrap iframe{height:78vh;min-height:650px}}
 </style>
+
+<style id="rpl-poll-form-light-controls-v1">
+/* Modulo creazione votazioni: controlli chiari e leggibili anche sul tema scuro. */
+#operatorVotingSection .rpl-admin-create-poll .rpl-poll-create-grid input,
+#operatorVotingSection .rpl-admin-create-poll .rpl-poll-option-row input,
+#operatorVotingSection .rpl-admin-create-poll .rpl-poll-option-row select,
+#operatorVotingSection .rpl-admin-create-poll #pollOptionRows input,
+#operatorVotingSection .rpl-admin-create-poll #pollOptionRows select {
+  background-color:#fff!important;
+  color:#17212b!important;
+  border:1px solid #aeb8c4!important;
+  color-scheme:light!important;
+  opacity:1!important;
+}
+#operatorVotingSection .rpl-admin-create-poll .rpl-poll-create-grid input:focus,
+#operatorVotingSection .rpl-admin-create-poll #pollOptionRows input:focus,
+#operatorVotingSection .rpl-admin-create-poll #pollOptionRows select:focus {
+  outline:2px solid rgba(231,185,78,.75)!important;
+  outline-offset:1px;
+  border-color:#9b741f!important;
+}
+#operatorVotingSection .rpl-admin-create-poll #pollOptionRows option {
+  background:#fff!important;
+  color:#17212b!important;
+}
+#operatorVotingSection .rpl-admin-create-poll #pollOptionRows .poll-option-remove {
+  background:#fff!important;
+  color:#17212b!important;
+  border:1px solid #aeb8c4!important;
+  min-width:42px;
+}
+#operatorVotingSection .rpl-admin-create-poll input::placeholder {
+  color:#667085!important;
+  opacity:1;
+}
+</style>
+
 </head>
 <body><main>
 <header class="top" style="position:relative;background:linear-gradient(180deg,rgba(2,8,14,.94),rgba(6,18,31,.90));border:1px solid var(--line);border-radius:0 0 22px 22px;padding:18px 18px 20px;text-align:center;box-shadow:0 12px 45px rgba(0,0,0,.45)">
