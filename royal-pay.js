@@ -55,10 +55,35 @@
   .rpl-pay-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:6px;margin:7px 0 12px}
   .rpl-pay-checks label{display:flex;gap:7px;align-items:center;padding:7px;border:1px solid #354a4a;border-radius:8px;font-size:13px}
   .rpl-pay-checks input{width:17px;min-height:17px;margin:0;flex:0 0 auto}
+  .rpl-bank-modal{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(5px)}
+  .rpl-bank-dialog{width:min(100%,440px);box-sizing:border-box;border:1px solid rgba(63,196,133,.55);border-radius:18px;padding:20px;background:linear-gradient(150deg,#102d2b,#071522);color:#f5f7fa;box-shadow:0 20px 70px rgba(0,0,0,.55)}
+  .rpl-bank-dialog h2{margin:0 0 8px;color:#d9ffe9;font-size:21px}
+  .rpl-bank-field{margin:14px 0 6px;padding:12px;border:1px solid #395c54;border-radius:11px;background:rgba(0,0,0,.2)}
+  .rpl-bank-label{display:block;margin-bottom:6px;color:#9db8ad;font-size:11px;font-weight:900;letter-spacing:.1em}
+  .rpl-bank-value{display:block;overflow-wrap:anywhere;font-size:16px;font-weight:900;letter-spacing:.035em;user-select:all}
+  .rpl-bank-copy{width:100%;min-height:44px;margin:8px 0 0!important;background:linear-gradient(135deg,#176044,#104632)!important;border-color:#3fc485!important}
+  .rpl-bank-close{width:100%;min-height:44px;margin:14px 0 0!important;background:#263541!important;border-color:#526575!important}
+  .rpl-bank-hint{margin-top:12px;color:#afc0c3;font-size:12px;line-height:1.45}
   `;
   function statusLabel(s){return ({unpaid:'DA PAGARE',pending_verification:'IN VERIFICA',paid:'PAGATA',waived:'ESONERATA',rejected:'DA RIPROVARE'})[s]||s;}
   function statusClass(s){return s==='paid'||s==='waived'?'paid':s==='pending_verification'?'pending_verification':s==='rejected'?'rejected':'';}
   function addStyle(){if($('rplPayStyles'))return;const st=document.createElement('style');st.id='rplPayStyles';st.textContent=css;document.head.appendChild(st);}
+  function copyBankValue(value,button){
+    const original=button.textContent;
+    const done=()=>{button.textContent="✓ COPIATO";button.disabled=true;window.setTimeout(()=>{button.textContent=original;button.disabled=false;},1500);};
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(value).then(done).catch(()=>{button.textContent="SELEZIONA E COPIA";});return;}
+    const area=document.createElement("textarea");area.value=value;area.setAttribute("readonly","");area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();
+    try{if(document.execCommand("copy"))done();else button.textContent="SELEZIONA E COPIA";}catch(e){button.textContent="SELEZIONA E COPIA";}area.remove();
+  }
+  function showBankTransferModal(){
+    $("rplBankTransferModal")?.remove();
+    const overlay=document.createElement("div");overlay.id="rplBankTransferModal";overlay.className="rpl-bank-modal";
+    overlay.innerHTML='<div class="rpl-bank-dialog" role="dialog" aria-modal="true" aria-labelledby="rplBankTitle"><div style="font-size:11px;letter-spacing:.16em;color:#72e5ae;font-weight:900">ROYAL PADEL LEAGUE · ROYAL PAY</div><h2 id="rplBankTitle">🏦 Ricarica con bonifico</h2><div class="rpl-pay-muted">Usa queste coordinate per ricaricare il tuo portafoglio Royal Pay.</div><div class="rpl-bank-field"><span class="rpl-bank-label">INTESTATARIO</span><span class="rpl-bank-value">Giovanni Caruso</span></div><div class="rpl-bank-field"><span class="rpl-bank-label">IBAN</span><span class="rpl-bank-value" id="rplBankIbanValue">LT953250061046402734</span><button type="button" class="rpl-bank-copy" id="rplBankCopyIban">📋 COPIA IBAN</button></div><div class="rpl-bank-field"><span class="rpl-bank-label">CAUSALE</span><span class="rpl-bank-value" id="rplBankReasonValue">Royal Pay</span><button type="button" class="rpl-bank-copy" id="rplBankCopyReason">📋 COPIA CAUSALE</button></div><div class="rpl-bank-hint">Dopo aver effettuato il bonifico, attendi la verifica dell’operatore prima dell’accredito sul portafoglio.</div><button type="button" class="rpl-bank-close" id="rplBankClose">CHIUDI</button></div>';
+    document.body.appendChild(overlay);
+    $("rplBankCopyIban").addEventListener("click",()=>copyBankValue("LT953250061046402734",$("rplBankCopyIban")));
+    $("rplBankCopyReason").addEventListener("click",()=>copyBankValue("Royal Pay",$("rplBankCopyReason")));
+    $("rplBankClose").addEventListener("click",()=>overlay.remove());overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove();});
+  }
   function mountPlayer(){
     const host=$('playerDashboard'); if(!host||$('rplPayPlayerCard'))return;
     const section=document.createElement('section');section.id='rplPayPlayerCard';section.className='rpl-pay-card hidden';
@@ -135,7 +160,7 @@
     }else{
       const bet=$('rplRoyalBetCard'); if(bet?.parentNode)bet.insertAdjacentElement('afterend',section);else host.prepend(section);
     }
-    $('rplPayBankTransferBtn')?.addEventListener('click',()=>alert('Per ricaricare con bonifico, contatta un operatore Royal Padel League per ricevere le coordinate bancarie. Inserisci “Royal Pay” nella causale e attendi la verifica prima dell’accredito.'));
+    $('rplPayBankTransferBtn')?.addEventListener('click',showBankTransferModal);
     $('rplPayPlayerRefresh').addEventListener('click',loadPlayer);
   }
   async function getPlayer(){
