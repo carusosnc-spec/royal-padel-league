@@ -1,5 +1,5 @@
-// RPL release 9.1.116 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v9.1.116";
+// RPL release v.10 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
+const CACHE_NAME = "rpl-v10";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
@@ -74,7 +74,7 @@ async function injectRoyalPay(response, requestUrl) {
   const path = new URL(requestUrl).pathname;
   if (!(path.endsWith("/") || path.endsWith("/index.html"))) return response;
   let html = await response.text();
-  html = html.replace(/(\.\/royal-pay\.js\?v=)[^\"\s>]+/g, '$1' + '9.1.115');
+  html = html.replace(/(\.\/royal-pay\.js\?v=)[^\"\s>]+/g, '$1' + '10');
   const injectedScripts = [
     ['rpl-ranking-evolution.js', '<script src="./rpl-ranking-evolution.js?v=1" defer></script>'],
     ['rpl-last-sets.js', '<script src="./rpl-last-sets.js?v=2" defer></script>'],
