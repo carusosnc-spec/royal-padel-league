@@ -1,5 +1,5 @@
 // RPL release v.10 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v10";
+const CACHE_NAME = "rpl-v11";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
@@ -78,7 +78,8 @@ async function injectRoyalPay(response, requestUrl) {
   const injectedScripts = [
     ['rpl-ranking-evolution.js', '<script src="./rpl-ranking-evolution.js?v=1" defer></script>'],
     ['rpl-last-sets.js', '<script src="./rpl-last-sets.js?v=2" defer></script>'],
-    ['rpl-ranking-movement.js', '<script src="./rpl-ranking-movement.js?v=7" defer></script>']
+    ['rpl-ranking-movement.js', '<script src="./rpl-ranking-movement.js?v=7" defer></script>'],
+    ['rpl-vote-alert.js', '<script src="./rpl-vote-alert.js?v=1" defer></script>']
   ];
   for (const [needle, script] of injectedScripts) {
     if (!html.includes('src="./' + needle) && !html.includes("src='./" + needle)) {
