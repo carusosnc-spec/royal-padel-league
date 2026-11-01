@@ -1955,8 +1955,10 @@ function render(){
     const status=(!s.eligible && s.required!==null)
       ? `<span class="rpl-set-status warning">⚠️ ${s.sets}/${s.required} set — minimo non raggiunto</span>`
       : "";
-    const f=String(s.fascia||"").replace(/^F/i,"");
     const rank=i+1;
+    // Fascia dinamica: deriva dalla posizione nella classifica corrente,
+    // non dal valore statico salvato nell'anagrafica giocatore.
+    const f=String(!s.eligible && s.required!==null ? 4 : rank<=4 ? 1 : rank<=8 ? 2 : rank<=12 ? 3 : 4);
     const finalsTag=s.eligible && rank<=5 ? `<span class="rpl-finals-status rpl-finals-captain">♛ Capitano Finals${rank<=3?' · Podio':' · Spareggio'}</span>` : (s.eligible && rank<=10 ? `<span class="rpl-finals-status rpl-finals-qualified">🎟 Qualificato Finals</span>` : '');
     const podiumClass=s.eligible && rank<=3 ? ` rpl-podium-${rank}` : '';
     return `<tr class="${s.eligible?"":"rpl-ineligible"}${podiumClass}">
