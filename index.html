@@ -2737,8 +2737,9 @@ function fillCalendarPlayers(){
   // Used by the weekly calendar rows. Player options come from the same DB-backed list used for match entry.
 }
 function calendarPlayerOptions(selected=""){
+  // Nel menu mostriamo solo il nominativo: la fascia viene calcolata sulla data della partita.
   return '<option value="">Seleziona giocatore</option>'+dbPlayers.map(p=>{
-    const label=`${p.name}${p.nickname?" — "+p.nickname:""} — Fascia ${p.fascia??"—"} · ${p.fascia_value??"—"} punti`;
+    const label=`${p.name}${p.nickname?" — "+p.nickname:""}`;
     return `<option value="${p.id}" ${String(p.id)===String(selected)?"selected":""}>${escOperator(label)}</option>`;
   }).join("");
 }
@@ -2746,9 +2747,52 @@ function calendarCourtOptions(selected=""){
   const courts=["Sporting Club Perillo","Sporting Village Tirrito Coperto","Sporting Village Tirrito Scoperto","Padel Club Calascibetta"];
   return '<option value="">Seleziona campo</option>'+courts.map(c=>`<option value="${escOperator(c)}" ${c===selected?"selected":""}>${escOperator(c)}</option>`).join("");
 }
-function calendarPlayerMeta(id){
+function calendarPlayerMeta(id, standings){
   const p=dbPlayers.find(x=>String(x.id)===String(id));
-  return p?`Fascia ${p.fascia??"—"} · ${p.fascia_value??"—"} punti`:"";
+  if(!p)return "";
+  if(p.is_guest)return `Ospite · Fascia ${p.fascia??4} · ${p.fascia_value??2} punti`;
+  const d=(standings||[]).find(x=>String(x.id)===String(id));
+  return d?`Fascia ${d.fascia} · ${d.fascia_value} punti`:"Calcolo fascia…";
+}
+async function refreshCalendarRowFasce(row){
+  if(!row)return;
+  const ids=[1,2,3,4].map(i=>row.querySelector(".cal-row-p"+i)?.value||"").filter(Boolean);
+  const date=row.querySelector(".cal-row-date")?.value;
+  const time=row.querySelector(".cal-row-time")?.value||"23:59";
+  const token=String((Number(row.dataset.fasciaRefreshToken)||0)+1);
+  row.dataset.fasciaRefreshToken=token;
+  if(!ids.length)return;
+  if(!date){
+    [1,2,3,4].forEach(i=>{
+      const id=row.querySelector(".cal-row-p"+i)?.value;
+      const el=row.querySelector(".cal-meta-p"+i);
+      if(el)el.textContent=id?"Seleziona prima la data":"";
+    });
+    return;
+  }
+  [1,2,3,4].forEach(i=>{
+    const id=row.querySelector(".cal-row-p"+i)?.value;
+    const el=row.querySelector(".cal-meta-p"+i);
+    if(el)el.textContent=id?"Calcolo fascia dinamica…":"";
+  });
+  try{
+    const at=new Date(`${date}T${time}:00`).toISOString();
+    const standings=await calculateStandingsBefore(at);
+    if(row.dataset.fasciaRefreshToken!==token)return;
+    [1,2,3,4].forEach(i=>{
+      const id=row.querySelector(".cal-row-p"+i)?.value;
+      const el=row.querySelector(".cal-meta-p"+i);
+      if(el)el.textContent=id?calendarPlayerMeta(id,standings):"";
+    });
+  }catch(err){
+    console.warn("Calcolo fasce calendario non riuscito:",err);
+    if(row.dataset.fasciaRefreshToken===token){
+      [1,2,3,4].forEach(i=>{
+        const el=row.querySelector(".cal-meta-p"+i);
+        if(el)el.textContent="Fascia non disponibile: verifica la data";
+      });
+    }
+  }
 }
 function calendarResponsibleOptions(selected="", players=[1,2,3,4].map(i=>"")){
   const ids=new Set(players.map(Number).filter(Boolean));
@@ -2779,14 +2823,17 @@ function addCalendarRow(data={}){
   <div class="rpl-cal-actions"><button type="button" onclick="removeCalendarRow(this)">🗑️ Rimuovi partita</button></div>`;
   host.appendChild(row);
   [1,2,3,4].forEach(i=>{
-    row.querySelector(".cal-row-p"+i).addEventListener("change",e=>{
-      row.querySelector(".cal-meta-p"+i).textContent=calendarPlayerMeta(e.target.value);
+    row.querySelector(".cal-row-p"+i).addEventListener("change",()=>{
       const selected=row.querySelector(".cal-row-responsible")?.value||"";
       const ids=[1,2,3,4].map(n=>row.querySelector(".cal-row-p"+n)?.value||"");
       const sel=row.querySelector(".cal-row-responsible");
       if(sel){sel.innerHTML=calendarResponsibleOptions(ids.includes(selected)?selected:"",ids);}
+      refreshCalendarRowFasce(row);
     });
   });
+  row.querySelector(".cal-row-date").addEventListener("change",()=>refreshCalendarRowFasce(row));
+  row.querySelector(".cal-row-time").addEventListener("change",()=>refreshCalendarRowFasce(row));
+  if(data.date)refreshCalendarRowFasce(row);
 }
 function removeCalendarRow(btn){btn.closest(".calendar-row")?.remove();}
 function calendarRowData(row){
