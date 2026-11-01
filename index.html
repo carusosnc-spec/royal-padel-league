@@ -2281,22 +2281,50 @@ async function saveMatch(){
   }
 }
 async function calculateStandingsBefore(timestamp){
-  const {data:matches}=await sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").lt("played_at",timestamp).order("played_at",{ascending:true});
-  if(!matches||!matches.length)return dbPlayers.filter(p=>!p.is_guest).map(p=>({id:p.id,base:0,total:0}));
-  const ids=matches.map(m=>m.id);
-  const [{data:mp},{data:sets},{data:aw}]=await Promise.all([
-    sb.from("match_players").select("*").in("match_id",ids),
-    sb.from("sets").select("*").in("match_id",ids),
-    sb.from("match_awards").select("*").in("match_id",ids)
-  ]);
-  let s=dbPlayers.filter(p=>!p.is_guest).map(p=>({id:p.id,sets:0,pt:0,games:0,mvp:0,imb:0}));
-  const snap={};(mp||[]).forEach(x=>snap[x.match_id+"_"+x.player_id]=x);
-  (sets||[]).forEach(x=>{let A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2],win=x.games_a>x.games_b?A:B,lose=x.games_a>x.games_b?B:A,wg=Math.max(x.games_a,x.games_b),lg=Math.min(x.games_a,x.games_b);
-    win.forEach(pid=>{let z=s.find(a=>a.id===pid);if(z){z.sets++;z.games+=wg;z.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0)}});
-    lose.forEach(pid=>{let z=s.find(a=>a.id===pid);if(z){z.sets++;z.games+=lg}});
+  const cutoff=new Date(timestamp);
+  const cutoffDate=cutoff.toISOString().slice(0,10);
+  // Soglia applicabile alla partita: usa il requisito maturato alla fine del mese precedente.
+  const thresholds=[
+    ["2026-10-01",5],["2026-11-01",15],["2026-12-01",25],
+    ["2027-01-01",35],["2027-02-01",45],["2027-03-01",55],
+    ["2027-04-01",65]
+  ];
+  let required=null;
+  thresholds.forEach(([date,value])=>{if(cutoffDate>=date)required=value;});
+  const {data:matches,error:matchError}=await sb.from("matches")
+    .select("id,played_at,approval_status")
+    .or("approval_status.eq.confirmed,approval_status.is.null")
+    .lt("played_at",timestamp).order("played_at",{ascending:true});
+  if(matchError)throw matchError;
+  const ids=(matches||[]).map(m=>m.id);
+  let s=dbPlayers.filter(p=>!p.is_guest).map(p=>({id:p.id,name:p.name,sets:0,pt:0,games:0,mvp:0,imb:0}));
+  if(ids.length){
+    const [{data:mp,error:e1},{data:sets,error:e2},{data:aw,error:e3}]=await Promise.all([
+      sb.from("match_players").select("*").in("match_id",ids),
+      sb.from("sets").select("*").in("match_id",ids),
+      sb.from("match_awards").select("*").in("match_id",ids)
+    ]);
+    if(e1||e2||e3)throw(e1||e2||e3);
+    const snap={};(mp||[]).forEach(x=>snap[x.match_id+"_"+x.player_id]=x);
+    (sets||[]).forEach(x=>{
+      const A=[x.pair_a_player_1,x.pair_a_player_2],B=[x.pair_b_player_1,x.pair_b_player_2];
+      if(+x.games_a===+x.games_b)return;
+      const win=+x.games_a>+x.games_b?A:B,lose=+x.games_a>+x.games_b?B:A;
+      const wg=Math.max(+x.games_a,+x.games_b),lg=Math.min(+x.games_a,+x.games_b);
+      win.forEach(pid=>{const z=s.find(a=>String(a.id)===String(pid));if(z){z.sets++;z.games+=wg;z.pt+=(snap[x.match_id+"_"+lose[0]]?.fascia_value||0)+(snap[x.match_id+"_"+lose[1]]?.fascia_value||0);}});
+      lose.forEach(pid=>{const z=s.find(a=>String(a.id)===String(pid));if(z){z.sets++;z.games+=lg;}});
+    });
+    (aw||[]).forEach(x=>{const z=s.find(a=>String(a.id)===String(x.player_id));if(z){if(x.award_type==="MVP")z.mvp++;if(x.award_type==="IMBATTUTO")z.imb++;}});
+  }
+  s=s.map(z=>{
+    const base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;
+    return {...z,base,total:base+z.mvp*1.5+z.imb,eligible:required===null||z.sets>=required,required};
+  }).sort((a,b)=>(a.eligible!==b.eligible?(a.eligible?-1:1):b.total-a.total||b.base-a.base||a.id-b.id));
+  return s.map((z,i)=>{
+    const rank=i+1;
+    const fascia=!z.eligible?4:rank<=4?1:rank<=8?2:rank<=12?3:4;
+    return {...z,rank,fascia,fascia_value:({1:5,2:4,3:3,4:2})[fascia]};
   });
-  (aw||[]).forEach(x=>{let z=s.find(a=>a.id===x.player_id);if(z)x.award_type==="MVP"?z.mvp++:z.imb++});
-  return s.map(z=>{let base=z.sets?((z.pt+z.games*.30+z.sets*.10)/z.sets)*10:0;return {...z,base,total:base+z.mvp*1.5+z.imb}}).sort((a,b)=>b.total-a.total||b.base-a.base||a.id-b.id);
 }
 
 
@@ -2787,9 +2815,10 @@ function validateCalendarRows(){
 function renderCalendarWeek(){
   if($("calendarWeekRows")&&!$("calendarWeekRows").children.length)addCalendarRow();
 }
-function playerSnapshot(id){
+function playerSnapshot(id, standings){
   const p=dbPlayers.find(x=>String(x.id)===String(id));
-  return {name:p?.name||"",nickname:p?.nickname||"",fascia:p?.fascia??null,points:p?.fascia_value??null};
+  const dynamic=(standings||[]).find(x=>String(x.id)===String(id));
+  return {name:p?.name||"",nickname:p?.nickname||"",fascia:dynamic?.fascia??p?.fascia??null,points:dynamic?.fascia_value??p?.fascia_value??null};
 }
 async function getCalendarRankSnapshot(timestamp, ids){
   try{
@@ -2838,8 +2867,12 @@ async function saveCalendarWeek(){
   const oldMatches=oldR.data||[];
   const keep=[];
   for(const row of [...document.querySelectorAll("#calendarWeekRows .calendar-row")]){
-    const d=calendarRowData(row), s=d.players.map(playerSnapshot);
-    const ranks=await getCalendarRankSnapshot(new Date(`${d.date}T${d.time}:00`).toISOString(),d.players);
+    const d=calendarRowData(row);
+    const scheduledAt=new Date(`${d.date}T${d.time}:00`).toISOString();
+    const preStandings=await calculateStandingsBefore(scheduledAt);
+    const s=d.players.map(id=>playerSnapshot(id,preStandings));
+    const rankMap={};(preStandings||[]).forEach(x=>rankMap[String(x.id)]=x.rank);
+    const ranks=d.players.map(id=>rankMap[String(id)]||999);
     const courtMap={"Sporting Club Perillo":1,"Sporting Village Tirrito Coperto":2,"Sporting Village Tirrito Scoperto":3,"Padel Club Calascibetta":4};
     const payload={
       scheduled_at:new Date(`${d.date}T${d.time}:00`).toISOString(),
