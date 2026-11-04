@@ -235,7 +235,12 @@
       const amount=Number($('rplPayAmount').value);if(!Number.isFinite(amount)||amount<0)throw new Error('Importo non valido.');
       const params={p_title:title,p_description:$('rplPayDescription').value.trim()||null,p_charge_type:$('rplPayType').value,p_amount_eur:amount,p_due_date:$('rplPayDue').value||null,p_club_only:$('rplPayCalascibetta').checked,p_player_amounts:null,p_match_id:null,p_player_ids:ids};
       const {data,error}=await window.sb.rpc('rpl_pay_create_charge',params);if(error)throw error;
-      msg.textContent='Quota creata correttamente (ID '+data+'). Sono state assegnate '+ids.length+' quote.';
+      let pushMessage=' Notifica inviata.';
+      try{
+        const push=await window.sb.functions.invoke('rpl-notifications',{body:{action:'royal_pay_flush'}});
+        if(push.error||push.data?.failed||push.data?.missing)pushMessage=' Notifica accodata: verrà ritentata automaticamente.';
+      }catch(_pushError){pushMessage=' Notifica accodata: verrà ritentata automaticamente.';}
+      msg.textContent='Quota creata correttamente (ID '+data+'). Sono state assegnate '+ids.length+' quote.'+pushMessage;
       $('rplPayTitle').value='';$('rplPayDescription').value='';await loadOperator();
     }catch(e){msg.textContent=e.message||String(e);}finally{btn.disabled=false;}
   }
