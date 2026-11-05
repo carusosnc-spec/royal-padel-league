@@ -5908,25 +5908,23 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 
-<script id="rpl-auto-update-v9136">
+<script id="rpl-auto-update-v9137">
 (function(){
   if(!('serviceWorker' in navigator))return;
-  let reloading=false;
-  const reloadOnce=()=>{
-    if(reloading)return;reloading=true;
-    try{const key='rpl-sw-reloaded-v9136',last=Number(sessionStorage.getItem(key)||'0');if(Date.now()-last<30000){reloading=false;return;}sessionStorage.setItem(key,String(Date.now()));}catch(e){}
-    location.reload();
-  };
-  navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
   async function checkForUpdate(){
     try{
       const reg=await navigator.serviceWorker.register('./sw.js?v=10',{updateViaCache:'none'});
       await reg.update();
-      if(reg.waiting&&navigator.serviceWorker.controller){try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}}
+      // Attiva il nuovo Service Worker senza ricaricare la pagina aperta:
+      // la sezione corrente e i dati inseriti dall'operatore restano intatti.
+      if(reg.waiting&&navigator.serviceWorker.controller){
+        try{reg.waiting.postMessage({type:'SKIP_WAITING'});}catch(e){}
+      }
     }catch(e){console.debug('RPL update check non riuscito',e);}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',checkForUpdate,{once:true});else checkForUpdate();
-  // Aggiorna all'apertura e quando l'app torna visibile: niente polling di rete ogni minuto.
+  // Controlla gli aggiornamenti all'apertura e al ritorno in primo piano,
+  // senza forzare reload o cambiare la sezione visualizzata.
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdate();});
 })();
 </script>
