@@ -1649,6 +1649,7 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
   <div id="pollOptionRows" class="rpl-poll-option-rows" style="margin-top:10px"></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
     <button type="button" onclick="addPollOptionRow()">➕ AGGIUNGI GIORNO / FASCIA</button>
+    <button type="button" onclick="loadBasePollTemplate()">⚡ CARICA VOTAZIONE BASE</button>
     <button type="button" class="primary" onclick="createOperatorPoll()">💾 CREA VOTAZIONE</button>
   </div>
 </div>
@@ -2372,6 +2373,8 @@ function addPollOptionRow(data={}){
   <button type="button" class="poll-option-remove">🗑️</button>`;
   const kind=row.querySelector('.poll-option-kind'), wrap=row.querySelector('.poll-option-time-wrap');
   kind.value=data.kind||'time';
+  const courtSelect=row.querySelector('.poll-option-court');
+  if(data.court)courtSelect.value=data.court;
   const sync=()=>{wrap.style.display=kind.value==='time'?'flex':'none';}; kind.onchange=sync; sync();
   row.querySelector('.poll-option-remove').onclick=()=>row.remove(); host.appendChild(row);
 }
@@ -2383,6 +2386,45 @@ function initPollOptionRows(){
   [2,3,4].forEach(offset=>{const x=new Date(d);x.setDate(d.getDate()+offset);addPollOptionRow({date:x.toISOString().slice(0,10),kind:'time',time:'21:30'});});
 }
 window.initPollOptionRows=initPollOptionRows;
+
+// Prepara in un clic il modello settimanale standard RPL.
+// La votazione riguarda la settimana successiva: lunedì-sabato.
+// Apertura: sabato precedente ore 08:00; chiusura: domenica ore 12:00.
+function loadBasePollTemplate(){
+  const msg=$("operatorVotingMsg");
+  try{
+    const now=new Date();
+    const monday=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const day=monday.getDay();
+    monday.setDate(monday.getDate()+(day===0?-6:1-day)+7);
+    const saturday=new Date(monday);saturday.setDate(monday.getDate()+5);
+    const open=new Date(monday);open.setDate(monday.getDate()-2);open.setHours(8,0,0,0);
+    const close=new Date(monday);close.setDate(monday.getDate()-1);close.setHours(12,0,0,0);
+    const dateValue=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+    const localInput=d=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,16);};
+    $("pollWeekStart").value=dateValue(monday);
+    $("pollWeekEnd").value=dateValue(saturday);
+    $("pollOpensAt").value=localInput(open);
+    $("pollClosesAt").value=localInput(close);
+    const host=$("pollOptionRows");host.innerHTML="";
+    for(let offset=0;offset<5;offset++){
+      const d=new Date(monday);d.setDate(monday.getDate()+offset);
+      addPollOptionRow({date:dateValue(d),kind:"pomeriggio",court:"__TBD__"});
+      addPollOptionRow({date:dateValue(d),kind:"sera",court:"__TBD__"});
+    }
+    addPollOptionRow({date:dateValue(saturday),kind:"mattina",court:"__TBD__"});
+    addPollOptionRow({date:dateValue(saturday),kind:"sera",court:"__TBD__"});
+    const createBtn=document.querySelector('button[onclick="createOperatorPoll()"]');
+    if(createBtn){createBtn.textContent="💾 CREA VOTAZIONE";createBtn.onclick=createOperatorPoll;}
+    if(msg){msg.className="msg ok";msg.textContent="⚡ Modello settimanale caricato: controlla le date e premi CREA VOTAZIONE per confermare.";}
+    host.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){
+    console.error(e);
+    if(msg){msg.className="msg err";msg.textContent="Errore caricamento votazione base: "+(e.message||e);}
+  }
+}
+window.loadBasePollTemplate=loadBasePollTemplate;
+
 async function createOperatorPoll(){
   const msg=$("operatorVotingMsg");
   try{
