@@ -1701,6 +1701,26 @@ header.top>div:first-child img{width:136px!important;height:136px!important;max-
 <div class="card">
 <h2>👥 Account giocatori</h2>
 <div class="muted">Crea gli account RPL dei giocatori partendo dal file di importazione. La password iniziale viene generata automaticamente e il giocatore dovrà cambiarla al primo accesso.</div>
+<div style="margin-top:14px;padding:14px;border:1px solid rgba(231,185,78,.35);border-radius:13px;background:linear-gradient(145deg,rgba(231,185,78,.08),rgba(255,255,255,.015))">
+  <button type="button" id="rplNewPlayerToggle" class="primary" style="width:100%;min-height:46px">➕ NUOVO GIOCATORE</button>
+  <div id="rplNewPlayerFormWrap" class="hidden" style="margin-top:14px">
+    <div style="font-weight:900;color:#ffd86a;margin-bottom:10px">CREA ANAGRAFICA E ACCOUNT COMPLETO</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px">
+      <label>Nome e cognome *<input id="rplNewName" type="text" maxlength="90" autocomplete="off" placeholder="Es. Mario Rossi" style="width:100%;margin-top:5px"></label>
+      <label>Soprannome<input id="rplNewNickname" type="text" maxlength="50" placeholder="Es. The Rocket" style="width:100%;margin-top:5px"></label>
+      <label>Cellulare *<input id="rplNewPhone" type="tel" inputmode="tel" maxlength="18" placeholder="Es. 3331234567" style="width:100%;margin-top:5px"></label>
+      <label>Fascia *<select id="rplNewFascia" style="width:100%;margin-top:5px"><option value="">Seleziona fascia</option><option value="1">Fascia 1 — 5 punti</option><option value="2">Fascia 2 — 4 punti</option><option value="3">Fascia 3 — 3 punti</option><option value="4">Fascia 4 — 2 punti</option></select></label>
+    </div>
+    <label style="display:flex;align-items:center;gap:9px;margin-top:12px"><input id="rplNewMember" type="checkbox" style="width:18px;height:18px"> Membro Padel Club Calascibetta (quota partita €3 anziché €6)</label>
+    <div style="margin-top:12px">
+      <label>Logo / caricatura giocatore (PNG, JPG o WEBP — massimo 5 MB)<input id="rplNewLogo" type="file" accept="image/png,image/jpeg,image/webp" style="display:block;width:100%;margin-top:6px"></label>
+      <img id="rplNewLogoPreview" alt="Anteprima logo giocatore" class="hidden" style="width:92px;height:92px;object-fit:cover;border-radius:14px;border:1px solid rgba(231,185,78,.45);margin-top:10px">
+    </div>
+    <div class="muted" style="margin-top:12px;font-size:12px">Alla creazione vengono predisposti: account di accesso, profilo, portafoglio Royal Pay (€0), portafoglio Royal Bet Lab (1.000 crediti) e password temporanea da cambiare al primo accesso. Il giocatore entra nella classifica senza ricevere punti o risultati inventati.</div>
+    <button type="button" id="rplNewPlayerCreate" class="primary" style="width:100%;margin-top:14px;min-height:48px">👑 CREA GIOCATORE</button>
+    <div id="rplNewPlayerMsg" class="msg" style="margin-top:10px"></div>
+  </div>
+</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
 <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid rgba(231,185,78,.25);border-radius:10px;cursor:pointer">📥 CARICA FILE ACCOUNT <input id="accountImportFile" type="file" accept=".json,application/json" style="display:none"></label>
 <button type="button" onclick="loadAccountImportTemplate()">🔄 RICARICA ELENCO</button>
@@ -6005,4 +6025,86 @@ label{color:#cbd5e1!important}.muted{color:#aebdcb!important}
 })();
 </script>
 <script src="./royal-pay.js?v=10" defer></script>
+
+<script id="rpl-admin-new-player-v1">
+(function(){
+  const $=id=>document.getElementById(id);
+  let lastCredentials=null;
+  $('rplNewPlayerToggle')?.addEventListener('click',()=>{
+    const wrap=$('rplNewPlayerFormWrap');
+    wrap?.classList.toggle('hidden');
+    if(wrap&&!wrap.classList.contains('hidden')) $('rplNewName')?.focus();
+  });
+  $('rplNewLogo')?.addEventListener('change',()=>{
+    const file=$('rplNewLogo')?.files?.[0], preview=$('rplNewLogoPreview');
+    if(!preview)return;
+    if(!file){preview.classList.add('hidden');preview.removeAttribute('src');return;}
+    if(file.size>5*1024*1024){$('rplNewPlayerMsg').className='msg err';$('rplNewPlayerMsg').textContent='Il logo supera 5 MB.';$('rplNewLogo').value='';preview.classList.add('hidden');return;}
+    if(!['image/png','image/jpeg','image/webp'].includes(file.type)){$('rplNewPlayerMsg').className='msg err';$('rplNewPlayerMsg').textContent='Formato logo non supportato. Usa PNG, JPG o WEBP.';$('rplNewLogo').value='';preview.classList.add('hidden');return;}
+    preview.src=URL.createObjectURL(file);preview.classList.remove('hidden');
+  });
+  function fileAsBase64(file){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');
+      reader.onerror=()=>reject(new Error('Impossibile leggere il logo selezionato.'));
+      reader.readAsDataURL(file);
+    });
+  }
+  function showCreated(result){
+    lastCredentials={name:result.name,phone:result.phone,email:result.technical_email,password:result.temporary_password};
+    const msg=$('rplNewPlayerMsg');
+    msg.className='msg ok';
+    msg.innerHTML='✅ <b>'+escOperator(result.name)+'</b> creato correttamente!<br><br>'+
+      'ID giocatore: <b>'+escOperator(result.player_id)+'</b> · Fascia '+escOperator(result.fascia)+'<br>'+
+      'Royal Pay: <b>€0,00</b> · Royal Bet Lab: <b>1.000 crediti</b><br>'+
+      'Quota partita: <b>€'+escOperator(result.match_fee_eur)+'</b><br>'+
+      (result.logo_url?'Logo caricato e collegato al profilo.<br>':'')+
+      '<hr style="border-color:rgba(255,255,255,.15)"><b>CREDENZIALI TEMPORANEE — CONSEGNARLE AL GIOCATORE</b><br>'+
+      'Email tecnica: <b>'+escOperator(result.technical_email)+'</b><br>'+
+      'Password: <b style="font-size:17px;color:#ffd86a;word-break:break-all">'+escOperator(result.temporary_password)+'</b><br>'+
+      '<span class="muted">Al primo accesso dovrà impostare una password personale. Conserva o scarica queste credenziali: non saranno mostrate di nuovo.</span><br>'+
+      '<button type="button" id="rplNewPlayerDownloadCredentials" style="margin-top:10px">📄 SCARICA CREDENZIALI</button>';
+    $('rplNewPlayerDownloadCredentials')?.addEventListener('click',downloadCredentials);
+  }
+  function downloadCredentials(){
+    if(!lastCredentials)return;
+    const body=['ROYAL PADEL LEAGUE — CREDENZIALI TEMPORANEE','Consegnare al giocatore. Al primo accesso dovrà cambiare la password.','',
+      'Giocatore: '+lastCredentials.name,'Telefono: '+lastCredentials.phone,'Email tecnica: '+lastCredentials.email,'Password temporanea: '+lastCredentials.password].join('\n');
+    const blob=new Blob([body],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='RPL_Credenziali_'+lastCredentials.name.trim().replace(/[^a-z0-9]+/gi,'_')+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+  $('rplNewPlayerCreate')?.addEventListener('click',async()=>{
+    const msg=$('rplNewPlayerMsg');
+    const name=$('rplNewName')?.value?.trim()||'', nickname=$('rplNewNickname')?.value?.trim()||'';
+    const phone=$('rplNewPhone')?.value?.trim()||'', fascia=$('rplNewFascia')?.value||'';
+    if(name.length<3){msg.className='msg err';msg.textContent='Inserisci nome e cognome.';return;}
+    if(!phone){msg.className='msg err';msg.textContent='Inserisci il numero di cellulare.';return;}
+    if(!fascia){msg.className='msg err';msg.textContent='Seleziona la fascia.';return;}
+    if(!confirm('Confermi la creazione del nuovo giocatore '+name+'? Verrà creato anche il suo account e i due portafogli.'))return;
+    const btn=$('rplNewPlayerCreate');btn.disabled=true;btn.textContent='⏳ CREAZIONE IN CORSO…';
+    msg.className='msg';msg.textContent='Controllo dati e creazione anagrafica, account e portafogli…';
+    try{
+      const {data:{session},error:sessionError}=await sb.auth.getSession();
+      if(sessionError||!session)throw new Error('Sessione operatore non valida. Esci e rientra nell’Area Riservata.');
+      const logoFile=$('rplNewLogo')?.files?.[0]||null;
+      const logo=logoFile?{type:logoFile.type,base64:await fileAsBase64(logoFile)}:null;
+      const response=await fetch(SUPABASE_URL+'/functions/v1/rpl-admin-create-player',{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY},
+        body:JSON.stringify({name,nickname,phone,fascia:Number(fascia),calascibetta_member:$('rplNewMember')?.checked===true,logo})
+      });
+      let result;try{result=await response.json();}catch{throw new Error('Risposta non valida dal server (HTTP '+response.status+').');}
+      if(!response.ok||!result.success)throw new Error(result.error||'Creazione non riuscita (HTTP '+response.status+').');
+      showCreated(result);
+      $('rplNewName').value='';$('rplNewNickname').value='';$('rplNewPhone').value='';$('rplNewFascia').value='';
+      $('rplNewMember').checked=false;$('rplNewLogo').value='';$('rplNewLogoPreview').classList.add('hidden');$('rplNewLogoPreview').removeAttribute('src');
+      if(typeof loadPlayers==='function')await loadPlayers();
+      if(typeof loadRanking==='function')await loadRanking();
+      if(typeof loadPlayerAccountResetList==='function')await loadPlayerAccountResetList();
+    }catch(e){msg.className='msg err';msg.textContent='❌ '+(e?.message||String(e));}
+    finally{btn.disabled=false;btn.textContent='👑 CREA GIOCATORE';}
+  });
+})();
+</script>
+
 </body></html>
