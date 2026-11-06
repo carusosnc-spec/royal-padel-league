@@ -3433,21 +3433,52 @@ $("date").value=new Date().toISOString().slice(0,16);
     try{return typeof window.logoFile==="function"?window.logoFile(name):"";}catch(e){return "";}
   }
 
+  // Requisito applicato solo alle parziali che rappresentano un mese completo.
+  // Settembre parte dal 15/09; da ottobre a marzo il minimo mensile è la
+  // differenza tra le soglie cumulative ufficiali (15-5, 25-15, ...): 10 set.
+  // Un mese non ancora concluso non viene mai penalizzato.
+  function getPartialRequirement(from,to){
+    const monthlyMinimums={
+      "2026-09":{from:"2026-09-15",to:"2026-09-30",sets:5},
+      "2026-10":{from:"2026-10-01",to:"2026-10-31",sets:10},
+      "2026-11":{from:"2026-11-01",to:"2026-11-30",sets:10},
+      "2026-12":{from:"2026-12-01",to:"2026-12-31",sets:10},
+      "2027-01":{from:"2027-01-01",to:"2027-01-31",sets:10},
+      "2027-02":{from:"2027-02-01",to:"2027-02-28",sets:10},
+      "2027-03":{from:"2027-03-01",to:"2027-03-31",sets:10}
+    };
+    const month=String(from||"").slice(0,7),rule=monthlyMinimums[month];
+    if(!rule||from!==rule.from||to!==rule.to)return null;
+    const today=new Date(); today.setHours(0,0,0,0);
+    const end=new Date(rule.to+"T00:00:00");
+    if(today<=end)return null;
+    return rule.sets;
+  }
+
   function renderPartial(stats,from,to){
     const body=$("partialRanking"), summary=$("partialSummary");
     if(!body)return;
+    const required=getPartialRequirement(from,to);
     const ranked=stats.map(s=>{
       const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;
-      return {...s,base,total:base+s.mvp*1.5+s.imb};
-    }).sort((a,b)=>b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,"it"));
+      const eligible=required===null||s.sets>=required;
+      const awardBonus=eligible?(s.mvp*1.5+s.imb):0;
+      return {...s,base,total:base+awardBonus,eligible,required};
+    }).sort((a,b)=>{
+      if(a.eligible!==b.eligible)return a.eligible?-1:1;
+      return b.total-a.total||b.base-a.base||b.sets-a.sets||a.name.localeCompare(b.name,"it");
+    });
 
     body.innerHTML=ranked.map((s,i)=>{
       const f=String(s.fascia||"").replace(/^F/i,"");
-      return `<tr>
+      const status=(!s.eligible&&s.required!==null)
+        ? `<span class="rpl-set-status warning">⚠️ ${s.sets}/${s.required} set — minimo non raggiunto</span>`
+        : "";
+      return `<tr class="${s.eligible?"":"rpl-ineligible"}">
         <td><b>${i+1}</b></td>
         <td><div style="display:flex;align-items:center;gap:9px">
           <img src="${logoFor(s.name)}" alt="${escp(s.name)}" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#07121e;cursor:pointer;touch-action:manipulation">
-          <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${escp(s.name)}</b><br><span style="color:#ffd86a;font-size:11px">${escp(s.nick)}</span></div>
+          <div class="rpl-ranking-player-info"><b class="rpl-ranking-player-name" data-player-profile="${s.id}" onclick="openRplPlayerProfile(${s.id});event.stopPropagation()">${escp(s.name)}</b><br><span style="color:#ffd86a;font-size:11px">${escp(s.nick)}</span>${status}</div>
         </div></td>
         <td><b style="color:var(--gold);font-size:16px">${s.total.toFixed(2)}</b></td>
         <td>${s.sets}</td><td>${s.pt.toFixed(1)}</td><td>${s.games}</td>
@@ -3456,7 +3487,10 @@ $("date").value=new Date().toISOString().slice(0,16);
       </tr>`;
     }).join("");
     const played=stats.filter(s=>s.sets>0).length;
-    summary.textContent=`Periodo: ${from||"—"} → ${to||"—"} · ${played} giocatori con almeno un set. Il punteggio usa lo stesso sistema della classifica generale.`;
+    const requirementNote=required===null
+      ? " Nessun minimo applicato al periodo selezionato o al mese ancora in corso."
+      : ` Minimo richiesto: ${required} set; chi non lo raggiunge è oscurato e collocato in fondo, senza punti bonus MVP/Imbattuto nel totale.`;
+    summary.textContent=`Periodo: ${from||"—"} → ${to||"—"} · ${played} giocatori con almeno un set.${requirementNote}`;
   }
 
   async function calculatePartial(){
@@ -3472,7 +3506,7 @@ $("date").value=new Date().toISOString().slice(0,16);
       const end=to+"T23:59:59";
       const {data:matches,error:me}=await window.sb.from("matches").select("id,played_at,approval_status").or("approval_status.eq.confirmed,approval_status.is.null").gte("played_at",start).lte("played_at",end).order("played_at",{ascending:true});
       if(me)throw me;
-      if(!matches?.length){renderPartial(stats,from,to);summary.textContent=`Periodo: ${from} → ${to} · Nessuna partita nel periodo.`;return;}
+      if(!matches?.length){renderPartial(stats,from,to);summary.textContent+=" Nessuna partita nel periodo.";return;}
       const ids=matches.map(m=>m.id);
       const [{data:mp,error:mpe},{data:sets,error:se},{data:aw,error:ae}]=await Promise.all([
         window.sb.from("match_players").select("*").in("match_id",ids),
@@ -3491,7 +3525,7 @@ $("date").value=new Date().toISOString().slice(0,16);
       });
       (aw||[]).forEach(x=>{const s=stats.find(z=>z.id===x.player_id);if(!s)return;if(x.award_type==="MVP")s.mvp++;if(x.award_type==="IMBATTUTO")s.imb++;});
       renderPartial(stats,from,to);
-      summary.textContent=`Periodo: ${from} → ${to} · ${matches.length} partite · classifica calcolata.`;
+      summary.textContent+=` · ${matches.length} partite · classifica calcolata.`;
     }catch(e){
       console.error(e);
       $("partialRanking").innerHTML="";
