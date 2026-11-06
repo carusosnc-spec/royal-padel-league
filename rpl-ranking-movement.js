@@ -41,6 +41,7 @@ old.bonus=new Map(Object.keys(baselineTotals).sort(function(a,b){return baseline
 ready=true;paint()
 }catch(e){console.warn('[RPL frecce classifica]',e)}finally{busy=false}}
 function refresh(){rebuild(false).then(paint)}
-function init(){refresh();var obs=new MutationObserver(paint);if($('ranking'))obs.observe($('ranking'),{childList:true,subtree:true});['partialFrom','partialTo'].forEach(function(id){if($(id))$(id).addEventListener('change',function(){rebuild(true)})});['partialRanking','bonusRanking'].forEach(function(id){if($(id)){var ob2=new MutationObserver(function(){paint()});ob2.observe($(id),{childList:true,subtree:true})}});var l=window.loadRanking;if(typeof l==='function')window.loadRanking=async function(){var r=await l.apply(this,arguments);await rebuild(true);return r}}
+function watchRows(id){var root=$(id);if(!root)return;var target=root.tBodies&&root.tBodies[0]?root.tBodies[0]:root;var pending=false;var obs=new MutationObserver(function(){if(pending)return;pending=true;requestAnimationFrame(function(){pending=false;paint()})});obs.observe(target,{childList:true})}
+function init(){refresh();['ranking','partialRanking','bonusRanking'].forEach(watchRows);['partialFrom','partialTo'].forEach(function(id){if($(id))$(id).addEventListener('change',function(){rebuild(true)})});var l=window.loadRanking;if(typeof l==='function')window.loadRanking=async function(){var r=await l.apply(this,arguments);await rebuild(false);return r}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
