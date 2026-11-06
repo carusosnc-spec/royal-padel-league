@@ -212,7 +212,7 @@
 (function(){
   if(document.querySelector('script[data-rpl-ranking-movement]')) return;
   var s=document.createElement('script');
-  s.src='./rpl-ranking-movement.js?v=8';
+  s.src='./rpl-ranking-movement.js?v=9';
   s.setAttribute('data-rpl-ranking-movement','1');
   document.head.appendChild(s);
 })();
