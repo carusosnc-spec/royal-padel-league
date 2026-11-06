@@ -207,3 +207,12 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
+
+/* Carica le frecce di movimento della classifica anche quando il browser apre una copia aggiornata della pagina. */
+(function(){
+  if(document.querySelector('script[data-rpl-ranking-movement]')) return;
+  var s=document.createElement('script');
+  s.src='./rpl-ranking-movement.js?v=2';
+  s.setAttribute('data-rpl-ranking-movement','1');
+  document.head.appendChild(s);
+})();
