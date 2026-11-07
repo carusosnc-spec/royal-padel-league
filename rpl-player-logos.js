@@ -1,8 +1,13 @@
-/* Royal Padel League — Paolo Cavallaro / The Tow King */
+/* Royal Padel League — mapping loghi giocatori */
 (() => {
   const previous = window.logoFile;
+  const playerLogos = {
+    'Paolo Cavallaro': './paolo-cavallaro.webp',
+    'Vincenzo Ragona': 'https://vanbadzkxvextdvnqwtr.supabase.co/storage/v1/object/public/avatars/players/25/logo.jpg'
+  };
   window.logoFile = function(name) {
-    if (String(name || '').trim() === 'Paolo Cavallaro') return './paolo-cavallaro.webp';
+    const key = String(name || '').trim();
+    if (playerLogos[key]) return playerLogos[key];
     return typeof previous === 'function' ? previous(name) : '';
   };
   if (typeof window.loadRanking === 'function') {
