@@ -1,5 +1,5 @@
 // RPL release v.10 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v17";
+const CACHE_NAME = "rpl-v18";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js", "./rpl-player-logos.js", "./paolo-cavallaro.webp"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
@@ -100,7 +100,7 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     try {
-      const network = await fetch(req);
+      // Revalidate the app document on every online launch so Android does not keep an old HTML shell.\n      const isAppDocument = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");\n      const network = await fetch(req, isAppDocument ? { cache: "no-cache" } : {});
       const response = await injectRoyalPay(network, req.url);
       if (response && response.ok) {
         const copy = response.clone();
