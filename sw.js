@@ -1,8 +1,11 @@
 // RPL release v.10 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v18";
+const CACHE_NAME = "rpl-v19";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js", "./rpl-player-logos.js", "./paolo-cavallaro.webp"];
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(()=>{})));
+  event.waitUntil(caches.open(CACHE_NAME).then(async c => {
+    // Cache each shell resource independently: one missing asset must not prevent index.html from being cached.
+    await Promise.all(APP_SHELL.map(path => c.add(path).catch(() => null)));
+  }));
   self.skipWaiting();
 });
 self.addEventListener("message", event => {
@@ -99,10 +102,22 @@ self.addEventListener("fetch", event => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   event.respondWith((async () => {
+    const isAppDocument = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");
     try {
-      // Revalidate the app document on every online launch so Android does not keep an old HTML shell.
-      const isAppDocument = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");
-      const network = await fetch(req, isAppDocument ? { cache: "no-cache" } : {});
+      let network;
+      if (isAppDocument) {
+        // Do not let a stalled network request freeze the PWA launch.
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        try {
+          network = await fetch(req, { cache: "no-cache", signal: controller.signal });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      } else {
+        network = await fetch(req);
+      }
+
       const response = await injectRoyalPay(network, req.url);
       if (response && response.ok) {
         const copy = response.clone();
@@ -110,6 +125,7 @@ self.addEventListener("fetch", event => {
       }
       return response;
     } catch (_) {
+      // On network error or timeout, immediately serve the last cached app document.
       const cached = await caches.match(req);
       if (cached) return injectRoyalPay(cached, req.url);
       const fallback = await caches.match("./index.html");
