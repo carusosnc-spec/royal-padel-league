@@ -100,7 +100,9 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     try {
-      // Revalidate the app document on every online launch so Android does not keep an old HTML shell.\n      const isAppDocument = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");\n      const network = await fetch(req, isAppDocument ? { cache: "no-cache" } : {});
+      // Revalidate the app document on every online launch so Android does not keep an old HTML shell.
+      const isAppDocument = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");
+      const network = await fetch(req, isAppDocument ? { cache: "no-cache" } : {});
       const response = await injectRoyalPay(network, req.url);
       if (response && response.ok) {
         const copy = response.clone();
