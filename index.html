@@ -56,7 +56,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 tr.rpl-ineligible{opacity:.42;filter:grayscale(1)}
 tr.rpl-ineligible td{background:rgba(120,120,120,.12)!important}
 .rpl-set-status{display:block;margin-top:4px;font-size:10px;line-height:1.2;color:#c4cbd3}
-.rpl-set-status.warning{color:#bfc5cc}
+.rpl-set-status.warning{color:#f0bd65}.rpl-set-status.met{color:#75d6a0}
 </style>
 
 
@@ -1992,6 +1992,9 @@ function minSetsRequired(){
 
 function render(){
   const required=minSetsRequired();
+  // Indicatore sempre visibile: anche a settembre mostriamo il target iniziale
+  // di 5 set, pur senza applicare ancora l'oscuramento.
+  const displayRequired=required!==null?required:(new Date().getMonth()===8?5:null);
   let a=stats.map(s=>{
     const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;
     const eligible=required===null || s.sets>=required;
@@ -2002,9 +2005,9 @@ function render(){
   });
 
   $("ranking").innerHTML=a.map((s,i)=>{
-    const status=(!s.eligible && s.required!==null)
-      ? `<span class="rpl-set-status warning">⚠️ ${s.sets}/${s.required} set — minimo non raggiunto</span>`
-      : "";
+    const status=displayRequired!==null
+      ? `<span class="rpl-set-status ${s.sets>=displayRequired?"met":"warning"}">${s.sets>=displayRequired?"✓":"⚠️"} ${s.sets}/${displayRequired} set minimi</span>`
+      : `<span class="rpl-set-status">${s.sets} set disputati</span>`;
     const rank=i+1;
     // Fascia dinamica: deriva dalla posizione nella classifica corrente,
     // non dal valore statico salvato nell'anagrafica giocatore.
@@ -3466,7 +3469,7 @@ $("date").value=new Date().toISOString().slice(0,16);
   // Settembre parte dal 15/09; da ottobre a marzo il minimo mensile è la
   // differenza tra le soglie cumulative ufficiali (15-5, 25-15, ...): 10 set.
   // Un mese non ancora concluso non viene mai penalizzato.
-  function getPartialRequirement(from,to){
+  function getPartialMonthRule(from,to){
     const monthlyMinimums={
       "2026-09":{from:"2026-09-15",to:"2026-09-30",sets:5},
       "2026-10":{from:"2026-10-01",to:"2026-10-31",sets:10},
@@ -3477,6 +3480,14 @@ $("date").value=new Date().toISOString().slice(0,16);
       "2027-03":{from:"2027-03-01",to:"2027-03-31",sets:10}
     };
     const month=String(from||"").slice(0,7),rule=monthlyMinimums[month];
+    if(!rule||String(to||"").slice(0,7)!==month)return null;
+    return rule;
+  }
+
+  // Il target mensile viene mostrato anche mentre il mese è in corso.
+  // L'oscuramento continua invece ad applicarsi solo dopo la chiusura del mese.
+  function getPartialRequirement(from,to){
+    const rule=getPartialMonthRule(from,to);
     if(!rule||from!==rule.from||to!==rule.to)return null;
     const today=new Date(); today.setHours(0,0,0,0);
     const end=new Date(rule.to+"T00:00:00");
@@ -3488,6 +3499,8 @@ $("date").value=new Date().toISOString().slice(0,16);
     const body=$("partialRanking"), summary=$("partialSummary");
     if(!body)return;
     const required=getPartialRequirement(from,to);
+    const displayRule=getPartialMonthRule(from,to);
+    const displayRequired=displayRule?.sets??null;
     const ranked=stats.map(s=>{
       const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;
       const eligible=required===null||s.sets>=required;
@@ -3500,9 +3513,9 @@ $("date").value=new Date().toISOString().slice(0,16);
 
     body.innerHTML=ranked.map((s,i)=>{
       const f=String(s.fascia||"").replace(/^F/i,"");
-      const status=(!s.eligible&&s.required!==null)
-        ? `<span class="rpl-set-status warning">⚠️ ${s.sets}/${s.required} set — minimo non raggiunto</span>`
-        : "";
+      const status=displayRequired!==null
+        ? `<span class="rpl-set-status ${s.sets>=displayRequired?"met":"warning"}">${s.sets>=displayRequired?"✓":"⚠️"} ${s.sets}/${displayRequired} set minimi del mese</span>`
+        : `<span class="rpl-set-status">${s.sets} set disputati nel periodo</span>`;
       return `<tr class="${s.eligible?"":"rpl-ineligible"}">
         <td><b>${i+1}</b></td>
         <td><div style="display:flex;align-items:center;gap:9px">
