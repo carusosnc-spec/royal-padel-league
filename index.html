@@ -1990,11 +1990,27 @@ function minSetsRequired(){
   return null; // settembre: nessuna soglia ancora scaduta
 }
 
+// Soglia cumulativa da raggiungere entro la chiusura del mese corrente.
+// È solo un indicatore di rischio futuro: non modifica l'oscuramento.
+function minSetsForCurrentMonthClose(){
+  const m=new Date().getMonth();
+  if(m===8)return 5;   // settembre
+  if(m===9)return 15;  // ottobre
+  if(m===10)return 25; // novembre
+  if(m===11)return 35; // dicembre
+  if(m===0)return 45;  // gennaio
+  if(m===1)return 55;  // febbraio
+  if(m>=2)return 65;   // marzo e mesi successivi
+  return null;
+}
+function getSeasonSetCount(playerId,fallback){
+  const playerStats=Array.isArray(stats)?stats.find(x=>String(x.id)===String(playerId)):null;
+  return playerStats?.sets ?? fallback;
+}
+
 function render(){
   const required=minSetsRequired();
-  // Indicatore sempre visibile: anche a settembre mostriamo il target iniziale
-  // di 5 set, pur senza applicare ancora l'oscuramento.
-  const displayRequired=required!==null?required:(new Date().getMonth()===8?5:null);
+  const displayRequired=minSetsForCurrentMonthClose();
   let a=stats.map(s=>{
     const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;
     const eligible=required===null || s.sets>=required;
@@ -3499,8 +3515,7 @@ $("date").value=new Date().toISOString().slice(0,16);
     const body=$("partialRanking"), summary=$("partialSummary");
     if(!body)return;
     const required=getPartialRequirement(from,to);
-    const displayRule=getPartialMonthRule(from,to);
-    const displayRequired=displayRule?.sets??null;
+    const displayRequired=minSetsForCurrentMonthClose();
     const ranked=stats.map(s=>{
       const base=s.sets?((s.pt+s.games*.30+s.sets*.10)/s.sets)*10:0;
       const eligible=required===null||s.sets>=required;
@@ -3513,9 +3528,10 @@ $("date").value=new Date().toISOString().slice(0,16);
 
     body.innerHTML=ranked.map((s,i)=>{
       const f=String(s.fascia||"").replace(/^F/i,"");
+      const seasonSets=getSeasonSetCount(s.id,s.sets);
       const status=displayRequired!==null
-        ? `<span class="rpl-set-status ${s.sets>=displayRequired?"met":"warning"}">${s.sets>=displayRequired?"✓":"⚠️"} ${s.sets}/${displayRequired} set minimi del mese</span>`
-        : `<span class="rpl-set-status">${s.sets} set disputati nel periodo</span>`;
+        ? `<span class="rpl-set-status ${seasonSets>=displayRequired?"met":"warning"}">${seasonSets>=displayRequired?"✓":"⚠️"} ${seasonSets}/${displayRequired} set per la chiusura del mese</span>`
+        : `<span class="rpl-set-status">${seasonSets} set disputati</span>`;
       return `<tr class="${s.eligible?"":"rpl-ineligible"}">
         <td><b>${i+1}</b></td>
         <td><div style="display:flex;align-items:center;gap:9px">
