@@ -5,6 +5,7 @@
   const KEY = "ranking-and-players";
   let running = false;
   let apiRef = null;
+  let lastSavedAt = null;
 
   function openDB() {
     return new Promise((resolve, reject) => {
@@ -63,10 +64,13 @@
         id:s.id, name:s.name, nick:s.nick || "", fascia:s.fascia,
         value:s.value, sets:s.sets, pt:s.pt, games:s.games, mvp:s.mvp, imb:s.imb
       }));
-      await saveSnapshot({players, stats, savedAt:new Date().toISOString(), schema:1});
+      lastSavedAt = new Date().toISOString();
+      await saveSnapshot({players, stats, savedAt:lastSavedAt, schema:1});
+      apiRef.setHasSnapshot(true);
     } catch (error) {
       // Se il refresh fallisce, i dati già mostrati restano disponibili.
-      if (!apiRef.hasSnapshot()) statusText("Connessione al database RPL non disponibile. Riprova quando la rete torna attiva.");
+      if (apiRef.hasSnapshot() && lastSavedAt) statusText("Classifica offline · dati salvati il " + formatDate(lastSavedAt) + ". Le modifiche richiedono la connessione.");
+      else if (!apiRef.hasSnapshot()) statusText("Connessione al database RPL non disponibile. Riprova quando la rete torna attiva.");
     } finally {
       running = false;
     }
@@ -81,6 +85,7 @@
       api.fill();
       api.render();
       api.setHasSnapshot(true);
+      lastSavedAt = snapshot.savedAt;
       statusText("Classifica offline · dati salvati il " + formatDate(snapshot.savedAt) + ". In aggiornamento dal database RPL…");
     }
     if (navigator.onLine) {
