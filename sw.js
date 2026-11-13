@@ -1,5 +1,5 @@
 // RPL release v.10 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v19";
+const CACHE_NAME = "rpl-v20";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js", "./rpl-player-logos.js", "./paolo-cavallaro.webp"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(async c => {
@@ -83,7 +83,8 @@ async function injectRoyalPay(response, requestUrl) {
     ['rpl-last-sets.js', '<script src="./rpl-last-sets.js?v=2" defer></script>'],
     ['rpl-ranking-movement.js', '<script src="./rpl-ranking-movement.js?v=9" defer></script>'],
     ['rpl-vote-alert.js', '<script src="./rpl-vote-alert.js?v=1" defer></script>'],
-    ['rpl-player-logos.js', '<script src="./rpl-player-logos.js?v=1" defer></script>']
+    ['rpl-player-logos.js', '<script src="./rpl-player-logos.js?v=1" defer></script>'],
+    ['rpl-db-timestamp.js', '<script src="./rpl-db-timestamp.js?v=1" defer></script>']
   ];
   for (const [needle, script] of injectedScripts) {
     if (!html.includes('src="./' + needle) && !html.includes("src='./" + needle)) {
@@ -103,33 +104,41 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     const isAppDocument = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");
-    try {
-      let network;
-      if (isAppDocument) {
-        // Do not let a stalled network request freeze the PWA launch.
+    if (isAppDocument) {
+      const cached = await caches.match(req) || await caches.match("./index.html");
+      const refresh = (async () => {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
         try {
-          network = await fetch(req, { cache: "no-cache", signal: controller.signal });
+          const network = await fetch(req, { cache: "no-cache", signal: controller.signal });
+          const response = await injectRoyalPay(network, req.url);
+          if (response && response.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(req, response.clone());
+          }
         } finally {
           clearTimeout(timeoutId);
         }
-      } else {
-        network = await fetch(req);
+      })();
+      if (cached) {
+        event.waitUntil(refresh.catch(() => {}));
+        return injectRoyalPay(cached, req.url);
       }
-
-      const response = await injectRoyalPay(network, req.url);
-      if (response && response.ok) {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(req, copy)).catch(()=>{});
+      try { await refresh; } catch (_) {}
+      const first = await caches.match(req) || await caches.match("./index.html");
+      return first ? injectRoyalPay(first, req.url) : Response.error();
+    }
+    try {
+      const network = await fetch(req);
+      if (network && network.ok) {
+        const copy = network.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, copy)).catch(() => {});
       }
-      return response;
+      return network;
     } catch (_) {
-      // On network error or timeout, immediately serve the last cached app document.
       const cached = await caches.match(req);
-      if (cached) return injectRoyalPay(cached, req.url);
-      const fallback = await caches.match("./index.html");
-      return fallback ? injectRoyalPay(fallback, new URL("./index.html", self.location.href).href) : Response.error();
+      return cached || Response.error();
+    }
     }
   })());
 });
