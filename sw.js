@@ -100,7 +100,7 @@ async function injectRoyalPay(response, requestUrl) {
     const bootAt = bootMatch.index;
     const scriptAt = html.lastIndexOf("<script", bootAt);
     if (scriptAt >= 0) {
-      const preloader = '<script src="./rpl-offline-cache.js?v=2" onerror="document.getElementById(\\'status\\').textContent=\\'Cache locale non disponibile: impossibile caricare la classifica salvata.\\'"></script>';
+      const preloader = '<script src="./rpl-offline-cache.js?v=2" onerror="document.getElementById(\'status\').textContent=\'Cache locale non disponibile: impossibile caricare la classifica salvata.\'"></script>';
       if (!html.includes('src="./rpl-offline-cache.js')) html = html.slice(0, scriptAt) + preloader + html.slice(scriptAt);
     }
     const offlineBoot = 'window.RPLOfflineBoot ? window.RPLOfflineBoot({loadPlayers,loadRanking,buildSets,fill,render,getPlayers:()=>dbPlayers,getStats:()=>stats,setPlayers:v=>{dbPlayers=v;window.dbPlayers=dbPlayers},setStats:v=>{stats=v},setHasSnapshot:v=>{window.__rplHasOfflineSnapshot=v},hasSnapshot:()=>!!window.__rplHasOfflineSnapshot}) : (document.getElementById("status").textContent="Cache locale non attiva: avvio connessione a Supabase…", (async()=>{await loadPlayers();buildSets();await loadRanking()})())';
