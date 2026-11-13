@@ -91,7 +91,8 @@
       statusText("Classifica offline · dati salvati il " + formatDate(snapshot.savedAt) + ". In aggiornamento dal database RPL…");
     }
     if (navigator.onLine) {
-      await refresh();
+      // Non bloccare l'apertura: mostra subito lo snapshot e aggiorna Supabase in background.
+      refresh();
     } else if (snapshot) {
       statusText("Classifica offline · dati salvati il " + formatDate(snapshot.savedAt) + ". Le modifiche richiedono la connessione.");
     } else {
