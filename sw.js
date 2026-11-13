@@ -1,5 +1,5 @@
 // RPL release v.10 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v25";
+const CACHE_NAME = "rpl-v26";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js", "./rpl-player-logos.js", "./rpl-db-timestamp.js", "./rpl-offline-cache.js", "./paolo-cavallaro.webp"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(async c => {
@@ -131,30 +131,24 @@ self.addEventListener("fetch", event => {
   event.respondWith((async () => {
     const isAppDocument = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");
     if (isAppDocument) {
-      const cached = await caches.match(req) || await caches.match("./index.html");
-      const refresh = (async () => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000);
-        try {
-          const network = await fetch(req, { cache: "no-cache", signal: controller.signal });
-          const response = await injectRoyalPay(network, req.url);
-          if (response && response.ok) {
-            const cache = await caches.open(CACHE_NAME);
-            await cache.put(req, response.clone());
-          }
-        } finally {
-          clearTimeout(timeoutId);
+      // Avvio immediato: se la pagina è già in cache, non scaricare nuovamente
+      // l'intero HTML da ~8 MB ad ogni apertura. Gli aggiornamenti statici
+      // vengono distribuiti tramite la versione del Service Worker.
+      const cached = await caches.match(req) || await caches.match("./index.html") || await caches.match("./");
+      if (cached) return cached;
+
+      // Solo prima installazione o cache assente: recupera e prepara la pagina.
+      try {
+        const network = await fetch(req);
+        const response = await injectRoyalPay(network, req.url);
+        if (response && response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(req, response.clone());
         }
-      })();
-      if (cached) {
-        event.waitUntil(refresh.catch(() => {}));
-        // La pagina in cache è già stata trasformata all'installazione/aggiornamento:
-        // restituirla direttamente evita di rileggere e riscrivere gli 8 MB ad ogni avvio.
-        return cached;
+        return response;
+      } catch (_) {
+        return Response.error();
       }
-      try { await refresh; } catch (_) {}
-      const first = await caches.match(req) || await caches.match("./index.html");
-      return first ? injectRoyalPay(first, req.url) : Response.error();
     }
     try {
       const network = await fetch(req);
