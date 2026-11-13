@@ -1,5 +1,5 @@
 // RPL release v.10 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v22";
+const CACHE_NAME = "rpl-v23";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js", "./rpl-player-logos.js", "./rpl-db-timestamp.js", "./rpl-offline-cache.js", "./paolo-cavallaro.webp"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(async c => {
@@ -92,17 +92,23 @@ async function injectRoyalPay(response, requestUrl) {
       else html += script;
     }
   }
-  // Load offline bootstrap before the main inline script starts.
-  const bootCode = '(async()=>{await loadPlayers();buildSets();await loadRanking()})();';
-  const offlineBoot = 'window.RPLOfflineBoot ? window.RPLOfflineBoot({loadPlayers,loadRanking,buildSets,fill,render,getPlayers:()=>dbPlayers,getStats:()=>stats,setPlayers:v=>{dbPlayers=v;window.dbPlayers=dbPlayers},setStats:v=>{stats=v},setHasSnapshot:v=>{window.__rplHasOfflineSnapshot=v},hasSnapshot:()=>!!window.__rplHasOfflineSnapshot}) : ' + bootCode;
-  if (html.includes(bootCode)) {
-    const bootAt = html.indexOf(bootCode);
+  // Install the offline bootstrap before the main application script.
+  // Match the real startup call even if formatting/whitespace changes in index.html.
+  const bootPattern = /\(async\s*\(\)\s*=>\s*\{\s*await\s+loadPlayers\(\)\s*;\s*buildSets\(\)\s*;\s*await\s+loadRanking\(\)\s*\}\)\s*\(\)\s*;?/;
+  const bootMatch = html.match(bootPattern);
+  if (bootMatch) {
+    const bootAt = bootMatch.index;
     const scriptAt = html.lastIndexOf("<script", bootAt);
     if (scriptAt >= 0) {
-      const preloader = '<script src="./rpl-offline-cache.js?v=1"></script>';
+      const preloader = '<script src="./rpl-offline-cache.js?v=2" onerror="document.getElementById(\\'status\\').textContent=\\'Cache locale non disponibile: impossibile caricare la classifica salvata.\\'"></script>';
       if (!html.includes('src="./rpl-offline-cache.js')) html = html.slice(0, scriptAt) + preloader + html.slice(scriptAt);
     }
-    html = html.replace(bootCode, offlineBoot);
+    const offlineBoot = 'window.RPLOfflineBoot ? window.RPLOfflineBoot({loadPlayers,loadRanking,buildSets,fill,render,getPlayers:()=>dbPlayers,getStats:()=>stats,setPlayers:v=>{dbPlayers=v;window.dbPlayers=dbPlayers},setStats:v=>{stats=v},setHasSnapshot:v=>{window.__rplHasOfflineSnapshot=v},hasSnapshot:()=>!!window.__rplHasOfflineSnapshot}) : (document.getElementById("status").textContent="Cache locale non attiva: avvio connessione a Supabase…", (async()=>{await loadPlayers();buildSets();await loadRanking()})())';
+    html = html.replace(bootMatch[0], offlineBoot);
+  } else {
+    // Expose a clear diagnostic rather than silently pretending offline startup is active.
+    const diagnostic = '<script>window.addEventListener("load",function(){if(!window.RPLOfflineBoot){var s=document.getElementById("status");if(s)s.textContent="Avvio offline non attivo: aggiorna la pagina con Internet."}});</script>';
+    if (/<\/body\s*>/i.test(html)) html = html.replace(/<\/body\s*>/i, diagnostic + "</body>");
   }
   const headers = new Headers(response.headers);
   headers.delete("content-length");
