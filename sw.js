@@ -1,10 +1,18 @@
 // RPL release v.10 — campi chiari modulo votazioni — ripristino frecce classifica basate sulle partite
-const CACHE_NAME = "rpl-v24";
+const CACHE_NAME = "rpl-v25";
 const APP_SHELL = ["./", "./index.html", "./apple-touch-icon.png", "./favicon-32x32.png", "./manifest.webmanifest", "./rpl-header-bg.webp", "./rpl-vote-alert.js", "./royal-pay.js", "./rpl-ranking-evolution.js", "./rpl-last-sets.js", "./rpl-ranking-movement.js", "./rpl-player-logos.js", "./rpl-db-timestamp.js", "./rpl-offline-cache.js", "./paolo-cavallaro.webp"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(async c => {
     // Cache each shell resource independently: one missing asset must not prevent index.html from being cached.
     await Promise.all(APP_SHELL.map(path => c.add(path).catch(() => null)));
+    // Trasforma l'HTML una sola volta durante l'installazione, non ad ogni apertura.
+    for (const path of ["./index.html", "./"]) {
+      const cachedPage = await c.match(path);
+      if (cachedPage) {
+        const enhancedPage = await injectRoyalPay(cachedPage, new URL(path, self.location.href).href);
+        if (enhancedPage && enhancedPage.ok) await c.put(path, enhancedPage);
+      }
+    }
   }));
   self.skipWaiting();
 });
@@ -140,7 +148,9 @@ self.addEventListener("fetch", event => {
       })();
       if (cached) {
         event.waitUntil(refresh.catch(() => {}));
-        return injectRoyalPay(cached, req.url);
+        // La pagina in cache è già stata trasformata all'installazione/aggiornamento:
+        // restituirla direttamente evita di rileggere e riscrivere gli 8 MB ad ogni avvio.
+        return cached;
       }
       try { await refresh; } catch (_) {}
       const first = await caches.match(req) || await caches.match("./index.html");
