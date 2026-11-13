@@ -67,6 +67,8 @@
       lastSavedAt = new Date().toISOString();
       await saveSnapshot({players, stats, savedAt:lastSavedAt, schema:1});
       apiRef.setHasSnapshot(true);
+      // Scrive la data direttamente nel messaggio di stato dopo il salvataggio verificato.
+      statusText("Dati aggiornati dal database RPL · Ultimo aggiornamento: " + formatDate(lastSavedAt) + ".");
     } catch (error) {
       // Se il refresh fallisce, i dati già mostrati restano disponibili.
       if (apiRef.hasSnapshot() && lastSavedAt) statusText("Classifica offline · dati salvati il " + formatDate(lastSavedAt) + ". Le modifiche richiedono la connessione.");
