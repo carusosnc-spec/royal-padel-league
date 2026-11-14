@@ -4569,7 +4569,7 @@ async function loadPublicCalendar(){
 <style id="rpl-player-voting-style">
 .rpl-vote-option{border:1px solid rgba(231,185,78,.30);border-radius:14px;padding:13px;margin:10px 0;background:linear-gradient(180deg,rgba(8,25,40,.9),rgba(3,12,21,.92))}
 .rpl-vote-option.rpl-vote-full{opacity:.72;border-color:rgba(255,255,255,.15)}
-.rpl-vote-date{font-size:16px;font-weight:900;color:#fff}.rpl-vote-meta{font-size:12px;color:#aebccc;margin-top:4px}.rpl-vote-players{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.rpl-vote-player{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(231,185,78,.10);border:1px solid rgba(231,185,78,.24);color:#f7e3a0}.rpl-vote-btn{width:100%;margin-top:10px;min-height:44px}.rpl-vote-btn:disabled{opacity:.5;cursor:not-allowed}
+.rpl-vote-date{font-size:16px;font-weight:900;color:#fff}.rpl-vote-meta{font-size:12px;color:#aebccc;margin-top:4px}.rpl-vote-players{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.rpl-vote-player{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(231,185,78,.10);border:1px solid rgba(231,185,78,.24);color:#f7e3a0}.rpl-vote-player{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px}.rpl-vote-player-time{font-size:9px;line-height:1.2;font-weight:500;color:#aebccc;white-space:nowrap}.rpl-vote-btn{width:100%;margin-top:10px;min-height:44px}.rpl-vote-btn:disabled{opacity:.5;cursor:not-allowed}
 </style>
 <script id="rpl-v6582-profile-helpers">
 (function(){
@@ -4830,7 +4830,10 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       const full=!!o.is_full||ov.length>=Number(o.max_players||4);
       const already=mine.some(v=>String(v.option_id)===String(o.id));
       const canVote=!full&&!already&&mine.length<maxVotes;
-      const players=ov.map(v=>playerById(v.player_id)?.name||'Giocatore');
+      const players=ov.map(v=>({
+        name:playerById(v.player_id)?.name||'Giocatore',
+        votedAt:v.voted_at?new Date(v.voted_at).toLocaleString('it-IT',{timeZone:'Europe/Rome',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}):''
+      }));
       const d=new Date(`${o.play_date}T${o.start_time||'00:00:00'}`);
       const dateLabel=d.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase();
       const time=o.start_time?` · ${String(o.start_time).slice(0,5)}`:''; const kind=o.start_time?'time':((o.label||'').includes('MATTINA')?'mattina':(o.label||'').includes('POMERIGGIO')?'pomeriggio':'sera'); const weather=await rplGetWeather(o.play_date,kind,o.start_time);
@@ -4839,7 +4842,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
         <div class="rpl-vote-meta">${escP(o.label||'Serata')}${escP(time)} · 👥 ${ov.length}/${o.max_players||4}</div>
         <div class="rpl-vote-court">📍 ${escP(o.court&&o.court!=="__TBD__"?o.court:"Campo non ancora definito")}</div>
         ${weather?`<div class="rpl-vote-weather"><button type="button" class="rpl-vote-weather-icon" data-weather-option="${o.id}" data-weather-date="${escP(o.play_date)}" data-weather-kind="${escP(kind)}" data-weather-time="${escP(o.start_time||'')}" aria-label="Approfondisci previsioni meteo" title="Tocca per approfondire il meteo">${weather.icon}</button><div><div class="rpl-vote-weather-temp">${weather.temp!=null?weather.temp+'°C':'—'} · ${escP(weather.label)}</div><div class="rpl-vote-weather-sub">Previsione Enna · Tocca l’icona per i dettagli</div></div></div><div class="rpl-vote-weather-detail" id="rplVoteWeatherDetail-${o.id}" hidden></div>`:''}
-        ${players.length?`<div class="rpl-vote-players">${players.map(n=>`<span class="rpl-vote-player">${escP(n)}</span>`).join('')}</div>`:'<div class="rpl-vote-players"></div>'}
+        ${players.length?`<div class="rpl-vote-players">${players.map(v=>`<span class="rpl-vote-player"><span class="rpl-vote-player-name">${escP(v.name)}</span>${v.votedAt?`<small class="rpl-vote-player-time">${escP(v.votedAt)}</small>`:''}</span>`).join('')}</div>`:'<div class="rpl-vote-players"></div>'}
         ${already
           ? `<button type="button" class="rpl-vote-btn primary" data-vote-remove="${o.id}">✅ HAI VOTATO — TOGLI VOTO</button>`
           : `<button type="button" class="rpl-vote-btn ${canVote?'primary':''}" data-vote-option="${o.id}" ${canVote?'':'disabled'}>${full?'🟢 COMPLETA – 4/4':mine.length>=maxVotes?'🔒 VOTI UTILIZZATI':'🎾 VOTA'}</button>`}
