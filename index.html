@@ -5278,7 +5278,7 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       box.innerHTML='💻 <strong>Desktop:</strong> consenti le notifiche quando richiesto dal browser.';
     }
   }
-  async function rplRegisterServiceWorker(version='9.1.67'){
+  async function rplRegisterServiceWorker(version='10.0.3'){
     if(!('serviceWorker' in navigator)) throw new Error('Questo browser non supporta il Service Worker.');
     return await navigator.serviceWorker.register('./sw.js?v='+version);
   }
@@ -5307,14 +5307,14 @@ function fmtDate(iso){const d=new Date(iso);return Number.isNaN(d.getTime())?'':
       let permission=Notification.permission;
       if(permission==='default') permission=await Notification.requestPermission();
       if(permission!=='granted') throw new Error('Permesso notifiche non concesso. Se lo hai negato, abilitalo nelle impostazioni del browser/dispositivo.');
-      let reg=await rplRegisterServiceWorker('731');
+      let reg=await rplRegisterServiceWorker('10.0.3');
       let sub;
       try{
         sub=await rplCreatePushSubscription(reg);
       }catch(firstError){
         console.warn('RPL: primo tentativo Push fallito, rinnovo Service Worker.',firstError);
         try{await reg.unregister();}catch(_e){}
-        reg=await rplRegisterServiceWorker('732');
+        reg=await rplRegisterServiceWorker('10.0.4');
         await navigator.serviceWorker.ready;
         sub=await rplCreatePushSubscription(reg);
       }
